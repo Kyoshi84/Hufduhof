@@ -1,0 +1,92 @@
+{
+ "id": "ivo",
+ "display_name": "Ivo Eggert (gwardzista Szkarłatnej Gwardii, miecz dwuręczny)",
+ "frame_size": [
+  320,
+  192
+ ],
+ "pivot": [
+  160,
+  190
+ ],
+ "world_per_texel": 1.3333333333333333,
+ "facing": "right",
+ "animations": {
+  "idle": {
+   "frames": 4,
+   "fps": 6,
+   "loop": true,
+   "note": "oddychanie, postawa bojowa"
+  },
+  "run": {
+   "frames": 6,
+   "fps": 12,
+   "loop": true,
+   "note": "bieg w profilu; ruch w głąb sceny używa póz 8-kierunkowych (poses/)"
+  },
+  "light1": {
+   "frames": 5,
+   "fps": 0,
+   "loop": false,
+   "note": "lekki atak 1; klatka kontaktu = miecz/broń na maksymalnym wyciągnięciu; musi sięgać zasięgu z balance.json (zasięg 140 px świata ~ 105 px sprite'a)",
+   "contact": [
+    2,
+    2
+   ]
+  },
+  "light2": {
+   "frames": 5,
+   "fps": 0,
+   "loop": false,
+   "note": "lekki atak 2 (z drugiej strony)",
+   "contact": [
+    2,
+    2
+   ]
+  },
+  "sweep": {
+   "frames": 8,
+   "fps": 0,
+   "loop": false,
+   "note": "szeroki zamach obszarowy (obrót), zasięg 165 px świata w obie strony",
+   "contact": [
+    3,
+    4
+   ]
+  },
+  "heavy": {
+   "frames": 10,
+   "fps": 0,
+   "loop": false,
+   "note": "mocny atak znad głowy, zasięg 180 px świata",
+   "contact": [
+    5,
+    5
+   ]
+  },
+  "hurt": {
+   "frames": 2,
+   "fps": 10,
+   "loop": false,
+   "note": "odchylenie do tyłu (0,35 s)"
+  },
+  "dodge": {
+   "frames": 4,
+   "fps": 14,
+   "loop": false,
+   "note": "unik / przewrót (0,3 s)"
+  },
+  "die": {
+   "frames": 6,
+   "fps": 8,
+   "loop": false,
+   "note": "śmierć; ostatnia klatka zostaje na ziemi"
+  },
+  "victory": {
+   "frames": 4,
+   "fps": 6,
+   "loop": true,
+   "note": "miecz w górę po pokonaniu bossa"
+  }
+ }
+}

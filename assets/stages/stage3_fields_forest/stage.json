@@ -1,0 +1,76 @@
+{
+ "id": "stage3_fields_forest",
+ "name": "ETAP 3: POLA I LAS",
+ "world_per_texel": 1.3333333333333333,
+ "layers": {
+  "sky": {
+   "file": "sky.png",
+   "parallax": 0.0,
+   "y_offset": 0,
+   "note": "niebo; powtarzane poziomo, dolna krawędź na horyzoncie",
+   "size": "128x320 (szeroki 64-512, wysokość 320)"
+  },
+  "far1": {
+   "file": "far1.png",
+   "parallax": 0.15,
+   "y_offset": 0,
+   "note": "daleki plan (wolny paralaks), powtarzany poziomo, dolna krawędź na horyzoncie",
+   "size": "640x140, szew poziomy niewidoczny"
+  },
+  "far2": {
+   "file": "far2.png",
+   "parallax": 0.32,
+   "y_offset": 0,
+   "note": "bliższy plan sylwetek (średni paralaks), powtarzany poziomo",
+   "size": "640x110, szew niewidoczny"
+  },
+  "ground": {
+   "file": "ground.png",
+   "parallax": 0.0,
+   "y_offset": 0,
+   "note": "podłoże w pasie walki, powtarzane poziomo, górna krawędź na horyzoncie",
+   "size": "128x320"
+  },
+  "foreground": {
+   "file": "foreground.png",
+   "parallax": 1.25,
+   "y_offset": 0,
+   "note": "opcjonalny pierwszy plan przy dolnej krawędzi ekranu (poza pasem walki!)",
+   "size": "640x60, max 67 px wysokości"
+  }
+ },
+ "props": {
+  "tree_oak": {
+   "note": "drzewo liściaste",
+   "size": "110x150"
+  },
+  "tree_dead": {
+   "note": "martwe drzewo",
+   "size": "110x150"
+  },
+  "tree_pine": {
+   "note": "świerk",
+   "size": "80x170"
+  },
+  "bush": {
+   "note": "krzew",
+   "size": "50x32"
+  },
+  "stone_big": {
+   "note": "głaz",
+   "size": "45x38"
+  },
+  "fence_broken": {
+   "note": "zniszczony płot",
+   "size": "80x40"
+  },
+  "tent": {
+   "note": "namiot obozowy",
+   "size": "70x50"
+  },
+  "banner_torn": {
+   "note": "podarty sztandar",
+   "size": "35x72"
+  }
+ }
+}

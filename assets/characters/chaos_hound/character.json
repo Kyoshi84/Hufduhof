@@ -1,0 +1,60 @@
+{
+ "id": "chaos_hound",
+ "display_name": "Pies Chaosu",
+ "frame_size": [
+  176,
+  96
+ ],
+ "pivot": [
+  88,
+  94
+ ],
+ "world_per_texel": 1.3333333333333333,
+ "facing": "right",
+ "animations": {
+  "idle": {
+   "frames": 4,
+   "fps": 6,
+   "loop": true,
+   "note": ""
+  },
+  "run": {
+   "frames": 6,
+   "fps": 16,
+   "loop": true,
+   "note": ""
+  },
+  "bite": {
+   "frames": 4,
+   "fps": 0,
+   "loop": false,
+   "note": "ugryzienie z bliska",
+   "contact": [
+    1,
+    1
+   ]
+  },
+  "charge": {
+   "frames": 6,
+   "fps": 0,
+   "loop": false,
+   "note": "szarża: zamach (przycupnięcie) -> pęd (klatki 2-4 w pętli) -> hamowanie",
+   "contact": [
+    2,
+    4
+   ]
+  },
+  "hurt": {
+   "frames": 2,
+   "fps": 10,
+   "loop": false,
+   "note": ""
+  },
+  "die": {
+   "frames": 5,
+   "fps": 10,
+   "loop": false,
+   "note": ""
+  }
+ }
+}

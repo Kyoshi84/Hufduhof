@@ -1,0 +1,16 @@
+{
+ "id": "common",
+ "name": "WSPÓLNE (wszystkie etapy)",
+ "world_per_texel": 1.3333333333333333,
+ "layers": {},
+ "props": {
+  "barrel": {
+   "note": "beczka (zniszczalna)",
+   "size": "36x44"
+  },
+  "potion": {
+   "note": "mikstura lecząca",
+   "size": "22x28"
+  }
+ }
+}

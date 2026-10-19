@@ -1,0 +1,96 @@
+{
+ "id": "chaos_champion",
+ "display_name": "Czempion Chaosu (boss)",
+ "frame_size": [
+  448,
+  320
+ ],
+ "pivot": [
+  224,
+  318
+ ],
+ "world_per_texel": 1.3333333333333333,
+ "facing": "right",
+ "animations": {
+  "idle": {
+   "frames": 4,
+   "fps": 4,
+   "loop": true,
+   "note": ""
+  },
+  "run": {
+   "frames": 6,
+   "fps": 7,
+   "loop": true,
+   "note": ""
+  },
+  "slash": {
+   "frames": 6,
+   "fps": 0,
+   "loop": false,
+   "note": "zasięg 150 px świata",
+   "contact": [
+    3,
+    3
+   ]
+  },
+  "backhand": {
+   "frames": 5,
+   "fps": 0,
+   "loop": false,
+   "note": "szybki zamach zwrotny",
+   "contact": [
+    2,
+    2
+   ]
+  },
+  "overhead": {
+   "frames": 8,
+   "fps": 0,
+   "loop": false,
+   "note": "ciężki cios znad głowy, długi zamach (telegraf!)",
+   "contact": [
+    4,
+    4
+   ]
+  },
+  "slam": {
+   "frames": 8,
+   "fps": 0,
+   "loop": false,
+   "note": "uderzenie w ziemię, fala obszarowa 230 px w obie strony",
+   "contact": [
+    4,
+    5
+   ]
+  },
+  "charge": {
+   "frames": 6,
+   "fps": 0,
+   "loop": false,
+   "note": "szarża",
+   "contact": [
+    2,
+    4
+   ]
+  },
+  "hurt": {
+   "frames": 3,
+   "fps": 8,
+   "loop": false,
+   "note": "oszołomienie po złamaniu poise (okno kontrataku, 1,5 s)"
+  },
+  "roar": {
+   "frames": 6,
+   "fps": 8,
+   "loop": false,
+   "note": "ryk przy zmianie fazy (1,2 s)"
+  },
+  "die": {
+   "frames": 8,
+   "fps": 8,
+   "loop": false,
+   "note": ""
+  }
+ }
+}

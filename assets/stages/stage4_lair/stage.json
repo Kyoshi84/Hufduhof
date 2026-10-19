@@ -1,0 +1,64 @@
+{
+ "id": "stage4_lair",
+ "name": "ETAP 4: LEGOWISKO CHAOSU",
+ "world_per_texel": 1.3333333333333333,
+ "layers": {
+  "sky": {
+   "file": "sky.png",
+   "parallax": 0.0,
+   "y_offset": 0,
+   "note": "niebo; powtarzane poziomo, dolna krawędź na horyzoncie",
+   "size": "128x320 (szeroki 64-512, wysokość 320)"
+  },
+  "far1": {
+   "file": "far1.png",
+   "parallax": 0.15,
+   "y_offset": 0,
+   "note": "daleki plan (wolny paralaks), powtarzany poziomo, dolna krawędź na horyzoncie",
+   "size": "640x140, szew poziomy niewidoczny"
+  },
+  "far2": {
+   "file": "far2.png",
+   "parallax": 0.32,
+   "y_offset": 0,
+   "note": "bliższy plan sylwetek (średni paralaks), powtarzany poziomo",
+   "size": "640x110, szew niewidoczny"
+  },
+  "ground": {
+   "file": "ground.png",
+   "parallax": 0.0,
+   "y_offset": 0,
+   "note": "podłoże w pasie walki, powtarzane poziomo, górna krawędź na horyzoncie",
+   "size": "128x320"
+  },
+  "foreground": {
+   "file": "foreground.png",
+   "parallax": 1.25,
+   "y_offset": 0,
+   "note": "opcjonalny pierwszy plan przy dolnej krawędzi ekranu (poza pasem walki!)",
+   "size": "640x60, max 67 px wysokości"
+  }
+ },
+ "props": {
+  "obelisk": {
+   "note": "obelisk z runą",
+   "size": "40x100"
+  },
+  "brazier": {
+   "note": "kocioł z ogniem Chaosu",
+   "size": "30x65"
+  },
+  "tree_twisted": {
+   "note": "skażone drzewo",
+   "size": "110x150"
+  },
+  "bones": {
+   "note": "kości i pal z czaszką",
+   "size": "70x70"
+  },
+  "crystals": {
+   "note": "kryształy Chaosu",
+   "size": "45x50"
+  }
+ }
+}

@@ -1,0 +1,43 @@
+{
+ "scale": 0.5,
+ "canvas": [
+  96,
+  128
+ ],
+ "pivot": [
+  48.0,
+  126.5
+ ],
+ "world_per_texel": 1.3333333333333333,
+ "dirs": [
+  "south",
+  "south-east",
+  "east",
+  "north-east",
+  "north",
+  "north-west",
+  "west",
+  "south-west"
+ ],
+ "clipped_edges": {
+  "south": [],
+  "south-east": [],
+  "east": [
+   "left"
+  ],
+  "north-east": [
+   "left"
+  ],
+  "north": [
+   "left"
+  ],
+  "north-west": [
+   "left"
+  ],
+  "west": [
+   "top"
+  ],
+  "south-west": []
+ },
+ "notes": "Orygina\u0142y: assets/characters/ivo/source. Sprite'y s\u0105 statycznymi pozami (turnaround), nie klatkami animacji."
+}

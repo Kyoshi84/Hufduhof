@@ -1,0 +1,50 @@
+{
+ "id": "skaven",
+ "display_name": "Skaven",
+ "frame_size": [
+  160,
+  112
+ ],
+ "pivot": [
+  80,
+  110
+ ],
+ "world_per_texel": 1.3333333333333333,
+ "facing": "right",
+ "animations": {
+  "idle": {
+   "frames": 4,
+   "fps": 6,
+   "loop": true,
+   "note": ""
+  },
+  "run": {
+   "frames": 6,
+   "fps": 14,
+   "loop": true,
+   "note": ""
+  },
+  "claw": {
+   "frames": 5,
+   "fps": 0,
+   "loop": false,
+   "note": "szybki cios; zasięg 72 px świata",
+   "contact": [
+    2,
+    2
+   ]
+  },
+  "hurt": {
+   "frames": 2,
+   "fps": 10,
+   "loop": false,
+   "note": ""
+  },
+  "die": {
+   "frames": 5,
+   "fps": 10,
+   "loop": false,
+   "note": ""
+  }
+ }
+}

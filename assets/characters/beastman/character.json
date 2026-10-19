@@ -1,0 +1,60 @@
+{
+ "id": "beastman",
+ "display_name": "Zwierzoczłek",
+ "frame_size": [
+  288,
+  224
+ ],
+ "pivot": [
+  144,
+  222
+ ],
+ "world_per_texel": 1.3333333333333333,
+ "facing": "right",
+ "animations": {
+  "idle": {
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "note": ""
+  },
+  "run": {
+   "frames": 6,
+   "fps": 9,
+   "loop": true,
+   "note": ""
+  },
+  "chop": {
+   "frames": 6,
+   "fps": 0,
+   "loop": false,
+   "note": "cios z góry; zasięg 112 px świata",
+   "contact": [
+    3,
+    3
+   ]
+  },
+  "wide": {
+   "frames": 7,
+   "fps": 0,
+   "loop": false,
+   "note": "szeroki zamach; zasięg 160 px świata",
+   "contact": [
+    3,
+    4
+   ]
+  },
+  "hurt": {
+   "frames": 2,
+   "fps": 10,
+   "loop": false,
+   "note": ""
+  },
+  "die": {
+   "frames": 6,
+   "fps": 8,
+   "loop": false,
+   "note": ""
+  }
+ }
+}

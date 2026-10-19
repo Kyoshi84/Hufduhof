@@ -1,0 +1,205 @@
+{
+  "name": "Obrona Hufduhofu",
+  "length": 7600,
+  "stages": [
+    {
+      "name": "ETAP 1: DROGA DO HUFDUHOFU",
+      "start": 0,
+      "folder": "stage1_road"
+    },
+    {
+      "name": "ETAP 2: WIEŚ",
+      "start": 1900,
+      "folder": "stage2_village"
+    },
+    {
+      "name": "ETAP 3: POLA I LAS",
+      "start": 3900,
+      "folder": "stage3_fields_forest"
+    },
+    {
+      "name": "ETAP 4: LEGOWISKO CHAOSU",
+      "start": 5900,
+      "folder": "stage4_lair"
+    }
+  ],
+  "player_start": 120,
+  "waves": [
+    {
+      "trigger": 900,
+      "spawns": [
+        {
+          "type": "skaven",
+          "count": 2,
+          "side": "right"
+        }
+      ]
+    },
+    {
+      "trigger": 1500,
+      "spawns": [
+        {
+          "type": "skaven",
+          "count": 2,
+          "side": "right"
+        },
+        {
+          "type": "skaven",
+          "count": 1,
+          "side": "left",
+          "delay": 2.0
+        }
+      ]
+    },
+    {
+      "trigger": 2300,
+      "spawns": [
+        {
+          "type": "skaven",
+          "count": 3,
+          "side": "both"
+        },
+        {
+          "type": "chaos_hound",
+          "count": 1,
+          "side": "right",
+          "delay": 3.0
+        }
+      ]
+    },
+    {
+      "trigger": 3000,
+      "spawns": [
+        {
+          "type": "skaven",
+          "count": 3,
+          "side": "both"
+        },
+        {
+          "type": "chaos_hound",
+          "count": 2,
+          "side": "right",
+          "delay": 2.5,
+          "interval": 1.2
+        }
+      ]
+    },
+    {
+      "trigger": 3550,
+      "spawns": [
+        {
+          "type": "chaos_hound",
+          "count": 2,
+          "side": "both"
+        },
+        {
+          "type": "skaven",
+          "count": 4,
+          "side": "both",
+          "delay": 2.0,
+          "interval": 0.8
+        }
+      ]
+    },
+    {
+      "trigger": 4400,
+      "spawns": [
+        {
+          "type": "beastman",
+          "count": 1,
+          "side": "right"
+        },
+        {
+          "type": "skaven",
+          "count": 2,
+          "side": "both",
+          "delay": 3.0
+        }
+      ]
+    },
+    {
+      "trigger": 5000,
+      "spawns": [
+        {
+          "type": "beastman",
+          "count": 2,
+          "side": "both"
+        },
+        {
+          "type": "chaos_hound",
+          "count": 2,
+          "side": "right",
+          "delay": 4.0
+        }
+      ]
+    },
+    {
+      "trigger": 5600,
+      "spawns": [
+        {
+          "type": "beastman",
+          "count": 1,
+          "side": "left"
+        },
+        {
+          "type": "skaven",
+          "count": 4,
+          "side": "both",
+          "delay": 1.0,
+          "interval": 0.7
+        },
+        {
+          "type": "chaos_hound",
+          "count": 2,
+          "side": "right",
+          "delay": 5.0
+        }
+      ]
+    },
+    {
+      "trigger": 6400,
+      "spawns": [
+        {
+          "type": "beastman",
+          "count": 2,
+          "side": "both"
+        },
+        {
+          "type": "skaven",
+          "count": 4,
+          "side": "both",
+          "delay": 2.0,
+          "interval": 0.7
+        },
+        {
+          "type": "chaos_hound",
+          "count": 2,
+          "side": "right",
+          "delay": 6.0
+        }
+      ]
+    },
+    {
+      "trigger": 6900,
+      "final": true,
+      "spawns": [
+        {
+          "type": "chaos_champion",
+          "count": 1,
+          "side": "right"
+        }
+      ]
+    }
+  ],
+  "barrels": [
+    620,
+    1250,
+    2050,
+    2750,
+    3300,
+    4150,
+    4850,
+    5450,
+    6200
+  ]
+}

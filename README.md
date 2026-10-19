@@ -1,0 +1,78 @@
+# Ivo Eggert: Obrona Hufduhofu
+
+2D side-scrolling arcade beat 'em up (Warhammer Fantasy, grimdark) na Androida. Godot 4.3 + GDScript.
+Jeden poziom: 4 etapy, 10 fal, boss w 3 fazach. Oprawa: pixel-art w **jednej palecie 256 kolorów**.
+
+## Uruchomienie na komputerze
+1. Godot 4.3 (standard, nie .NET): https://godotengine.org/download
+2. Otwórz `project.godot`, naciśnij **F5** (pierwsze otwarcie sam importuje zasoby).
+
+Sterowanie PC: `WASD`/strzałki - ruch (także w głąb sceny), `J` - cięcie, `K` - mocny atak, `L`/`Spacja` - unik, `Esc` - pauza, **`F3` - diagnostyka kolizji**.
+Combo: cięcie → cięcie → szeroki zamach obszarowy. Telefon: joystick po lewej, przyciski po prawej.
+
+## Testy
+```
+godot --headless --path . --import                       # raz (cache klas i zasobów)
+godot --headless --path . res://tests/test_runner.tscn   # kod wyjścia 0 = OK
+```
+Testy obejmują m.in.: geometrię i okna czasowe trafień, **12 scenariuszy kolizji miecza**, wspomaganie kierunku, nietykalność, AI wrogów,
+poise, fazy bossa, fale, zapis, sterowanie dotykowe (w tym multi-touch), paletę i sprite'y Ivo (rozmiar, pivot, kolory, alfa),
+wybór kierunku 8-stronnego oraz pełne przejście poziomu przez bota.
+Zrzuty ekranu z prawdziwym renderowaniem (np. `xvfb-run`): `res://tests/shots.tscn`, `res://tests/shots2.tscn` → `/home/claude/shots`.
+
+## Kolizje miecza i diagnostyka
+Cała geometria walki jest w `scripts/combat/hit_shape.gd` (jedno źródło prawdy), liczona na płaszczyźnie podłoża względem **punktu stóp**,
+niezależnie od rozmiaru sprite'a i kamery:
+- **hitbox ataku**: prostokąt od `hit_start` (przed ciałem) do `reach`, opcjonalnie `back` (ataki obszarowe), pasmo głębi `±depth`;
+- **hurtbox celu**: `±body_half` w poziomie, `±foot_half_depth` w głębi;
+- hitbox istnieje wyłącznie w fazie ACTIVE ataku, trafia raz na cel na atak; wizualna smuga cięcia (`swing_fx.gd`) jest rysowana z tych samych liczb.
+- **wspomaganie kierunku** (`player.facing_assist` w balance.json): bez wciśniętego kierunku Ivo obraca się ku najbliższemu celowi w zasięgu.
+
+**Tryb diagnostyczny** (tylko build debug): `F3` albo Ustawienia → „Diagnostyka kolizji”. Rysuje hitbox (czerwony = aktywny, żółty obrys = zamach),
+hurtboxy stóp (zielone), pivot, kierunek ataku, stan hitboxa oraz wynik testu dla każdego celu (`HIT`, `REACH`, `DEPTH`, `DUP`, `INVULN`). Domyślnie wyłączony.
+
+## Grafika
+**Pipeline (nie modyfikuje oryginałów):**
+```
+python3 tools/make_palette.py    # paleta 256 kolorów + tablica LUT + scripts/art/pal.gd
+python3 tools/prepare_ivo.py     # assets/characters/ivo/source (oryginały) -> assets/characters/ivo/poses (kopie do gry + manifest.json)
+```
+- **Paleta**: `assets/palette/` (rampy zaprojektowane ręcznie + kolory wyłuskane z Twoich sprite'ów Ivo). Kod rysujący używa `Pal.r("ramp", i)`.
+- **Renderowanie**: świat idzie do SubViewport w rozdzielczości `render_scale` × ekran (0.75 → 960×540) i jest skalowany filtrem *nearest* (ostre piksele).
+  HUD/menu zostają w głównym viewport. Na końcu `PaletteFilter` (shader + LUT 32³) sprowadza **cały obraz** do palety. Wyłączenie: argument `-- --no-palette`.
+  Weryfikacja: w 19 wyrenderowanych kadrach max 207 unikalnych kolorów, 0 spoza palety.
+- **Ivo**: 8 póz kierunkowych (zapas, gdy brak animacji z folderu) (E, SE, S, SW, W, NW, N, NE), wspólny pivot na stopach. Kierunek wynika z ruchu (także w głąb sceny); podczas ataku to profil E/W.
+- **Tło**: `level_background.gd`: dithering Bayera, 2 warstwy paralaksy, rekwizyty zależne od etapu. Wszystko jest wyłącznie dekoracją (nic nie blokuje ruchu, nic nie zasłania postaci).
+- **Potwory**: `monster_art.gd` (tymczasowa, proceduralna grafika w stylu sprite'owym).
+
+**Podmiana grafiki bez zmian w kodzie:** foldery `assets/characters/<postać>/` (animacje) i `assets/stages/<etap>/` (warstwy tła, rekwizyty) -
+patrz **`assets/README.md`** i instrukcje w każdym folderze. Brakujący plik = grafika tymczasowa, więc podmieniasz po jednym PNG.
+Walidacja: `python3 tools/check_assets.py`. Dźwięki: `assets/audio/sfx/<nazwa>.ogg|wav|mp3`, muzyka: `assets/audio/music/battle.ogg`.
+
+## Brakuje (uczciwie)
+- Ivo ma **tylko 8 statycznych póz** (turnaround). Brak klatek: chód/bieg, lekki/ciężki atak, zamach obszarowy, obrażenia, unik, śmierć, zwycięstwo.
+  Tymczasowo: wahnięcie kroku, wypad/odskok sprite'a, smuga cięcia, obrót o 90° przy śmierci. Nie jest to pełna animacja.
+- W 5 z 8 dostarczonych PNG czubek miecza jest **ucięty krawędzią płótna** (east, north-east, north, north-west: lewa krawędź; west: górna). Nie da się go odtworzyć.
+- Potwory i tło są proceduralne, nie klatkowe (brak klatek chodu/ataku jako sprite'ów).
+- Eksport Android wymaga lokalnego SDK (poniżej); nie był tu budowany.
+
+## Budowanie wersji Android (APK)
+1. JDK 17 i Android SDK (platform-tools, build-tools 34, platform android-34, cmdline-tools).
+2. Godot: **Editor → Manage Export Templates → Download** (4.3).
+3. **Editor Settings → Export → Android**: ścieżki SDK/JDK i debug keystore.
+4. **Project → Export → Android** (preset w `export_presets.cfg`) → **Export Project** lub „Run on device”. Do Google Play potrzebny keystore release i AAB.
+Uwaga: tryb diagnostyczny jest dostępny tylko w buildach debug; shader palety używa tekstury ekranu (`hint_screen_texture`), zweryfikowanej tutaj na Mesa/OpenGL, nie na fizycznym GPU telefonu.
+
+## Struktura
+| Katalog | Zawartość |
+|---|---|
+| `data/` | `balance.json` (cały balans, `render_scale`), `level_1.json` (etapy, fale, beczki) |
+| `scripts/autoload/` | `Balance`, `GameState`, `SaveData`, `Sfx`, `Controls` |
+| `scripts/combat/` | `HitShape` (geometria trafień) |
+| `scripts/actors/` | `Actor`, `Player`, `Enemy`, `Boss`, `IvoView`, `SwingFx`, `ActorVisual`, `MonsterArt`, `Barrel`, `Pickup` |
+| `scripts/level/` | `Level`, `LevelBackground` |
+| `scripts/fx/` | `FxLayer`, `DebugOverlay`, `PaletteFilter` |
+| `scripts/art/` | `pal.gd` (generowane rampy), `character_sheet.gd`, `sheet_view.gd`, `stage_art.gd` (ładowanie folderów grafik) |
+| `assets/` | `characters/<id>` (animacje; Ivo: `source` oryginały, `poses` kopie do gry), `stages/<etap>`, `palette`, `shaders`, `audio` |
+| `tools/` | `make_palette.py`, `prepare_ivo.py`, `make_asset_folders.py`, `check_assets.py`, `quantize_png.py`, `asset_spec.py` |
+| `tests/` | testy, bot, zrzuty |
