@@ -20,6 +20,14 @@ poise, fazy bossa, fale, zapis, sterowanie dotykowe (w tym multi-touch), paletę
 wybór kierunku 8-stronnego oraz pełne przejście poziomu przez bota.
 Zrzuty ekranu z prawdziwym renderowaniem (np. `xvfb-run`): `res://tests/shots.tscn`, `res://tests/shots2.tscn` → `/home/claude/shots`.
 
+## Ekrany fabularne
+Między etapami gra pokazuje ekrany z ilustracją i tekstem (prolog we wsi, las, czempion). Treść, tytuły i miejsce wyświetlenia
+(`before_stage` = numer etapu od 0) są w `data/story.json`; ilustracje w `assets/ui/story/` (generator: `tools/build_story_art.py`,
+każdą można podmienić własną 1280x720). Sterowanie: dotyk/klik/Enter/Spacja = dalej (pierwsze dotknięcie dopisuje stronę do końca),
+„Pomiń” albo Esc kończy cały ekran. Po „Kontynuuj” z checkpointu ekrany etapów za graczem się nie powtarzają.
+Kod: `scripts/ui/story_screen.gd`, wyzwalanie w `scripts/level/level.gd` (`update_stage_banner`). Testy i zrzuty ekranu wyłączają fabułę
+przez `GameState.story_enabled = false`.
+
 ## Kolizje miecza i diagnostyka
 Cała geometria walki jest w `scripts/combat/hit_shape.gd` (jedno źródło prawdy), liczona na płaszczyźnie podłoża względem **punktu stóp**,
 niezależnie od rozmiaru sprite'a i kamery:

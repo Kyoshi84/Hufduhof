@@ -42,6 +42,9 @@ var spawn_queue: Array = []
 var tokens: Array = []
 var stage_idx: int = -1
 var go_prompt: bool = false
+var story_active: bool = false       # ekran fabularny na wierzchu (gra wstrzymana)
+var _story_checked: bool = false
+var _stories_seen: Dictionary = {}
 
 var outcome: String = ""
 var outcome_t: float = 0.0
@@ -329,7 +332,46 @@ func update_stage_banner() -> void:
 	if idx != stage_idx:
 		stage_idx = idx
 		if hud != null:
-			hud.show_banner(str(stages[idx]["name"]), 2.4)
+			var banner: String = str(stages[idx]["name"])
+			var entry: Dictionary = _story_to_show(idx)
+			if entry.is_empty():
+				hud.show_banner(banner, 2.4)
+			else:
+				show_story(entry, banner)
+
+## Wpis fabularny do pokazania przed etapem idx (pusty, gdy brak, wyłączony albo już widziany).
+## Przy kontynuacji z checkpointu pomijamy fabułę etapów, które gracz ma już za sobą.
+func _story_to_show(idx: int) -> Dictionary:
+	if not GameState.story_enabled:
+		return {}
+	var first_check := not _story_checked
+	_story_checked = true
+	if first_check and start_wave_idx > 0:
+		for e in StoryScreen.load_entries():
+			if int(e.get("before_stage", -1)) <= idx:
+				_stories_seen[str(e.get("id", ""))] = true
+	var entry: Dictionary = StoryScreen.entry_for_stage(idx)
+	if entry.is_empty() or _stories_seen.has(str(entry.get("id", ""))):
+		return {}
+	_stories_seen[str(entry.get("id", ""))] = true
+	return entry
+
+func show_story(entry: Dictionary, banner: String = "") -> void:
+	if overlay_layer == null:
+		return
+	story_active = true
+	get_tree().paused = true
+	Controls.reset()
+	var sc := StoryScreen.new()
+	sc.setup(entry)
+	sc.finished.connect(func():
+		story_active = false
+		clear_overlay()
+		get_tree().paused = false
+		Controls.reset()
+		if banner != "" and hud != null:
+			hud.show_banner(banner, 2.4))
+	set_overlay(sc)
 
 # ------------------------------------------------------------------ zdarzenia walki
 
@@ -440,7 +482,7 @@ func clear_overlay() -> void:
 		overlay = null
 
 func toggle_pause() -> void:
-	if outcome != "" or simulate_only:
+	if outcome != "" or simulate_only or story_active:
 		return
 	if get_tree().paused:
 		resume()

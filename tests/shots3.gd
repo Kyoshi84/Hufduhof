@@ -127,6 +127,7 @@ func run() -> void:
 	CharacterSheet.clear_cache()
 	StageArt.clear_cache()
 	GameState.god_mode = true
+	GameState.story_enabled = false
 	lvl = Level.new()
 	add_child(lvl)
 	await frames(10)

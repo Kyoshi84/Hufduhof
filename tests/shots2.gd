@@ -39,6 +39,7 @@ func go_to(x: float) -> void:
 
 func run() -> void:
 	GameState.god_mode = true
+	GameState.story_enabled = false
 	lvl = Level.new()
 	add_child(lvl)
 	await frames(10)

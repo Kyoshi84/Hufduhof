@@ -40,6 +40,7 @@ func run() -> void:
 	await frames(2)
 	# poziom
 	GameState.god_mode = true
+	GameState.story_enabled = false
 	lvl = Level.new()
 	add_child(lvl)
 	await frames(30)

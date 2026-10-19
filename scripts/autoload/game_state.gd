@@ -18,3 +18,6 @@ func add_score(points: int) -> void:
 
 ## Tryb diagnostyczny kolizji (domyślnie wyłączony; dostępny tylko w buildach debug).
 var debug_collision: bool = false
+
+## Ekrany fabularne między etapami (data/story.json). Testy i zrzuty ekranu je wyłączają.
+var story_enabled: bool = true

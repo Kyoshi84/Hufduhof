@@ -17,7 +17,7 @@ func _ready() -> void:
 	var tests := [
 		"t_balance", "t_hit_geometry", "t_single_hit_per_attack", "t_invulnerability", "t_light_timing",
 		"t_skaven_ai", "t_hound_charge", "t_beastman_poise", "t_boss_phases", "t_wave_flow", "t_pause_state",
-		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_full_run_bot",
+		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_story", "t_full_run_bot",
 	]
 	for t in tests:
 		var t0 := Time.get_ticks_msec()
@@ -903,6 +903,73 @@ func t_stage_art() -> void:
 	ok(lvl2.bg.sky_tex[0].get_height() == 460 and lvl2.bg.sky_par[0] == 0.0, "puste foldery etapów => tło w całości zapasowe")
 	free_level(lvl2)
 	tmp_clean()
+
+func t_story() -> void:
+	var entries: Array = StoryScreen.load_entries()
+	ok(entries.size() == 3, "story.json ma 3 ekrany fabularne (jest %d)" % entries.size())
+	var stage_count: int = int(Level.load_level_data("res://data/level_1.json")["stages"].size())
+	var ids := {}
+	for e in entries:
+		var id := str(e.get("id", ""))
+		ok(id != "" and not ids.has(id), "unikalny id ekranu fabularnego: " + id)
+		ids[id] = true
+		ok(int(e.get("before_stage", -1)) >= 0 and int(e.get("before_stage", -1)) < stage_count, "%s: before_stage w zakresie etapów" % id)
+		ok(str(e.get("title", "")) != "" and str(e.get("kicker", "")) != "", "%s: tytuł i podtytuł" % id)
+		ok(ResourceLoader.exists(str(e.get("image", ""))), "%s: istnieje ilustracja" % id)
+		var pages: Array = e.get("pages", [])
+		ok(pages.size() >= 3, "%s: co najmniej 3 strony" % id)
+		for pg in pages:
+			ok(typeof(pg) == TYPE_ARRAY and pg.size() > 0 and str(pg[0]).length() > 10, "%s: strona z tekstem" % id)
+			ok(StoryScreen.page_to_bbcode(pg).length() < 520, "%s: strona mieści się w panelu (<520 znaków)" % id)
+	ok(StoryScreen.entry_for_stage(1).is_empty(), "etap 2 (wieś) bez ekranu fabularnego")
+	ok(str(StoryScreen.entry_for_stage(0).get("id", "")) == "wies", "przed etapem 1: prolog we wsi")
+	ok(str(StoryScreen.entry_for_stage(2).get("id", "")) == "las", "przed etapem 3: las")
+	ok(str(StoryScreen.entry_for_stage(3).get("id", "")) == "czempion", "przed etapem 4: czempion")
+	var bb := StoryScreen.page_to_bbcode(["Tekst [x]", "— Dialog"])
+	ok(bb.contains("[lb]x]") and bb.contains("[color=" + StoryScreen.DIALOG_COLOR + "]"), "BBCode: nawiasy escapowane, dialog złoty")
+	# przejście przez wszystkie strony: pierwsze advance kończy pisanie, drugie zmienia stronę
+	var sc := StoryScreen.new()
+	sc.setup(entries[0])
+	add_child(sc)
+	var fin := [0]
+	sc.finished.connect(func(): fin[0] += 1)
+	var pages_n: int = sc.pages.size()
+	for i in pages_n:
+		ok(sc.page == i and sc.typing, "strona %d startuje w trakcie pisania" % i)
+		sc.advance()
+		ok(not sc.typing and is_equal_approx(sc.rich.visible_ratio, 1.0), "pierwsze advance dopisuje stronę %d" % i)
+		sc.advance()
+	ok(fin[0] == 1, "po ostatniej stronie dokładnie jedno finished")
+	sc.advance(); sc.skip_all()
+	ok(fin[0] == 1, "po zakończeniu kolejne wywołania nic nie robią")
+	sc.queue_free()
+	var sk := StoryScreen.new()
+	sk.setup(entries[1])
+	add_child(sk)
+	var fin2 := [0]
+	sk.finished.connect(func(): fin2[0] += 1)
+	sk.skip_all()
+	ok(fin2[0] == 1, "Pomiń kończy od razu")
+	sk.queue_free()
+	# logika wyzwalania w poziomie: raz na etap, wyłączalna, pomijana po kontynuacji z checkpointu
+	GameState.story_enabled = true
+	var lvl := make_level()
+	ok(str(lvl._story_to_show(0).get("id", "")) == "wies", "start gry pokazuje prolog")
+	ok(lvl._story_to_show(0).is_empty(), "ten sam ekran nie pokazuje się drugi raz")
+	ok(lvl._story_to_show(1).is_empty(), "etap bez wpisu: brak ekranu")
+	ok(str(lvl._story_to_show(2).get("id", "")) == "las", "wejście w etap 3 pokazuje las")
+	free_level(lvl)
+	GameState.story_enabled = false
+	var lvl2 := make_level()
+	ok(lvl2._story_to_show(0).is_empty(), "story_enabled=false wyłącza ekrany")
+	free_level(lvl2)
+	GameState.story_enabled = true
+	var lvl3 := Level.new({}, 5)
+	lvl3.simulate_only = true
+	add_child(lvl3)
+	ok(lvl3._story_to_show(2).is_empty(), "kontynuacja z checkpointu nie powtarza fabuły etapów za graczem")
+	ok(str(lvl3._story_to_show(3).get("id", "")) == "czempion", "kontynuacja: przed bossem fabuła pokazuje się raz")
+	free_level(lvl3)
 
 func t_full_run_bot() -> void:
 	var lvl := make_level()

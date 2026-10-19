@@ -17,6 +17,7 @@ func _ready() -> void:
 	run.call_deferred()
 
 func run() -> void:
+	GameState.story_enabled = false
 	lvl = Level.new()
 	add_child(lvl)
 	await frames(5)
