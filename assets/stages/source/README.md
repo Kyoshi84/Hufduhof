@@ -16,3 +16,9 @@ i tę samą paralaksę co `far2`). Szwy powtarzania poziomego są zamazane, kolo
 ## Surowe grafiki ruchomych elementów
 Folder `elements/` zawiera miejsce na każdy rekwizyt (drzewo, dom, płot, beczka, kałuża...): `elements/<etap>/<element>/`.
 Spis i rozmiary: `elements/ELEMENTY.md`. Struktura jest generowana: `python3 tools/make_source_folders.py`.
+
+## Rekwizyty wygenerowane z panoramy
+`python3 tools/build_props.py` buduje gotowe rekwizyty (`assets/stages/<etap>/props/`) i zapisuje ich źródła w
+`elements/<etap>/<element>/<element>_source.png` (wycięcie z panoramy w pełnej rozdzielczości albo 4x powiększona wersja
+rysowana kodem, `tools/pixart.py`). Chata ze strzechą, chata z gontem, spalona chata, wóz i studnia to wycięcia z panoramy;
+pozostałe są rysowane w jej paletą i konturem. Każdy plik można podmienić własnym o tej samej nazwie i rozmiarze.
