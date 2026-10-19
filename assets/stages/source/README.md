@@ -12,3 +12,7 @@ i tę samą paralaksę co `far2`). Szwy powtarzania poziomego są zamazane, kolo
 
 Żeby podmienić tło na docelowe, wystarczy wgrać własny plik o tej samej nazwie i rozmiarze do folderu etapu
 (skrypt nadpisuje pliki tylko po ponownym uruchomieniu, więc nie uruchamiaj go po ręcznej podmianie).
+
+## Surowe grafiki ruchomych elementów
+Folder `elements/` zawiera miejsce na każdy rekwizyt (drzewo, dom, płot, beczka, kałuża...): `elements/<etap>/<element>/`.
+Spis i rozmiary: `elements/ELEMENTY.md`. Struktura jest generowana: `python3 tools/make_source_folders.py`.

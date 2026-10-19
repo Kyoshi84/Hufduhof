@@ -1,0 +1,10 @@
+# grass_tuft
+
+Kępa trawy / chwastów
+
+- Docelowy rozmiar w grze: **30x18 px** (1 piksel = 4/3 jednostki świata).
+- Pivot: środek dolnej krawędzi PNG (punkt styku z podłożem).
+- Element **jeszcze niepodłączony do gry** (dziś część tła lub rysowany proceduralnie); folder czeka na przyszłe rozszerzenie.
+
+Tu wrzucasz **surowe** pliki (wycięcie z panoramy, obraz w wyższej rozdzielczości, warstwy robocze).
+Gotowy plik w rozmiarze docelowym trafia do `assets/stages/stage4_lair/props/` (nazwa `grass_tuft.png`, kolejne warianty `grass_tuft_2.png` ... `grass_tuft_6.png`).
