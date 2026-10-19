@@ -17,7 +17,7 @@ func _ready() -> void:
 	var tests := [
 		"t_balance", "t_hit_geometry", "t_single_hit_per_attack", "t_invulnerability", "t_light_timing",
 		"t_skaven_ai", "t_hound_charge", "t_beastman_poise", "t_boss_phases", "t_wave_flow", "t_pause_state",
-		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_story", "t_tavern", "t_full_run_bot",
+		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_story", "t_tavern", "t_music", "t_full_run_bot",
 	]
 	for t in tests:
 		var t0 := Time.get_ticks_msec()
@@ -57,6 +57,40 @@ func free_level(lvl: Level) -> void:
 	lvl.queue_free()
 
 # ------------------------------------------------------------------ testy
+
+func t_music() -> void:
+	var cfg: Dictionary = Sfx.load_music_cfg()
+	var tracks: Dictionary = cfg.get("tracks", {})
+	for k in ["menu", "stage", "boss"]:
+		ok(tracks.has(k), "music.json: utwór %s" % k)
+		var f := str(tracks.get(k, {}).get("file", ""))
+		ok(ResourceLoader.exists(f), "plik muzyki istnieje: %s" % f)
+		if ResourceLoader.exists(f):
+			var st = load(f)
+			ok(st is AudioStreamOggVorbis, "%s to OGG" % k)
+			var ln: float = st.get_length()
+			ok(ln > 20.0 and ln < 150.0, "%s: długość pętli %.1f s" % [k, ln])
+	# przepływ ekranów: menu -> prolog (cisza) -> etap 1 (muzyka) -> boss
+	var main = load("res://main.tscn").instantiate()
+	add_child(main)
+	ok(Sfx.current_track == "menu", "menu główne gra motyw menu")
+	main.show_settings()
+	ok(Sfx.current_track == "menu", "ustawienia nie przerywają motywu menu")
+	main.show_menu()
+	main.show_prologue()
+	ok(Sfx.current_track == "", "prolog (Etap 0) bez muzyki")
+	main.show_tavern()
+	ok(Sfx.current_track == "", "karczma (Etap 0) bez muzyki")
+	main.begin_level(0)
+	ok(Sfx.current_track == "stage", "etap 1 gra motyw rozgrywki")
+	var lvl: Level = main.current
+	lvl.spawn_enemy("chaos_champion", "right")
+	ok(Sfx.current_track == "boss", "pojawienie się Czempiona włącza motyw bossa")
+	main.show_menu()
+	ok(Sfx.current_track == "menu", "powrót do menu przywraca motyw menu")
+	Sfx.stop_music()
+	main.queue_free()
+	get_tree().paused = false
 
 func t_balance() -> void:
 	ok(Balance.validate().is_empty(), "balans przechodzi walidację: %s" % str(Balance.validate()))

@@ -40,6 +40,22 @@ od razu do etapu 1; „Kontynuuj” i ponowna próba po porażce w ogóle pomija
 - Grafiki: `assets/minigame/*.png`, generator `tools/build_tavern_art.py` (w razie potrzeby podmień pliki własnymi o tych samych nazwach).
 - Zrzuty: `tests/shots_tavern.tscn` (wymaga xvfb), testy: `t_tavern` w `tests/test_runner.gd`.
 
+## Muzyka
+Trzy zapętlone motywy w stylu automatów z lat 90. (FM jak w YM2151, kwadraty, szum, uderzenia orkiestry), zbudowane na **melodii
+piosenki „Oath of the Carroburg Guard” (Przysięga Szkarłatnej Gwardii)**. Z piosenki wzięte są tylko: tonacja c-moll, tempo 136 BPM,
+progresja c-As-Es-B i linia wokalu (refren „I am the fire that drives out evil…” i zwrotka). Brzmienie jest w całości syntezowane.
+
+| Utwór | Plik | Kiedy gra |
+|---|---|---|
+| Motyw menu | `assets/audio/music/menu_theme.ogg` (49 s) | menu główne, ustawienia, informacje |
+| Motyw rozgrywki | `assets/audio/music/stage_theme.ogg` (78 s) | etapy 1-4 |
+| Motyw bossa | `assets/audio/music/boss_theme.ogg` (50 s, 152 BPM) | od pojawienia się Czempiona Chaosu |
+
+**Prolog (Etap 0, karczma) gra bez muzyki** – motyw wchodzi dopiero w etapie 1. Po pokonaniu bossa muzyka cichnie.
+- Pliki i głośność (`volume_db`) każdego utworu: `data/music.json`. Podmiana: wrzuć własny OGG/WAV/MP3 i wpisz ścieżkę w `file`.
+- Generator: `python3 tools/build_music.py` (syntezator: `tools/chipsynth.py`, melodia zapisana w nutach na górze pliku).
+- Kod: `Sfx.play_track("menu"|"stage"|"boss")` w `scripts/autoload/sfx.gd`; test: `t_music`.
+
 ## Kolizje miecza i diagnostyka
 Cała geometria walki jest w `scripts/combat/hit_shape.gd` (jedno źródło prawdy), liczona na płaszczyźnie podłoża względem **punktu stóp**,
 niezależnie od rozmiaru sprite'a i kamery:

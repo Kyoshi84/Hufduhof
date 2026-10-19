@@ -1,0 +1,9 @@
+{
+  "_opis": "Muzyka gry. Plik 'file' mozna podmienic wlasnym (ogg/wav/mp3). volume_db: glosnosc utworu (0 = bez zmian, -6 = ok. polowa). Prolog (Etap 0) gra bez muzyki.",
+  "fade_in": 0.6,
+  "tracks": {
+    "menu":  { "file": "res://assets/audio/music/menu_theme.ogg",  "volume_db": 0.0 },
+    "stage": { "file": "res://assets/audio/music/stage_theme.ogg", "volume_db": -3.0 },
+    "boss":  { "file": "res://assets/audio/music/boss_theme.ogg",  "volume_db": 0.0 }
+  }
+}

@@ -15,7 +15,8 @@ assets/
     props/<rekwizyt>.png (+ warianty _2 ... _6)
     README.md
   palette/                    wspólna paleta 256 kolorów (+ tablica LUT dla shadera)
-  audio/sfx, audio/music      dźwięki (nazwy w scripts/autoload/sfx.gd)
+  audio/sfx                   dźwięki (nazwy w scripts/autoload/sfx.gd)
+  audio/music                 motywy menu / etapów / bossa (lista i głośność w data/music.json)
   ui/                         portret w menu
 ```
 

@@ -20,7 +20,7 @@ func _swap(n: Node) -> void:
 func show_menu() -> void:
 	get_tree().paused = false
 	Controls.reset()
-	Sfx.stop_music()
+	Sfx.play_track("menu")
 	var root := Control.new()
 	root.theme = UI.theme()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -85,8 +85,9 @@ func begin_level(from_wave: int) -> void:
 	lvl.restart_requested.connect(func(): start_game(false, true))
 	_swap(lvl)
 
+## Prolog (Etap 0) jest bez muzyki - motyw wchodzi dopiero w etapie 1.
 func show_prologue() -> void:
-	Sfx.stop_music()
+	Sfx.stop_music(0.8)
 	var pre: Dictionary = StoryScreen.entry_for_phase("pre")
 	if pre.is_empty():
 		show_tavern()

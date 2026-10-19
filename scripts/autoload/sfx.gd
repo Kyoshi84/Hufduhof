@@ -1,7 +1,8 @@
 extends Node
 ## Warstwa audio. Brak plików => tymczasowe dźwięki syntezowane w kodzie.
-## Aby podmienić dźwięk, wrzuć plik assets/audio/sfx/<nazwa>.ogg|wav|mp3
-## (muzyka: assets/audio/music/battle.ogg|wav|mp3). Kod gry nie wymaga zmian.
+## Aby podmienić dźwięk, wrzuć plik assets/audio/sfx/<nazwa>.ogg|wav|mp3. Kod gry nie wymaga zmian.
+## Muzyka: utwory i ich głośność opisuje data/music.json (menu, etapy 1-4, boss).
+## Prolog (Etap 0) celowo gra bez muzyki.
 
 const RATE := 22050
 const SFX_NAMES := [
@@ -14,6 +15,10 @@ var streams: Dictionary = {}
 var _pool: Array = []
 var _music: AudioStreamPlayer
 var _last_play: Dictionary = {}
+var music_cfg: Dictionary = {}
+var current_track: String = ""
+var _fade: Tween
+const MUSIC_CFG := "res://data/music.json"
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -27,6 +32,7 @@ func _ready() -> void:
 	_music = AudioStreamPlayer.new()
 	_music.bus = "Music"
 	add_child(_music)
+	music_cfg = load_music_cfg()
 	for n in SFX_NAMES:
 		streams[n] = _load_override("sfx", n)
 		if streams[n] == null:
@@ -63,17 +69,59 @@ func play(sfx_name: String, pitch: float = 1.0) -> void:
 			p.play()
 			return
 
+static func load_music_cfg() -> Dictionary:
+	if not FileAccess.file_exists(MUSIC_CFG):
+		return {}
+	var d = JSON.parse_string(FileAccess.get_file_as_string(MUSIC_CFG))
+	return d if d is Dictionary else {}
+
+## Zgodność wstecz: muzyka etapów.
 func play_music() -> void:
-	if _music.playing:
+	play_track("stage")
+
+## Włącza utwór z data/music.json ("menu", "stage", "boss") z płynnym przejściem.
+## Ten sam utwór, który już gra, nie jest restartowany.
+func play_track(track: String) -> void:
+	if current_track == track and _music.playing:
 		return
-	var m = _load_override("music", "battle")
+	var tracks: Dictionary = music_cfg.get("tracks", {})
+	var info: Dictionary = tracks.get(track, {})
+	var m = null
+	var f := str(info.get("file", ""))
+	if f != "" and ResourceLoader.exists(f):
+		m = load(f)
+	if m == null:
+		m = _load_override("music", "battle")
 	if m == null:
 		m = _synth_music()
+	if m is AudioStreamOggVorbis:
+		m.loop = true
+	current_track = track
+	var target_db := float(info.get("volume_db", 0.0))
+	var fade_in := float(music_cfg.get("fade_in", 0.6))
+	if _fade != null:
+		_fade.kill()
 	_music.stream = m
+	_music.volume_db = -40.0 if fade_in > 0.0 else target_db
 	_music.play()
+	if fade_in > 0.0 and is_inside_tree():
+		_fade = create_tween()
+		_fade.tween_property(_music, "volume_db", target_db, fade_in)
 
-func stop_music() -> void:
-	_music.stop()
+func stop_music(fade_out: float = 0.0) -> void:
+	current_track = ""
+	if _fade != null:
+		_fade.kill()
+		_fade = null
+	if fade_out > 0.0 and _music.playing and is_inside_tree():
+		_fade = create_tween()
+		_fade.tween_property(_music, "volume_db", -40.0, fade_out)
+		_fade.tween_callback(_music.stop)
+	else:
+		_music.stop()
+
+func is_music_playing() -> bool:
+	return _music.playing and current_track != ""
 
 func _load_override(folder: String, file: String):
 	for ext in ["ogg", "wav", "mp3"]:

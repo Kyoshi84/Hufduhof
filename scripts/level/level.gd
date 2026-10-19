@@ -316,6 +316,8 @@ func spawn_enemy(type: String, side: String) -> Enemy:
 	if e is Boss:
 		boss = e
 		Sfx.play("boss_roar")
+		if not simulate_only:
+			Sfx.play_track("boss")
 	return e
 
 func remove_enemy(e: Enemy) -> void:
@@ -420,7 +422,7 @@ func on_boss_defeated(b: Boss) -> void:
 	spawn_queue.clear()
 	shake = 18.0
 	freeze_time = 0.25
-	Sfx.stop_music()
+	Sfx.stop_music(1.2)
 
 func on_barrel_broken(b: Barrel) -> void:
 	GameState.add_score(int(data.get("barrel_score", Balance.data.get("score", {}).get("barrel", 20))))
