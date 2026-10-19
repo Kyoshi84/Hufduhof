@@ -21,12 +21,24 @@ wybór kierunku 8-stronnego oraz pełne przejście poziomu przez bota.
 Zrzuty ekranu z prawdziwym renderowaniem (np. `xvfb-run`): `res://tests/shots.tscn`, `res://tests/shots2.tscn` → `/home/claude/shots`.
 
 ## Ekrany fabularne
-Między etapami gra pokazuje ekrany z ilustracją i tekstem (prolog we wsi, las, czempion). Treść, tytuły i miejsce wyświetlenia
+Między etapami gra pokazuje ekrany z ilustracją i tekstem (las, czempion; prolog opisany niżej). Treść, tytuły i miejsce wyświetlenia
 (`before_stage` = numer etapu od 0) są w `data/story.json`; ilustracje w `assets/ui/story/` (generator: `tools/build_story_art.py`,
 każdą można podmienić własną 1280x720). Sterowanie: dotyk/klik/Enter/Spacja = dalej (pierwsze dotknięcie dopisuje stronę do końca),
 „Pomiń” albo Esc kończy cały ekran. Po „Kontynuuj” z checkpointu ekrany etapów za graczem się nie powtarzają.
 Kod: `scripts/ui/story_screen.gd`, wyzwalanie w `scripts/level/level.gd` (`update_stage_banner`). Testy i zrzuty ekranu wyłączają fabułę
 przez `GameState.story_enabled = false`.
+
+## Prolog (Etap 0): karczma
+„Nowa gra” zaczyna się prologiem: ekran fabularny `karczma` -> minigra -> ekran `szczury` -> etap 1. W karczmie gracz steruje pijakiem
+Borubarem, który łapie kufle zrzucane z balkonu przez karczmarza (A/D, strzałki, joystick albo przeciągnięcie palcem). Złoty kufel
+Bugmana liczy się za 3, rozbity kufel pod nogami ogłusza Borubara na chwilę (nie ma „game over”), tempo rośnie z postępem. Po 50 kuflach
+drzwi wylatują z zawiasów, wskakują szczuroludzie, a Ivo - jeden z gości pod ścianą - rusza do walki. „Pomiń prolog” (albo Esc) przeskakuje
+od razu do etapu 1; „Kontynuuj” i ponowna próba po porażce w ogóle pomijają prolog.
+- Kod: `scripts/minigame/tavern_game.gd` (logika `step()` oddzielona od wyglądu, parametry w stałych na górze pliku, np. `GOAL`),
+  przełączanie w `scripts/main.gd` (`start_game`, `show_prologue`, `show_tavern`).
+- Teksty: wpisy z `"phase": "pre"` / `"post"` w `data/story.json`.
+- Grafiki: `assets/minigame/*.png`, generator `tools/build_tavern_art.py` (w razie potrzeby podmień pliki własnymi o tych samych nazwach).
+- Zrzuty: `tests/shots_tavern.tscn` (wymaga xvfb), testy: `t_tavern` w `tests/test_runner.gd`.
 
 ## Kolizje miecza i diagnostyka
 Cała geometria walki jest w `scripts/combat/hit_shape.gd` (jedno źródło prawdy), liczona na płaszczyźnie podłoża względem **punktu stóp**,

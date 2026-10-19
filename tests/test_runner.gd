@@ -17,7 +17,7 @@ func _ready() -> void:
 	var tests := [
 		"t_balance", "t_hit_geometry", "t_single_hit_per_attack", "t_invulnerability", "t_light_timing",
 		"t_skaven_ai", "t_hound_charge", "t_beastman_poise", "t_boss_phases", "t_wave_flow", "t_pause_state",
-		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_story", "t_full_run_bot",
+		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_story", "t_tavern", "t_full_run_bot",
 	]
 	for t in tests:
 		var t0 := Time.get_ticks_msec()
@@ -906,23 +906,30 @@ func t_stage_art() -> void:
 
 func t_story() -> void:
 	var entries: Array = StoryScreen.load_entries()
-	ok(entries.size() == 3, "story.json ma 3 ekrany fabularne (jest %d)" % entries.size())
+	ok(entries.size() == 4, "story.json ma 4 ekrany fabularne: 2 prologu + las + czempion (jest %d)" % entries.size())
 	var stage_count: int = int(Level.load_level_data("res://data/level_1.json")["stages"].size())
 	var ids := {}
 	for e in entries:
 		var id := str(e.get("id", ""))
 		ok(id != "" and not ids.has(id), "unikalny id ekranu fabularnego: " + id)
 		ids[id] = true
-		ok(int(e.get("before_stage", -1)) >= 0 and int(e.get("before_stage", -1)) < stage_count, "%s: before_stage w zakresie etapów" % id)
+		var is_prologue: bool = str(e.get("phase", "")) != ""
+		if is_prologue:
+			ok(str(e["phase"]) in ["pre", "post"] and not e.has("before_stage"), "%s: wpis prologu ma phase pre/post, bez before_stage" % id)
+		else:
+			ok(int(e.get("before_stage", -1)) >= 0 and int(e.get("before_stage", -1)) < stage_count, "%s: before_stage w zakresie etapów" % id)
 		ok(str(e.get("title", "")) != "" and str(e.get("kicker", "")) != "", "%s: tytuł i podtytuł" % id)
 		ok(ResourceLoader.exists(str(e.get("image", ""))), "%s: istnieje ilustracja" % id)
 		var pages: Array = e.get("pages", [])
-		ok(pages.size() >= 3, "%s: co najmniej 3 strony" % id)
+		ok(pages.size() >= (2 if is_prologue else 3), "%s: wystarczająco stron" % id)
 		for pg in pages:
 			ok(typeof(pg) == TYPE_ARRAY and pg.size() > 0 and str(pg[0]).length() > 10, "%s: strona z tekstem" % id)
 			ok(StoryScreen.page_to_bbcode(pg).length() < 520, "%s: strona mieści się w panelu (<520 znaków)" % id)
 	ok(StoryScreen.entry_for_stage(1).is_empty(), "etap 2 (wieś) bez ekranu fabularnego")
-	ok(str(StoryScreen.entry_for_stage(0).get("id", "")) == "wies", "przed etapem 1: prolog we wsi")
+	ok(StoryScreen.entry_for_stage(0).is_empty(), "przed etapem 1 poziom nie pokazuje prologu (jest osobno, w karczmie)")
+	ok(str(StoryScreen.entry_for_phase("pre").get("id", "")) == "karczma", "prolog: opis przed minigrą")
+	ok(str(StoryScreen.entry_for_phase("post").get("id", "")) == "szczury", "prolog: opis po minigrze")
+	ok(StoryScreen.entry_for_phase("nieistniejaca").is_empty(), "nieznana faza => pusty wpis")
 	ok(str(StoryScreen.entry_for_stage(2).get("id", "")) == "las", "przed etapem 3: las")
 	ok(str(StoryScreen.entry_for_stage(3).get("id", "")) == "czempion", "przed etapem 4: czempion")
 	var bb := StoryScreen.page_to_bbcode(["Tekst [x]", "— Dialog"])
@@ -954,8 +961,7 @@ func t_story() -> void:
 	# logika wyzwalania w poziomie: raz na etap, wyłączalna, pomijana po kontynuacji z checkpointu
 	GameState.story_enabled = true
 	var lvl := make_level()
-	ok(str(lvl._story_to_show(0).get("id", "")) == "wies", "start gry pokazuje prolog")
-	ok(lvl._story_to_show(0).is_empty(), "ten sam ekran nie pokazuje się drugi raz")
+	ok(lvl._story_to_show(0).is_empty(), "start poziomu nie powtarza prologu z karczmy")
 	ok(lvl._story_to_show(1).is_empty(), "etap bez wpisu: brak ekranu")
 	ok(str(lvl._story_to_show(2).get("id", "")) == "las", "wejście w etap 3 pokazuje las")
 	free_level(lvl)
@@ -970,6 +976,119 @@ func t_story() -> void:
 	ok(lvl3._story_to_show(2).is_empty(), "kontynuacja z checkpointu nie powtarza fabuły etapów za graczem")
 	ok(str(lvl3._story_to_show(3).get("id", "")) == "czempion", "kontynuacja: przed bossem fabuła pokazuje się raz")
 	free_level(lvl3)
+
+func make_tavern() -> TavernGame:
+	var g := TavernGame.new()
+	g.auto_step = false
+	g.rng.seed = 7
+	add_child(g)
+	return g
+
+func t_tavern() -> void:
+	var g := make_tavern()
+	ok(g.phase == TavernGame.Phase.PLAY and g.caught == 0 and g.goal == 50, "prolog: start, cel 50 kufli")
+	# ruch Borubara: przyspiesza, ma granice
+	g.input_override = 1.0
+	for i in 600:
+		g.step(1.0 / 60.0)
+		g.mugs.clear()
+		g.spawn_t = 99.0
+	ok(is_equal_approx(g.boru_x, TavernGame.BORU_MAX), "Borubar zatrzymuje się na prawej ścianie")
+	g.input_override = -1.0
+	for i in 20:
+		g.step(1.0 / 60.0)
+	ok(g.boru_x < TavernGame.BORU_MAX - 100.0, "Borubar reaguje na sterowanie")
+	g.input_override = 0.0
+	for i in 60:
+		g.step(1.0 / 60.0)
+	ok(absf(g.boru_vx) < 0.01, "bez sterowania Borubar staje")
+	# łapanie: kufel nad wielkim kuflem
+	g.mugs.clear()
+	var bx: float = g.boru_x
+	g.drop_mug(bx, false, 400.0)
+	var before: int = g.caught
+	for i in 120:
+		g.step(1.0 / 60.0)
+		g.spawn_t = 99.0
+	ok(g.caught == before + 1 and g.mugs.is_empty() and g.missed == 0, "kufel nad Borubarem zostaje złapany (+1)")
+	g.drop_mug(bx, true, 400.0)
+	before = g.caught
+	for i in 120:
+		g.step(1.0 / 60.0)
+		g.spawn_t = 99.0
+	ok(g.caught == before + TavernGame.GOLD_VALUE, "złoty kufel liczy się za %d" % TavernGame.GOLD_VALUE)
+	# pudło: rozbity kufel, Borubar ogłuszony tylko gdy blisko
+	g.drop_mug(bx + 300.0 if bx < 800.0 else bx - 300.0, false, 600.0)
+	before = g.caught
+	for i in 120:
+		g.step(1.0 / 60.0)
+		g.spawn_t = 99.0
+	ok(g.missed == 1 and g.caught == before and g.stun == 0.0, "kufel daleko od Borubara rozbija się bez kary")
+	g.drop_mug(bx, false, 600.0)
+	g.mugs[0]["y"] = TavernGame.CATCH_Y + 5.0          # tuż pod linią łapania => spada Borubarowi na nogi
+	for i in 40:
+		g.step(1.0 / 60.0)
+		g.spawn_t = 99.0
+	ok(g.missed == 2 and g.splashes.size() >= 1, "rozlane kufle są liczone")
+	g.drop_mug(bx, false, 400.0)
+	g.mugs[0]["y"] = TavernGame.FLOOR_Y - 5.0
+	g.step(1.0 / 60.0)
+	ok(g.stun > 0.0, "kufel rozbity przy stopach ogłusza Borubara")
+	var cb := [0, true]
+	g.finished.connect(func(sk): cb[0] += 1; cb[1] = sk)
+	g.stun = 0.0
+	g.step(1.0 / 60.0)
+	# trudność rośnie z postępem
+	var easy_speed: float = g.fall_speed()
+	g.caught = 40
+	ok(g.fall_speed() > easy_speed and g.spawn_interval() < 1.25, "trudność rośnie wraz z liczbą kufli")
+	# dojście do 50 => scena ze szczurami
+	g.caught = 49
+	g.mugs.clear()
+	g.drop_mug(g.boru_x, false, 400.0)
+	for i in 120:
+		g.step(1.0 / 60.0)
+		g.spawn_t = 99.0
+		if g.phase != TavernGame.Phase.PLAY:
+			break
+	ok(g.caught >= 50 and g.phase == TavernGame.Phase.CUTSCENE, "50. kufel uruchamia scenę ze szczurami")
+	ok(g.mugs.is_empty() and g.rats.size() >= 8, "scena: kufle znikają, wskakują szczury")
+	var guard := 0
+	while g.phase == TavernGame.Phase.CUTSCENE and guard < 60 * 12:
+		g.step(1.0 / 60.0)
+		guard += 1
+	ok(g.door_open and g.phase == TavernGame.Phase.DONE, "scena: drzwi wyważone, koniec prologu")
+	ok(cb[0] == 1 and cb[1] == false, "dokładnie jedno finished(skipped=false)")
+	g.step(0.1); g.skip()
+	ok(cb[0] == 1, "po zakończeniu skip nic nie robi")
+	var all_landed := true
+	for r in g.rats:
+		all_landed = all_landed and bool(r["landed"])
+	ok(all_landed, "wszystkie szczury wylądowały na scenie")
+	g.queue_free()
+	# pominięcie z menu prologu
+	var g2 := make_tavern()
+	var cb2 := [0, false]
+	g2.finished.connect(func(sk): cb2[0] += 1; cb2[1] = sk)
+	g2.skip(); g2.skip()
+	ok(cb2[0] == 1 and cb2[1] == true, "Pomiń prolog: jedno finished(skipped=true)")
+	g2.queue_free()
+	# automatyczny karczmarz zrzuca kufle i co 9. jest złoty
+	var g3 := make_tavern()
+	var drops := 0
+	var golds := 0
+	for i in 60 * 40:
+		var n: int = g3.spawn_count
+		g3.step(1.0 / 60.0)
+		g3.boru_x = g3.mugs[0]["x"] if not g3.mugs.is_empty() and g3.mugs[0]["y"] > 300.0 else g3.boru_x
+		if g3.phase != TavernGame.Phase.PLAY:
+			break
+	ok(g3.spawn_count > 10, "karczmarz regularnie zrzuca kufle (%d)" % g3.spawn_count)
+	ok(g3.phase == TavernGame.Phase.CUTSCENE or g3.caught >= 20, "prowadzony gracz łapie większość kufli (%d)" % g3.caught)
+	g3.queue_free()
+	# assety prologu
+	for n in ["tavern_bg", "balcony_rail", "door_open", "borubar", "borubar_dizzy", "tankard_big", "innkeeper", "mug", "mug_gold", "splash", "stars", "guest_1", "guest_2", "guest_3", "guest_4", "guest_5", "guest_6"]:
+		ok(ResourceLoader.exists("res://assets/minigame/%s.png" % n), "istnieje grafika prologu: " + n)
 
 func t_full_run_bot() -> void:
 	var lvl := make_level()

@@ -38,6 +38,15 @@ static func entry_for_stage(stage: int, entries: Array = []) -> Dictionary:
 			return e
 	return {}
 
+## Wpis prologu: phase = "pre" (przed minigrą w karczmie) albo "post" (po niej, przed etapem 1).
+static func entry_for_phase(phase: String, entries: Array = []) -> Dictionary:
+	if entries.is_empty():
+		entries = load_entries()
+	for e in entries:
+		if str(e.get("phase", "")) == phase:
+			return e
+	return {}
+
 ## Zamienia akapity strony na BBCode (dialogi złote, tekst z escapowanymi nawiasami).
 static func page_to_bbcode(paragraphs: Array) -> String:
 	var out: PackedStringArray = []

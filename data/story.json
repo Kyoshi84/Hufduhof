@@ -2,17 +2,43 @@
  "_opis": "Ekrany fabularne. before_stage = numer etapu (od 0, wg stages w level_1.json), przed którym ekran się pokazuje. Akapity zaczynające się od '—' to dialogi (złote). Edytuj tekst bez ruszania kodu.",
  "stories": [
   {
-   "id": "wies",
+   "id": "karczma",
    "kicker": "PROLOG",
    "title": "Hufduhof",
-   "before_stage": 0,
+   "phase": "pre",
    "image": "res://assets/ui/story/story_village.png",
    "pages": [
-    ["W niewielkiej wsi Hufduhof trwa huczna zabawa. Przy stołach siedzą chłopi, leje się piwo, a miejscowi świętują udane zbiory.", "Ivo Eggert, gwardzista ze Szkarłatnej Gwardii z Carroburga, korzysta z chwili odpoczynku."],
-    ["Nagle drzwi karczmy otwierają się z hukiem. Do środka wpada zakrwawiony wieśniak.", "— Szczuroludzie! Ratujmy się! Atakują wieś!"],
-    ["Chwilę później rozlegają się krzyki, brzęk rozbijanych okien i piskliwe wrzaski dochodzące z ulicy. Szczuroludzie wdzierają się między domy, podpalają zabudowania i atakują uciekających mieszkańców."],
-    ["Ivo chwyta swój dwuręczny miecz.", "— Na Sigmara! Nie pozwolę, żeby te przeklęte bestie urządziły sobie ucztę z mieszkańców Imperium!"],
-    ["Gwardzista rusza przez wieś, przedzierając się przez kolejne fale przeciwników. Musi oczyścić ulicę, uratować ocalałych i dotrzeć do miejsca, z którego nadciąga największa grupa szczuroludzi."]
+    [
+     "W niewielkiej wsi Hufduhof trwa huczna zabawa. Przy stołach siedzą chłopi, leje się piwo, a miejscowi świętują udane zbiory.",
+     "Ivo Eggert, gwardzista ze Szkarłatnej Gwardii z Carroburga, korzysta z chwili odpoczynku."
+    ],
+    [
+     "Najgłośniej bawi się Borubar, miejscowy pijak, który nigdy nie wie, kiedy przestać.",
+     "Karczmarz, wściekły na jego długi, zrzuca z balkonu pełne kufle. Co spadnie na podłogę, to strata. Borubar ma zamiar nie stracić ani kropli!"
+    ]
+   ]
+  },
+  {
+   "id": "szczury",
+   "kicker": "PROLOG",
+   "title": "Szczuroludzie",
+   "phase": "post",
+   "image": "res://assets/ui/story/story_village.png",
+   "pages": [
+    [
+     "Nagle drzwi karczmy otwierają się z hukiem. Do środka wpada zakrwawiony wieśniak.",
+     "— Szczuroludzie! Ratujmy się! Atakują wieś!"
+    ],
+    [
+     "Chwilę później rozlegają się krzyki, brzęk rozbijanych okien i piskliwe wrzaski dochodzące z ulicy. Szczuroludzie wdzierają się między domy, podpalają zabudowania i atakują uciekających mieszkańców."
+    ],
+    [
+     "Ivo chwyta swój dwuręczny miecz.",
+     "— Na Sigmara! Nie pozwolę, żeby te przeklęte bestie urządziły sobie ucztę z mieszkańców Imperium!"
+    ],
+    [
+     "Gwardzista rusza przez wieś, przedzierając się przez kolejne fale przeciwników. Musi oczyścić ulicę, uratować ocalałych i dotrzeć do miejsca, z którego nadciąga największa grupa szczuroludzi."
+    ]
    ]
   },
   {
@@ -22,11 +48,24 @@
    "before_stage": 2,
    "image": "res://assets/ui/story/story_forest.png",
    "pages": [
-    ["Po opuszczeniu wsi Ivo dociera do starej studni przy skraju lasu. W pobliżu siedzi wyczerpany mężczyzna, który wygląda, jakby właśnie uciekł przed śmiercią.", "— Hej, ty! Jak cię zwą? — pyta Ivo."],
-    ["— Jestem Borubar, panie. Ledwo uszedłem z życiem! W lesie zalęgły się Zwierzoludzie. Widziałem ich dziesiątki. Rozszarpują każdego, kto zapuści się między drzewa!"],
-    ["Ivo spogląda na ciemną ścianę lasu.", "— Zwierzoludzie, szczuroludzie… Za dużo tego jak na jedną spokojną okolicę. Pokaż mi, którędy przyszli."],
-    ["Borubar wskazuje zarośnięty trakt prowadzący w głąb puszczy. Ivo rusza przed siebie, a odgłosy rogów i dzikich wrzasków stają się coraz głośniejsze."],
-    ["Między drzewami pojawiają się pierwsze sylwetki zwierzoludzi — potężnych, rogowych bestii uzbrojonych w topory, maczugi i prymitywne włócznie. Zastępują drogę i rzucają się do ataku.", "Ivo musi przedrzeć się przez leśne zasadzki, pokonać wojowników i dotrzeć do obozowiska, w którym gromadzą się siły wroga."]
+    [
+     "Po opuszczeniu wsi Ivo dociera do starej studni przy skraju lasu. W pobliżu siedzi wyczerpany mężczyzna, który wygląda, jakby właśnie uciekł przed śmiercią.",
+     "— Hej, ty! Jak cię zwą? — pyta Ivo."
+    ],
+    [
+     "— Jestem Borubar, panie. Ledwo uszedłem z życiem! W lesie zalęgły się Zwierzoludzie. Widziałem ich dziesiątki. Rozszarpują każdego, kto zapuści się między drzewa!"
+    ],
+    [
+     "Ivo spogląda na ciemną ścianę lasu.",
+     "— Zwierzoludzie, szczuroludzie… Za dużo tego jak na jedną spokojną okolicę. Pokaż mi, którędy przyszli."
+    ],
+    [
+     "Borubar wskazuje zarośnięty trakt prowadzący w głąb puszczy. Ivo rusza przed siebie, a odgłosy rogów i dzikich wrzasków stają się coraz głośniejsze."
+    ],
+    [
+     "Między drzewami pojawiają się pierwsze sylwetki zwierzoludzi — potężnych, rogowych bestii uzbrojonych w topory, maczugi i prymitywne włócznie. Zastępują drogę i rzucają się do ataku.",
+     "Ivo musi przedrzeć się przez leśne zasadzki, pokonać wojowników i dotrzeć do obozowiska, w którym gromadzą się siły wroga."
+    ]
    ]
   },
   {
@@ -36,9 +75,16 @@
    "before_stage": 3,
    "image": "res://assets/ui/story/story_champion.png",
    "pages": [
-    ["Ivo dociera na otwartą przestrzeń przed fortecą. Słońce znika za horyzontem, choć jeszcze przed chwilą był środek dnia. Nad ziemią zaczyna pełznąć nienaturalna mgła. Ziemia drży, a z wnętrza murów dobiega głuchy dźwięk rogów wojennych."],
-    ["W oknach wież rozbłyskują czerwone światła. Na murach powiewają sztandary oznaczone bluźnierczymi symbolami.", "Nagle brama fortecy otwiera się z przeciągłym zgrzytem."],
-    ["Z mgły wyłania się olbrzymia postać w czarnej, kolczastej zbroi. W dłoniach dzierży ogromną broń, a z jego hełmu wyrastają zakrzywione rogi. Każdy jego krok rozrywa ziemię pod stopami."]
+    [
+     "Ivo dociera na otwartą przestrzeń przed fortecą. Słońce znika za horyzontem, choć jeszcze przed chwilą był środek dnia. Nad ziemią zaczyna pełznąć nienaturalna mgła. Ziemia drży, a z wnętrza murów dobiega głuchy dźwięk rogów wojennych."
+    ],
+    [
+     "W oknach wież rozbłyskują czerwone światła. Na murach powiewają sztandary oznaczone bluźnierczymi symbolami.",
+     "Nagle brama fortecy otwiera się z przeciągłym zgrzytem."
+    ],
+    [
+     "Z mgły wyłania się olbrzymia postać w czarnej, kolczastej zbroi. W dłoniach dzierży ogromną broń, a z jego hełmu wyrastają zakrzywione rogi. Każdy jego krok rozrywa ziemię pod stopami."
+    ]
    ]
   }
  ]

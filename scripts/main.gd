@@ -59,21 +59,61 @@ func show_menu() -> void:
 		vb.add_child(UI.make_label("Najlepszy wynik: %d" % SaveData.best_score, 24, Color(0.8, 0.75, 0.62)))
 	_swap(root)
 
-func start_game(continue_save: bool) -> void:
+## Nowa gra zaczyna się prologiem (opis -> karczma z kuflami -> szczury -> opis); Kontynuuj i ponowna próba po porażce go pomijają.
+func start_game(continue_save: bool, skip_prologue: bool = false) -> void:
 	get_tree().paused = false
 	GameState.reset()
 	Controls.reset()
 	var from_wave := 0
-	if continue_save and SaveData.has_checkpoint():
+	var resumed: bool = continue_save and SaveData.has_checkpoint()
+	if resumed:
 		from_wave = int(SaveData.checkpoint["wave"])
 		GameState.score = int(SaveData.checkpoint.get("score", 0))
 		GameState.kills = int(SaveData.checkpoint.get("kills", 0))
 	else:
 		SaveData.clear_checkpoint()
+	if not resumed and not skip_prologue and GameState.story_enabled:
+		show_prologue()
+		return
+	begin_level(from_wave)
+
+func begin_level(from_wave: int) -> void:
+	get_tree().paused = false
+	Controls.reset()
 	var lvl := Level.new({}, from_wave)
 	lvl.exit_to_menu.connect(show_menu)
-	lvl.restart_requested.connect(func(): start_game(false))
+	lvl.restart_requested.connect(func(): start_game(false, true))
 	_swap(lvl)
+
+func show_prologue() -> void:
+	Sfx.stop_music()
+	var pre: Dictionary = StoryScreen.entry_for_phase("pre")
+	if pre.is_empty():
+		show_tavern()
+	else:
+		show_story(pre, show_tavern)
+
+func show_story(entry: Dictionary, done: Callable) -> void:
+	var root := Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var sc := StoryScreen.new()
+	sc.setup(entry)
+	sc.finished.connect(done)
+	root.add_child(sc)
+	_swap(root)
+
+func show_tavern() -> void:
+	var g := TavernGame.new()
+	g.finished.connect(func(skipped: bool):
+		if skipped:
+			begin_level(0)
+			return
+		var post: Dictionary = StoryScreen.entry_for_phase("post")
+		if post.is_empty():
+			begin_level(0)
+		else:
+			show_story(post, func(): begin_level(0)))
+	_swap(g)
 
 func show_settings() -> void:
 	var root := Control.new()
