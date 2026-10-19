@@ -210,6 +210,9 @@ func _draw_haze(vl: float, vw: float, th: Dictionary) -> void:
 
 func _draw_ground_detail(i: int, x: float, vl: float, vw: float) -> void:
 	var stage: int = _stage_index_at(x)
+	# własna grafika podłoża (ground.png) ma już koleiny, kałuże i trawę: proceduralne detale tylko jako zapas
+	if stage < art.size() and art[stage] != null and not art[stage].layer("ground").is_empty():
+		return
 	var lane0: float = level.lane_min()
 	var lane1: float = level.lane_max()
 	var r1: float = _hash(i, 11)

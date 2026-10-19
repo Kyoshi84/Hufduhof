@@ -7,21 +7,21 @@
    "file": "sky.png",
    "parallax": 0.0,
    "y_offset": 0,
-   "note": "niebo; powtarzane poziomo, dolna krawędź na horyzoncie",
-   "size": "128x320 (szeroki 64-512, wysokość 320)"
+   "note": "niebo (chmury), powtarzane poziomo; widoczne tylko nad pasem far1",
+   "size": "512x320"
   },
   "far1": {
    "file": "far1.png",
-   "parallax": 0.15,
-   "y_offset": 0,
-   "note": "daleki plan (wolny paralaks), powtarzany poziomo, dolna krawędź na horyzoncie",
+   "parallax": 0.2,
+   "y_offset": -110,
+   "note": "górna część ciągłego pasa scenerii (góry, zamek, las); leży nad far2 dzięki y_offset=-110; wygenerowane z panoramy",
    "size": "640x140, szew poziomy niewidoczny"
   },
   "far2": {
    "file": "far2.png",
-   "parallax": 0.32,
+   "parallax": 0.2,
    "y_offset": 0,
-   "note": "bliższy plan sylwetek (średni paralaks), powtarzany poziomo",
+   "note": "dolna część pasa scenerii (las, wieś, pola); dolna krawędź = horyzont; ta sama paralaksa co far1",
    "size": "640x110, szew niewidoczny"
   },
   "ground": {
