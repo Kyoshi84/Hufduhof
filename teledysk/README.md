@@ -27,4 +27,4 @@ Do gry trafi dopiero gotowy plik wideo.
 | Magnus | NIE |
 | Velgard | NIE |
 
-Audio: NIE
+Audio: Tak (`audio/Oath_of_the_Carroburg_Guard_Remastered.mp3`)
