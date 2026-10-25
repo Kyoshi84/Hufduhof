@@ -6,14 +6,14 @@ do piosenki z Suno (przysięga Szkarłatnej Gwardii).
 Plik `.gdignore` sprawia, że Godot nie importuje tego folderu, więc materiały źródłowe nie trafiają do APK.
 Do gry trafi dopiero gotowy plik wideo.
 
-- `grafiki/` - ilustracje postaci, nazwa pliku = imię postaci (np. `Pia.png`)
+- `grafiki/` - ilustracje postaci, nazwa pliku = imię postaci (np. `Pia.png`; kilka postaci: `Ivo_Skuld.png`)
 - `audio/` - piosenka (mp3)
 
 ## Grafiki postaci
 
 | Postać | Czy dodano grafikę |
 |---|---|
-| Ivo | NIE |
+| Ivo | Tak (`Ivo_Skuld.png`) |
 | Mortimer | NIE |
 | Pepin | Tak |
 | Siegfried | Tak |
@@ -23,7 +23,7 @@ Do gry trafi dopiero gotowy plik wideo.
 | Thomas | NIE |
 | Gerhard | NIE |
 | Pia | Tak |
-| Skuld | NIE |
+| Skuld | Tak (w tle na `Ivo_Skuld.png`) |
 | Magnus | NIE |
 | Velgard | NIE |
 
