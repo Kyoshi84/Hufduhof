@@ -20,7 +20,7 @@ Do gry trafi dopiero gotowy plik wideo.
 | Valdemar | Tak |
 | Alvar | NIE |
 | Sigmund | NIE |
-| Thomas | NIE |
+| Thomas | Tak |
 | Gerhard | NIE |
 | Pia | Tak |
 | Skuld | Tak (w tle na `Ivo_Skuld.png`) |
