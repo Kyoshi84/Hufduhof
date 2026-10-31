@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Przerabia lewą stronę far1/far2 etapu 1 (droga): usuwa chatę z kominem, wóz i zostawia same drzewa.
-Uruchamiać PO tools/build_stage_backgrounds.py (nadpisuje assets/stages/stage1_road/far1.png i far2.png).
+Wywoływany automatycznie na końcu budowy etapu 1 w tools/build_stage_backgrounds.py (można też ręcznie po nim; nadpisuje assets/stages/stage1_road/far1.png i far2.png).
 Tło lewej strony: las i pole z innego fragmentu panoramy (bez budynków), na to ręcznie ustawione sosny i dęby
 z generatora rekwizytów. Szew powtarzania (x=639 -> x=0) jest zamazany od nowa."""
 import os, sys

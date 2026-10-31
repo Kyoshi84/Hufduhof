@@ -238,6 +238,9 @@ def main():
             im.save(os.path.join(out, name + ".png"))
             print(f"{sid}/{name}.png {im.size[0]}x{im.size[1]}")
         update_manifest(out)
+        if sid == "stage1_road":                      # lewa strona etapu 1: same drzewa (bez chaty z panoramy)
+            import fix_stage1_left
+            fix_stage1_left.main()
         if a.preview:
             pv = Image.new("RGBA", (960, 540), (0, 0, 0, 255))
             sky = Image.open(os.path.join(out, "sky.png")); pv.alpha_composite(sky.crop((0, SKY_H - 259, 512, SKY_H)), (0, 0)); pv.alpha_composite(sky.crop((0, SKY_H - 259, 448, SKY_H)), (512, 0))
