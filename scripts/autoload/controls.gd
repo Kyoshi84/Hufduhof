@@ -5,7 +5,7 @@ signal pause_pressed
 signal debug_pressed
 
 var touch_move := Vector2.ZERO
-var _stamp := { "light": -100000, "heavy": -100000, "dodge": -100000 }
+var _stamp := { "light": -100000, "heavy": -100000, "dodge": -100000, "jump": -100000 }
 
 func reset() -> void:
 	touch_move = Vector2.ZERO
@@ -41,7 +41,8 @@ func _unhandled_input(e: InputEvent) -> void:
 		match e.physical_keycode:
 			KEY_J, KEY_Z: press("light")
 			KEY_K, KEY_X: press("heavy")
-			KEY_L, KEY_C, KEY_SPACE: press("dodge")
+			KEY_L, KEY_C: press("dodge")
+			KEY_SPACE: press("jump")
 			KEY_ESCAPE, KEY_P: pause_pressed.emit()
 			KEY_F3:
 				if OS.is_debug_build():

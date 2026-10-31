@@ -59,6 +59,22 @@
   "crystals": {
    "note": "kryształy Chaosu",
    "size": "45x50"
+  },
+  "skull_pile": {
+   "note": "stos czaszek",
+   "size": "64x46"
+  },
+  "skeleton": {
+   "note": "szkielet",
+   "size": "86x34"
+  },
+  "rubble": {
+   "note": "gruz",
+   "size": "100x54"
+  },
+  "stake_victim": {
+   "note": "ofiara na palu",
+   "size": "54x128"
   }
  }
 }

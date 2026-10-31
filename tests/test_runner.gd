@@ -17,7 +17,7 @@ func _ready() -> void:
 	var tests := [
 		"t_balance", "t_hit_geometry", "t_single_hit_per_attack", "t_invulnerability", "t_light_timing",
 		"t_skaven_ai", "t_hound_charge", "t_beastman_poise", "t_boss_phases", "t_wave_flow", "t_pause_state",
-		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_story", "t_tavern", "t_music", "t_full_run_bot",
+		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_story", "t_tavern", "t_jump_obstacles", "t_music", "t_full_run_bot",
 	]
 	for t in tests:
 		var t0 := Time.get_ticks_msec()
@@ -1124,6 +1124,67 @@ func t_tavern() -> void:
 	for n in ["tavern_bg", "balcony_rail", "door_open", "borubar", "borubar_dizzy", "tankard_big", "innkeeper", "mug", "mug_gold", "splash", "stars", "guest_1", "guest_2", "guest_3", "guest_4", "guest_5", "guest_6"]:
 		ok(ResourceLoader.exists("res://assets/minigame/%s.png" % n), "istnieje grafika prologu: " + n)
 
+func t_jump_obstacles() -> void:
+	var lvl := make_level()
+	var p: Player = lvl.player
+	lvl.waves = []
+	lvl.obstacles.clear()
+	ok(not p.is_airborne(), "skok: start na ziemi")
+	Controls.press("jump")
+	step(lvl, 0.1)
+	ok(p.is_airborne() and p.z > 5.0, "skok: Spacja unosi Ivo (z=%.0f)" % p.z)
+	ok(not p.can_be_hit(), "skok: w górze Ivo jest nietykalny dla ciosów")
+	step(lvl, 1.0)
+	ok(not p.is_airborne() and p.z == 0.0, "skok: Ivo wraca na ziemię")
+	# ściana (kłoda) blokuje, skok nad rzeką ratuje, bez skoku - obrażenia
+	var logo := Obstacle.new()
+	logo.setup(lvl, "log", 800.0)
+	lvl.obstacle_layer.add_child(logo)
+	lvl.obstacles.append(logo)
+	p.position = Vector2(logo.x0() - 30.0, 480.0)
+	lvl.view_left = p.position.x - 500.0
+	Controls.touch_move = Vector2(1, 0)
+	step(lvl, 1.0)
+	ok(p.position.x < logo.x0() + 5.0, "kłoda blokuje przejście pieszo (x=%.0f)" % p.position.x)
+	Controls.touch_move = Vector2.ZERO
+	var riv := Obstacle.new()
+	riv.setup(lvl, "river", 2000.0)
+	lvl.obstacle_layer.add_child(riv)
+	lvl.obstacles.append(riv)
+	p.position = Vector2(riv.x0() - 20.0, 480.0)
+	lvl.view_left = p.position.x - 500.0
+	p.invuln = 0.0
+	var hp0: float = p.hp
+	Controls.touch_move = Vector2(1, 0)
+	step(lvl, 1.5)
+	Controls.touch_move = Vector2.ZERO
+	ok(p.hp < hp0, "rzeka: wejście bez skoku rani (hp %.0f -> %.0f)" % [hp0, p.hp])
+	ok(p.position.x < riv.x0() + 5.0, "rzeka: po upadku Ivo wraca na brzeg")
+	p.position = Vector2(riv.x0() - 60.0, 480.0)
+	lvl.view_left = p.position.x - 500.0
+	p.invuln = 0.0
+	p.hp = hp0
+	Controls.touch_move = Vector2(1, 0)
+	Controls.press("jump")
+	step(lvl, 1.4)
+	Controls.touch_move = Vector2.ZERO
+	ok(p.hp == hp0 and p.position.x > riv.x1(), "rzeka: skok z rozbiegu przenosi na drugi brzeg (x=%.0f)" % p.position.x)
+	# spaczenie rani zamiast leczyć
+	p.position = Vector2(300, 480)
+	lvl.view_left = 0.0
+	p.hp = 100.0
+	lvl.drop_pickup(Vector2(300, 480), "slime")
+	step(lvl, 0.3)
+	ok(p.hp < 100.0, "spaczenie (glut) rani Ivo (hp=%.0f)" % p.hp)
+	p.hp = 50.0
+	lvl.drop_pickup(Vector2(300, 480), "potion")
+	step(lvl, 0.3)
+	ok(p.hp > 50.0, "mikstura leczy")
+	# dane poziomu
+	var d: Dictionary = lvl.data
+	ok(float(d["length"]) >= 15000.0, "poziom jest długi (%d)" % int(d["length"]))
+	ok(d["obstacles"].size() >= 10 and d["potions"].size() >= 10 and d["slimes"].size() >= 5, "poziom ma przeszkody, mikstury i spaczenie")
+
 func t_full_run_bot() -> void:
 	var lvl := make_level()
 	GameState.god_mode = true
@@ -1139,6 +1200,7 @@ func t_full_run_bot() -> void:
 		ticks += 1
 	GameState.god_mode = false
 	Controls.reset()
+	print("bot x=", lvl.player.position.x, " wave_active=", lvl.wave_active, " enemies=", lvl.enemies.size(), " hp=", lvl.player.hp, " state=", lvl.player.state)
 	ok(lvl.outcome == "won", "bot przechodzi cały poziom do zwycięstwa (%.0f s symulacji, fala %d/%d)" % [ticks / 60.0, lvl.next_wave, lvl.waves.size()])
 	ok(lvl.boss != null and not lvl.boss.is_alive(), "boss pokonany")
 	ok(lvl.boss != null and lvl.boss.phase == 3, "boss przeszedł przez fazy do 3")

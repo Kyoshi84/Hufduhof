@@ -12,6 +12,11 @@ var player: Player
 var enemies: Array = []
 var barrels: Array = []
 var pickups: Array = []
+var obstacles: Array = []           # Obstacle: kałuże, ogień, powalone drzewa, rzeki, przepaście (trzeba skoczyć)
+var obstacle_layer: Node2D
+var ambient: Ambient                # uciekający wieśniacy i zwierzęta (tylko dekoracja)
+var atmosphere: LevelAtmosphere     # gęstniejący las i ściemnianie
+var _jump_hint_shown: bool = false
 var entities: Node2D
 var camera: Camera2D
 var world: Node                    # rodzic świata: SubViewport (gra) lub sam Level (testy)
@@ -80,9 +85,26 @@ func build() -> void:
 	bg = LevelBackground.new()
 	bg.level = self
 	world.add_child(bg)
+	obstacle_layer = Node2D.new()
+	obstacle_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	world.add_child(obstacle_layer)
 	entities = Node2D.new()
 	entities.y_sort_enabled = true
 	world.add_child(entities)
+	for od in data.get("obstacles", []):
+		if Obstacle.is_known(str(od.get("type", ""))):
+			var o := Obstacle.new()
+			o.setup(self, str(od["type"]), float(od["x"]))
+			obstacle_layer.add_child(o)
+			obstacles.append(o)
+	if not simulate_only:
+		ambient = Ambient.new()
+		ambient.level = self
+		entities.add_child(ambient)
+		atmosphere = LevelAtmosphere.new()
+		atmosphere.level = self
+		atmosphere.z_index = 8
+		world.add_child(atmosphere)
 	fx = FxLayer.new()
 	fx.z_index = 50
 	world.add_child(fx)
@@ -95,6 +117,10 @@ func build() -> void:
 		b.setup(self, Vector2(float(bx), randf_range(lane_min() + 20.0, lane_max() - 20.0)))
 		entities.add_child(b)
 		barrels.append(b)
+	for px in data.get("potions", []):
+		drop_pickup(Vector2(float(px), randf_range(lane_min() + 25.0, lane_max() - 25.0)))
+	for sx in data.get("slimes", []):
+		drop_pickup(Vector2(float(sx), randf_range(lane_min() + 25.0, lane_max() - 25.0)), "slime")
 	player = Player.new()
 	player.setup(self)
 	player.position = Vector2(float(data["player_start"]), (lane_min() + lane_max()) * 0.5)
@@ -218,7 +244,12 @@ func tick(delta: float) -> void:
 		freeze_time -= delta
 		update_camera(delta)
 		return
+	var prev_x: float = player.position.x
 	player.tick(delta)
+	player.speed_mult = 1.0
+	for o in obstacles:
+		o.resolve(player, prev_x, delta)
+	update_jump_hint()
 	for e in enemies.duplicate():
 		e.tick(delta)
 		if e.remove_me:
@@ -230,6 +261,8 @@ func tick(delta: float) -> void:
 		if p.taken:
 			pickups.erase(p)
 			p.queue_free()
+	if ambient != null:
+		ambient.tick(delta)
 	update_waves(delta)
 	update_camera(delta)
 	check_outcome(delta)
@@ -400,7 +433,7 @@ func on_actor_died(a: Actor) -> void:
 		if a is Boss:
 			on_boss_defeated(a)
 		elif randf() < float(Balance.world("potion_drop_chance")):
-			drop_pickup(a.position)
+			drop_pickup(a.position, "slime" if stage_idx >= 3 and randf() < 0.3 else "potion")
 		if fx != null:
 			fx.burst(a.position + Vector2(0, -50), 16, Color(0.5, 0.05, 0.05), 220.0, a.facing)
 	else:
@@ -424,18 +457,47 @@ func on_boss_defeated(b: Boss) -> void:
 	freeze_time = 0.25
 	Sfx.stop_music(1.2)
 
+## Obrażenia od przeszkód (ogień, upadek): krótki efekt i dźwięk, bez przerywania akcji.
+func on_hazard_hit(target: Actor, dmg: float) -> void:
+	if fx != null:
+		fx.burst(target.position + Vector2(0, -50), 8, Color(0.85, 0.35, 0.1), 180.0, 1)
+	Sfx.play("player_hurt")
+	shake = maxf(shake, 7.0)
+	if hud != null:
+		hud.flash_damage()
+
+## Pierwsza przeszkoda przed graczem w zasięgu max_dist (albo null) - dla podpowiedzi i bota testowego.
+func next_obstacle_ahead(x: float, max_dist: float) -> Obstacle:
+	var best: Obstacle = null
+	for o in obstacles:
+		if o.x1() > x - 10.0 and o.x0() - x < max_dist:
+			if best == null or o.x0() < best.x0():
+				best = o
+	return best
+
+func update_jump_hint() -> void:
+	if _jump_hint_shown or hud == null or story_active:
+		return
+	var o := next_obstacle_ahead(player.position.x, 520.0)
+	if o != null and o.x0() > player.position.x:
+		_jump_hint_shown = true
+		hud.show_banner("SPACJA - SKOK (przeszkody!)", 2.6)
+
 func on_barrel_broken(b: Barrel) -> void:
 	GameState.add_score(int(data.get("barrel_score", Balance.data.get("score", {}).get("barrel", 20))))
 	if fx != null:
 		fx.burst(b.position + Vector2(0, -30), 12, Color(0.45, 0.3, 0.15), 200.0, 1)
-	if randf() < float(Balance.world("barrel_potion_chance")):
+	if stage_idx >= 3 and randf() < 0.38:
+		drop_pickup(b.position, "slime")             # w legowisku z beczek wylewa się spaczenie
+	elif randf() < float(Balance.world("barrel_potion_chance")):
 		drop_pickup(b.position)
 	barrels.erase(b)
 	b.queue_free()
 
-func drop_pickup(pos: Vector2) -> void:
+func drop_pickup(pos: Vector2, kind: String = "potion") -> void:
 	var p := Pickup.new()
-	p.setup(self, Vector2(pos.x, clampf(pos.y, lane_min(), lane_max())), float(Balance.world("potion_heal")))
+	var amount: float = float(Balance.world("potion_heal")) if kind == "potion" else float(Balance.world("slime_damage"))
+	p.setup(self, Vector2(pos.x, clampf(pos.y, lane_min(), lane_max())), amount, kind)
 	entities.add_child(p)
 	pickups.append(p)
 

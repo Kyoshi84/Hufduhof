@@ -370,6 +370,125 @@ def balcony_rail(W=960, H=44):
     c.paint(c.rect(0, H - 6, W, H), "wood", 0.2, 0.05)
     return c.image()
 
+
+REF = os.path.join(HERE, "assets/minigame/source/tavern_reference.png")
+CREST = os.path.join(HERE, "assets/ui/crest/carroburg_source.png")
+
+def mirror_tile(src, w):
+    """Powtarza pas src (h x sw x 3) w poziomie z odbiciami lustrzanymi do szerokości w."""
+    parts, n, flip = [], 0, False
+    while n < w:
+        parts.append(src[:, ::-1] if flip else src); n += src.shape[1]; flip = not flip
+    return np.concatenate(parts, 1)[:, :w]
+
+def patch_floor(a, x0, x1, y0, y1, sx0, sx1, feather=22):
+    """Zamazuje prostokąt (x0..x1, y0..y1) pasem podłogi z (sx0..sx1) w tych samych wierszach, z dopasowaniem jasności."""
+    H = y1 - y0
+    src = a[y0:y1, sx0:sx1].astype(float)
+    tile = mirror_tile(src, x1 - x0)
+    # dopasuj jasność wierszami do brzegu sąsiadującego z łatą (smooth gain)
+    edge_x = x1 if x0 == 0 else x0 - 1
+    edge_col = a[y0:y1, min(edge_x, a.shape[1] - 1)].astype(float).mean(-1)
+    near = tile[:, (-1 if x0 == 0 else 0)].mean(-1)
+    gain = np.clip(edge_col / np.maximum(near, 1.0), 0.6, 1.5)
+    from scipy.ndimage import gaussian_filter1d
+    gain = gaussian_filter1d(gain, 6)
+    tile = tile * gain[:, None, None]
+    from scipy.ndimage import gaussian_filter
+    tile = gaussian_filter(tile, (1.0, 7.0, 0))                # rozmyj szwy lustrzanych pasów
+    xs = np.linspace(0, 1, tile.shape[1]) if x0 != 0 else np.linspace(1, 0, tile.shape[1])
+    tile = tile * (1.0 - 0.38 * xs ** 1.5)[None, :, None]      # ciemniejsze rogi: stoły zastąpiła ciemna podłoga
+    m = np.ones((H, x1 - x0))
+    f = feather
+    if x0 == 0:
+        m[:, -f:] = np.linspace(1, 0, f)
+    else:
+        m[:, :f] = np.linspace(0, 1, f)
+    m[:f, :] *= np.linspace(0, 1, f)[:, None]
+    a[y0:y1, x0:x1] = (a[y0:y1, x0:x1] * (1 - m[..., None]) + tile * m[..., None]).clip(0, 255)
+
+
+def synth_floor(a, x0, x1, y0, y1, ref_box, vp=(836.0, 250.0), feather=26, seed=5, dark=0.85, pw=0.10):
+    """Podłoga z deskami w poprawnej perspektywie (punkt zbiegu vp): zastępuje zasłonięte stołami rogi."""
+    rng = np.random.default_rng(seed)
+    yy, xx = np.mgrid[y0:y1, x0:x1].astype(float)
+    dy = yy - vp[1]
+    u = (xx - vp[0]) / dy                      # stałe wzdłuż promienia od punktu zbiegu = jedna deska
+    pid = np.floor(u / pw)
+    fr = (u / pw) - pid
+    ry0, ry1, rx0, rx1 = ref_box
+    ref = a[ry0:ry1, rx0:rx1].reshape(-1, 3).mean(0)
+    base = np.zeros(xx.shape + (3,))
+    shade = (rng.random(int(pid.max() - pid.min()) + 2) - 0.5) * 0.34
+    sh = shade[(pid - pid.min()).astype(int)]
+    grain = (rng.random(xx.shape) - 0.5) * 0.10
+    # poprzeczne łączenia desek (odstępy rosną ku dołowi)
+    row = np.floor(np.log(np.maximum(dy, 1.0)) * 7.0 + pid * 1.7)
+    joint = (np.abs((np.log(np.maximum(dy, 1.0)) * 7.0 + pid * 1.7) - np.round(np.log(np.maximum(dy, 1.0)) * 7.0 + pid * 1.7)) < 0.035)
+    k = dark * (1 + sh + grain)
+    k = np.where(fr < 0.045, k * 0.45, k)
+    k = np.where(joint, k * 0.6, k)
+    glow = np.clip(1.0 - (np.hypot(xx - 150.0, (yy - 700.0) * 1.3) / 700.0), 0, 1) * 0.35
+    out = ref[None, None, :] * (k + glow)[..., None]
+    m = np.ones(xx.shape)
+    f = feather
+    if x0 == 0:
+        m[:, -f:] = np.linspace(1, 0, f)
+    else:
+        m[:, :f] = np.linspace(0, 1, f)
+    m[:f] *= np.linspace(0, 1, f)[:, None]
+    a[y0:y1, x0:x1] = a[y0:y1, x0:x1] * (1 - m[..., None]) + out * m[..., None]
+
+def crest_image(size, margin=0.0):
+    im = Image.open(CREST).convert("RGBA")
+    bb = im.getbbox()
+    im = im.crop(bb)
+    k = size / max(im.size)
+    return im.resize((max(1, int(im.width * k)), max(1, int(im.height * k))), Image.LANCZOS)
+
+def background_from_reference(W=960, H=540):
+    ref = Image.open(REF).convert("RGB")
+    sx = ref.width / W
+    a = np.array(ref).astype(float)          # pracujemy w pełnej rozdzielczości, potem skalujemy
+    # 1. stoły, kufel i świeca: dolne rogi zastępujemy podłogą (pasy z sąsiedztwa)
+    synth_floor(a, 0, 345, 690, 941, (700, 760, 350, 440), seed=5, dark=0.88)
+    a[606:642, 1486:1536] = a[606:642, 1430:1480]            # resztka świecy ze stołu
+    synth_floor(a, 1250, 1672, 630, 941, (655, 700, 1000, 1240), seed=9, dark=0.80)
+    # 2. tarcza z gryfem nad kominkiem -> kamień (pas z lewej strony komina)
+    patch_stone = a[110:305, 150:232].copy()
+    tile = mirror_tile(patch_stone, 150)
+    m = np.zeros((195, 150)); m[:] = 1
+    for k in range(14):
+        m[:, k] = k / 14.0; m[:, 149 - k] = k / 14.0
+        m[k, :] *= k / 14.0; m[194 - k, :] *= k / 14.0
+    a[110:305, 226:376] = a[110:305, 226:376] * (1 - m[..., None]) + tile * m[..., None]
+    img = Image.fromarray(a.clip(0, 255).astype(np.uint8)).convert("RGBA")
+    # 3. herb Carroburga nad kominkiem
+    c = crest_image(200)
+    img.alpha_composite(c, (int(295 - c.width / 2), int(205 - c.height / 2)))
+    # 4. sztandary: złota wieża -> herb Carroburga
+    for bx in (1022, 1117):
+        # zamaluj wieżę kolorem sztandaru i wstaw herb
+        arr = np.array(img)
+        box = arr[238:312, bx - 22:bx + 22]
+        gold = (box[..., 0] > 140) & (box[..., 1] > 110) & (box[..., 2] < 110)
+        base = arr[318:332, bx - 18:bx + 18, :3].reshape(-1, 3).mean(0)
+        box[gold, :3] = base
+        img = Image.fromarray(arr)
+        c = crest_image(66)
+        img.alpha_composite(c, (int(bx - c.width / 2), int(276 - c.height / 2)))
+    return img.convert("RGB").resize((W, H), Image.LANCZOS)
+
+def door_open_new(w=88, h=152):
+    return door_open(w, h)
+
+def crest_variants():
+    """Herb Carroburga: wersje do menu (duża), HUD/rekwizytów (mała) w palecie gry."""
+    return {
+        "crest_menu": crest_image(300),
+        "crest_small": crest_image(96),
+    }
+
 # ------------------------------------------------------------------------------------------ wyjście
 def quantize(im, P, plab):
     a = np.array(im.convert("RGBA"))
@@ -383,11 +502,26 @@ def quantize(im, P, plab):
     out[out[..., 3] == 0, :3] = 0
     return Image.fromarray(out, "RGBA")
 
+def quantize_dither(im, P, plab, strength=9.0):
+    """Jak quantize, ale z ditheringiem Bayera 4x4 (obraz fotograficzny bez pasów)."""
+    a = np.array(im.convert("RGB")).astype(float)
+    h, w = a.shape[:2]
+    bay = (np.tile(bayer(4, 4), (h // 4 + 1, w // 4 + 1))[:h, :w, None] - 0.5) * strength * 2
+    a = np.clip(a + bay, 0, 255)
+    idx = np.zeros((h, w), int)
+    for y0 in range(0, h, 24):
+        blk = mp.srgb2lab(a[y0:y0 + 24])
+        idx[y0:y0 + 24] = ((blk[..., None, :] - plab[None, None]) ** 2).sum(-1).argmin(-1)
+    out = np.zeros((h, w, 4), np.uint8)
+    out[..., :3] = P[idx]
+    out[..., 3] = 255
+    return Image.fromarray(out, "RGBA")
+
 def build():
     sheets = {
-        "tavern_bg": background(),
+        "tavern_bg": background_from_reference() if os.path.exists(REF) else background(),
         "balcony_rail": balcony_rail(),
-        "door_open": door_open(100, 130),
+        "door_open": door_open_new(),
         "borubar": borubar(84, 104),
         "borubar_dizzy": borubar(84, 104, dizzy=True),
         "tankard_big": tankard(76, 56, big=True),
@@ -414,10 +548,16 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     res = {}
     for name, im in build().items():
-        q = quantize(im, P, plab) if name != "tavern_bg" else quantize(im, P, plab)
+        q = quantize(im, P, plab) if name != "tavern_bg" else quantize_dither(im, P, plab)
         q.save(os.path.join(OUT, name + ".png"))
         res[name] = q
         print(f"assets/minigame/{name}.png {q.width}x{q.height}")
+    cdir = os.path.join(HERE, "assets/ui/crest")
+    os.makedirs(cdir, exist_ok=True)
+    for name, im in crest_variants().items():
+        q = quantize(im, P, plab)
+        q.save(os.path.join(cdir, name + ".png"))
+        print(f"assets/ui/crest/{name}.png {q.width}x{q.height}")
     if a.preview:
         os.makedirs(a.preview, exist_ok=True)
         res["tavern_bg"].convert("RGB").save(os.path.join(a.preview, "tavern_bg.png"))

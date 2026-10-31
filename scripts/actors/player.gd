@@ -12,6 +12,15 @@ var dodge_dir: Vector2 = Vector2.ZERO
 var dodge_invuln: float = 0.0
 var aim_dir: String = "east"      # 8-kierunkowy widok (E/SE/S/SW/W/NW/N/NE)
 var aim_hold: float = 0.0
+# skok: z = wysokość nad podłożem (jednostki świata), obrazowo przesuwa sprite w górę; cień zostaje na ziemi
+const JUMP_V := 760.0
+const GRAVITY := 2200.0
+const AIR_CONTROL := 1.3
+const AIR_SAFE_Z := 40.0           # powyżej tej wysokości ataki wrogów przelatują pod Ivo
+var z: float = 0.0
+var vz: float = 0.0
+var speed_mult: float = 1.0        # np. brodzenie w kałuży
+var jumps_done: int = 0
 
 func setup(lvl) -> void:
 	level = lvl
@@ -31,7 +40,45 @@ func hit_invuln() -> float:
 func hurt_scale() -> float:
 	return float(cfg["hurt_time_scale"])
 
+func is_airborne() -> bool:
+	return z > 0.5
+
+## Skok (Spacja). Tylko z ziemi, nie w trakcie ogłuszenia/śmierci.
+func try_jump() -> bool:
+	if is_airborne() or state == State.DEAD or state == State.HURT or state == State.VICTORY or state == State.DODGE:
+		return false
+	vz = JUMP_V
+	z = 0.01
+	jumps_done += 1
+	Sfx.play("swing", 1.5)
+	return true
+
+func tick_air(delta: float) -> void:
+	if z > 0.0 or vz > 0.0:
+		vz -= GRAVITY * delta
+		z += vz * delta
+		if z <= 0.0:
+			z = 0.0
+			vz = 0.0
+			Sfx.play("ui_click", 0.7)
+
+## Obrażenia od przeszkód (ogień, upadek): omijają animację ciosu, respektują nietykalność po trafieniu.
+func take_hazard(dmg: float) -> bool:
+	if state == State.DEAD or invuln > 0.0:
+		return false
+	if GameState.god_mode:
+		dmg = 0.0
+	hp -= dmg
+	flash = 0.15
+	invuln = 0.8
+	level.on_hazard_hit(self, dmg)
+	if hp <= 0.0:
+		hp = 0.0
+		die(-facing, { "knockback": 0.0 })
+	return true
+
 func tick(delta: float) -> void:
+	tick_air(delta)
 	tick_timers(delta)
 	dodge_cd = maxf(0.0, dodge_cd - delta)
 	dodge_invuln = maxf(0.0, dodge_invuln - delta)
@@ -56,17 +103,20 @@ func tick(delta: float) -> void:
 	level.clamp_player(self)
 
 func can_be_hit() -> bool:
-	return state != State.DEAD and invuln <= 0.0 and dodge_invuln <= 0.0
+	return state != State.DEAD and invuln <= 0.0 and dodge_invuln <= 0.0 and z < AIR_SAFE_Z
 
 func tick_free(delta: float) -> void:
 	var mv: Vector2 = Controls.get_move()
 	if mv.x != 0.0:
 		facing = 1 if mv.x > 0.0 else -1
-	position.x += mv.x * speed * delta
-	position.y += mv.y * depth_speed * delta
+	var air: float = AIR_CONTROL if is_airborne() else 1.0
+	position.x += mv.x * speed * speed_mult * air * delta
+	position.y += mv.y * depth_speed * speed_mult * delta
 	update_aim(mv, delta)
 	set_state_if_changed(State.MOVE if mv.length() > 0.05 else State.IDLE)
-	if Controls.consume("dodge"):
+	if Controls.consume("jump"):
+		try_jump()
+	if Controls.consume("dodge") and not is_airborne():
 		if try_dodge(mv):
 			return
 	if Controls.consume("heavy"):
@@ -128,7 +178,12 @@ func try_cancel() -> void:
 	var frac: float = state_t / float(attack["recover"])
 	if frac < float(cfg["chain_cancel_at"]):
 		return
-	if Controls.consume("dodge"):
+	if Controls.consume("jump"):
+		abort_attack()
+		set_state(State.IDLE)
+		try_jump()
+		return
+	if Controls.consume("dodge") and not is_airborne():
 		if try_dodge(Controls.get_move()):
 			return
 	if Controls.consume("heavy") and cooldown_ready("heavy"):

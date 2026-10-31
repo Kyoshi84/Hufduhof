@@ -172,7 +172,11 @@ func _draw() -> void:
 		_draw_ground_detail(i, i * step, vl, vw)
 		_draw_ground_detail(i + 5000, i * step + 70.0, vl, vw)          # drugi przebieg: gęstsze detale podłoża
 	for i in range(first, last + 1):
+		_draw_blood(i, i * step)
+	for i in range(first, last + 1):
 		_draw_prop(i, i * step)
+	for i in range(first, last + 1):
+		_draw_extra(i, i * step + 75.0)
 
 func _draw_far(vl: float, vw: float, th: Dictionary, par: float, col: Color, h0: float, h1: float, salt: int) -> void:
 	var stage: int = _stage_index_at(vl + vw * 0.5)
@@ -265,7 +269,7 @@ func _ell(c: Vector2, rx: float, ry: float, col: Color) -> void:
 	draw_colored_polygon(pts, col)
 
 ## Wybiera rekwizyt dla slotu: [nazwa, przesunięcie_y, parametry...]. Nazwy = pliki props/<nazwa>.png w folderze etapu.
-func _pick_prop(stage: int, r: float, v: float, _i: int) -> Array:
+func _pick_prop(stage: int, r: float, v: float, _i: int, k: float = 0.0) -> Array:
 	match stage:
 		0:   # droga
 			if r < 0.30: return ["fence_broken" if v < 0.3 else "fence", 8.0, 4, v < 0.3]
@@ -284,27 +288,43 @@ func _pick_prop(stage: int, r: float, v: float, _i: int) -> Array:
 			elif r < 0.80: return ["well", 18.0]
 			elif r < 0.86: return ["crates", 20.0]
 			elif r < 0.91: return ["scarecrow", 18.0]
-		2:   # pola i las
-			if r < 0.50:
-				var dead: bool = v < 0.35
-				var pine: bool = v > 0.6
+			elif r < 0.97: return ["crest_banner", 14.0]
+		2:   # pola i las: im dalej, tym gęstszy i ciemniejszy las (k = postęp przez etap)
+			var tree_p: float = 0.5 + 0.46 * k
+			if r < tree_p:
+				var dead: bool = v < 0.10 + 0.25 * (1.0 - k)
+				var pine: bool = v > 0.62 - 0.22 * k
 				return ["tree_dead" if dead else ("tree_pine" if pine else "tree_oak"), 0.0, 1.0 + v * 0.8, dead, pine]
-			elif r < 0.60: return ["bush", 10.0]
-			elif r < 0.68: return ["stone_big", 14.0]
-			elif r < 0.76: return ["fence_broken", 8.0, 3, true]
-			elif r < 0.82: return ["tent", 16.0]
-			elif r < 0.86: return ["banner_torn", 16.0]
-		3:   # legowisko
-			if r < 0.28: return ["obelisk", 14.0]
-			elif r < 0.46: return ["brazier", 20.0]
-			elif r < 0.62: return ["tree_twisted", 0.0, 1.2, true, false, true]
-			elif r < 0.74: return ["bones", 30.0]
-			elif r < 0.82: return ["crystals", 18.0]
+			var rest: float = (r - tree_p) / maxf(1.0 - tree_p, 0.02)
+			if rest < 0.30: return ["bush", 10.0]
+			elif rest < 0.50: return ["stone_big", 14.0]
+			elif rest < 0.68: return ["bush" if k > 0.5 else "fence_broken", 8.0, 3, true]
+			elif rest < 0.84: return ["tent", 16.0]
+			else: return ["banner_torn", 16.0]
+		3:   # legowisko: pobojowisko - gruz, pale z ofiarami, czaszki, szkielety
+			if r < 0.09: return ["obelisk", 14.0]
+			elif r < 0.17: return ["brazier", 20.0]
+			elif r < 0.28: return ["tree_twisted", 0.0, 1.2, true, false, true]
+			elif r < 0.36: return ["bones", 30.0]
+			elif r < 0.42: return ["crystals", 18.0]
+			elif r < 0.52: return ["skull_pile", 16.0]
+			elif r < 0.60: return ["skeleton", 26.0]
+			elif r < 0.76: return ["rubble", 16.0]
+			elif r < 0.92: return ["stake_victim", 14.0]
 	return []
+
+## Postęp przez etap 3 (las) w punkcie x świata: 0..1 (używany do zagęszczania drzew).
+func _forest_k(x: float) -> float:
+	var stages: Array = level.data["stages"]
+	if stages.size() < 4:
+		return 0.0
+	var s2: float = float(stages[2]["start"])
+	var s3: float = float(stages[3]["start"])
+	return clampf((x - s2) / maxf(s3 - s2, 1.0), 0.0, 1.0)
 
 func _draw_prop(i: int, x: float) -> void:
 	var stage: int = _stage_index_at(x)
-	var p: Array = _pick_prop(stage, _hash(i, 7), _hash(i, 8), i)
+	var p: Array = _pick_prop(stage, _hash(i, 7), _hash(i, 8), i, _forest_k(x) if stage == 2 else 0.0)
 	if p.is_empty():
 		return
 	var y: float = HORIZON + 10.0 + float(p[1])
@@ -321,6 +341,81 @@ func _draw_prop(i: int, x: float) -> void:
 				draw_texture_rect(tex, Rect2(x - w * 0.5, y - h, w, h), false)
 			return
 	_proc_prop(str(p[0]), x, y, p, i)
+
+## Rysuje rekwizyt po nazwie z folderu etapu (skala s), a gdy brak tekstury - nic (rekwizyty dodatkowe nie mają zapasu).
+func _draw_named(stage: int, pname: String, x: float, y: float, s: float, i: int) -> void:
+	var sa: StageArt = art[stage] if stage < art.size() else null
+	if sa == null:
+		return
+	var vars: Array = sa.prop_variants(pname)
+	if vars.is_empty():
+		return
+	var tex: Texture2D = vars[int(_hash(i, 61) * vars.size()) % vars.size()]
+	var w: float = tex.get_width() * WPT * s
+	var h: float = tex.get_height() * WPT * s
+	if _hash(i, 62) < 0.5:
+		draw_texture_rect(tex, Rect2(x + w * 0.5, y - h, -w, h), false)
+	else:
+		draw_texture_rect(tex, Rect2(x - w * 0.5, y - h, w, h), false)
+
+## Dodatkowa, bliższa warstwa: w lesie dogęszczanie drzew, w legowisku rozrzucone szczątki (dalej od horyzontu).
+func _draw_extra(i: int, x: float) -> void:
+	var stage: int = _stage_index_at(x)
+	if stage == 2:
+		var k: float = _forest_k(x)
+		if k < 0.08 or _hash(i, 31) > 0.18 + 0.78 * k:
+			return
+		var v: float = _hash(i, 33)
+		var name: String = "tree_pine" if v < 0.5 + 0.25 * k else ("tree_dead" if v < 0.62 + 0.2 * k else "tree_oak")
+		var y: float = HORIZON + 14.0 + _hash(i, 32) * 42.0
+		_draw_named(stage, name, x + (_hash(i, 34) - 0.5) * 70.0, y, 1.05 + _hash(i, 35) * 0.45, i)
+	elif stage == 3:
+		var r: float = _hash(i, 71)
+		if r > 0.62:
+			return
+		var names := ["rubble", "skull_pile", "skeleton", "stake_victim", "rubble", "bones"]
+		var nm: String = names[int(_hash(i, 72) * names.size()) % names.size()]
+		var y2: float = HORIZON + 40.0 + _hash(i, 73) * 36.0
+		_draw_named(stage, nm, x + (_hash(i, 74) - 0.5) * 80.0, y2, 1.0 + _hash(i, 75) * 0.3, i)
+
+## Plamy i rozbryzgi krwi na ziemi w legowisku (etap 4): kałuże, krople, smugi po ciągnięciu ciał.
+func _draw_blood(i: int, x: float) -> void:
+	if _stage_index_at(x) != 3:
+		return
+	var lane0: float = level.lane_min() - 20.0
+	var lane1: float = level.lane_max() + 50.0
+	for pass_i in 2:
+		var s: int = i * 3 + pass_i * 977
+		var r: float = _hash(s, 81)
+		if r > 0.62:
+			continue
+		var cx: float = x + _hash(s, 82) * 150.0
+		var cy: float = lane0 + _hash(s, 83) * (lane1 - lane0)
+		var dark: Color = Pal.r("blood", 1)
+		var mid: Color = Pal.r("blood", 3)
+		var wet: Color = Pal.r("blood", 5)
+		var rx: float = 18.0 + _hash(s, 84) * 40.0
+		var ry: float = 5.0 + _hash(s, 85) * 8.0
+		_ell(Vector2(cx, cy + 2.0), rx + 3.0, ry + 2.0, dark)
+		_ell(Vector2(cx, cy), rx, ry, mid)
+		_ell(Vector2(cx - rx * 0.2, cy - ry * 0.25), rx * 0.55, ry * 0.5, wet)
+		for d in 8:                                                    # rozbryzgi: krople wokół plamy
+			var a: float = _hash(s, 90 + d) * TAU
+			var dist: float = rx * (1.1 + _hash(s, 100 + d) * 1.2)
+			var dr: float = 1.5 + _hash(s, 110 + d) * 3.2
+			_ell(Vector2(cx + cos(a) * dist, cy + sin(a) * dist * 0.35), dr, dr * 0.6, mid)
+		if r < 0.2:                                                    # smuga po przeciągniętym ciele
+			var len: float = 70.0 + _hash(s, 86) * 90.0
+			var dir: float = -1.0 if _hash(s, 87) < 0.5 else 1.0
+			for seg in 6:
+				var u: float = float(seg) / 5.0
+				var wdt: float = lerpf(9.0, 3.0, u)
+				draw_line(Vector2(cx + dir * u * len, cy + sin(u * 3.0 + s) * 3.0), Vector2(cx + dir * (u + 0.2) * len, cy + sin((u + 0.2) * 3.0 + s) * 3.0), mid, wdt)
+		elif r < 0.34:                                                 # bryzg-wachlarz (cios)
+			for d in 9:
+				var a2: float = -0.9 + d * 0.22
+				var l2: float = 26.0 + _hash(s, 120 + d) * 44.0
+				draw_line(Vector2(cx, cy), Vector2(cx + cos(a2) * l2, cy + sin(a2) * l2 * 0.35), mid if d % 2 == 0 else dark, 2.0)
 
 func _proc_prop(name: String, x: float, y: float, p: Array, i: int) -> void:
 	match name:

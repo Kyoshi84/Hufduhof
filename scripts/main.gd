@@ -44,6 +44,13 @@ func show_menu() -> void:
 	vb.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.add_theme_constant_override("separation", 12)
 	hb.add_child(vb)
+	if ResourceLoader.exists("res://assets/ui/crest/crest_menu.png"):
+		var crest := TextureRect.new()
+		crest.texture = load("res://assets/ui/crest/crest_menu.png")
+		crest.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		crest.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		crest.custom_minimum_size = Vector2(0, 120)
+		vb.add_child(crest)
 	vb.add_child(UI.make_label("IVO EGGERT", 64, Color(0.85, 0.18, 0.14)))
 	vb.add_child(UI.make_label("Obrona Hufduhofu", 36, Color(0.9, 0.78, 0.45)))
 	var gap := Control.new()
@@ -175,7 +182,7 @@ func _slider_row(title: String, value: float, cb: Callable) -> Control:
 	return hb
 
 func show_about() -> void:
-	var text := "Ivo Eggert: Obrona Hufduhofu\n\nGwardzista Szkarłatnej Gwardii z Carroburga przedziera się\nprzez Hufduhof i okolice, by stawić czoła czempionowi Chaosu.\n\nSTEROWANIE (PC):  WASD / strzałki - ruch,  J - cięcie,\nK - mocny atak,  L / Spacja - unik,  Esc - pauza\nCombo: cięcie, cięcie, szeroki zamach obszarowy.\nTelefon: joystick po lewej, przyciski po prawej."
+	var text := "Ivo Eggert: Obrona Hufduhofu\n\nGwardzista Szkarłatnej Gwardii z Carroburga przedziera się\nprzez Hufduhof i okolice, by stawić czoła czempionowi Chaosu.\n\nSTEROWANIE (PC):  WASD / strzałki - ruch,  J - cięcie,\nK - mocny atak,  Spacja - skok,  L / C - unik,  Esc - pauza\nCombo: cięcie, cięcie, szeroki zamach obszarowy.\nTelefon: joystick po lewej, przyciski po prawej."
 	var box := UI.make_overlay("INFORMACJE", text, [["Wróć", show_menu]])
 	box.theme = UI.theme()
 	_swap(box)

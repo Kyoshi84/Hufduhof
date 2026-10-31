@@ -509,6 +509,151 @@ def crystals(w, h, seed=1):
     c.outline()
     return c.image()
 
+
+# ------------------------------------------------------------------------------------------ etap 4: pobojowisko i herb
+def skull_at(c, x, y, r=7.0, shade=0.7):
+    sk = c.ellipse(x, y, r, r * 0.95) | c.rect(x - r * 0.55, y + r * 0.5, x + r * 0.55, y + r * 1.15)
+    c.volume(sk, "bone", bulge=4, noise=0.2, base=shade)
+    c.flat(c.ellipse(x - r * 0.38, y + r * 0.05, r * 0.28, r * 0.33), OUTLINE)
+    c.flat(c.ellipse(x + r * 0.38, y + r * 0.05, r * 0.28, r * 0.33), OUTLINE)
+    c.flat(c.rect(x - 1, y + r * 0.42, x + 1, y + r * 0.62), OUTLINE)
+    for k in (-0.35, 0.0, 0.35):
+        c.flat(c.rect(x + r * k - 0.4, y + r * 0.78, x + r * k + 0.6, y + r * 1.1), OUTLINE)
+
+def skull_pile(w, h, seed=1):
+    c = Canvas(w, h); c.rng = np.random.default_rng(seed)
+    rng = np.random.default_rng(seed)
+    base = c.ellipse(w / 2, h - 5, w * 0.46, 6)
+    c.paint(base, "char", 0.5, 0.2)
+    rows = [(h - 12, 5, 0.10), (h - 21, 4, 0.14), (h - 29, 3, 0.2), (h - 36, 2, 0.26), (h - 42, 1, 0.3)]
+    for (y, n, jit) in rows:
+        for k in range(n):
+            x = w / 2 + (k - (n - 1) / 2) * 11 + rng.uniform(-2, 2)
+            skull_at(c, x, y + rng.uniform(-2, 2), 6.2 + rng.uniform(-0.6, 0.8), 0.45 + 0.3 * rng.random())
+    for k in range(4):                                  # kości na wierzchu
+        x0 = rng.uniform(4, w - 20); y0 = h - 6 - rng.uniform(0, 4)
+        c.paint(c.line((x0, y0), (x0 + 14, y0 - rng.uniform(-4, 5)), 3), "bone", 0.7, 0.2)
+    c.outline()
+    return c.image()
+
+def skeleton_lying(w, h, seed=1):
+    c = Canvas(w, h); c.rng = np.random.default_rng(seed)
+    rng = np.random.default_rng(seed)
+    y0 = h - 8
+    c.paint(c.ellipse(w / 2, h - 4, w * 0.45, 4), "char", 0.5, 0.2)
+    skull_at(c, 14, y0 - 2, 6.5, 0.7)
+    spine = c.line((22, y0), (w * 0.62, y0 - 1), 3)
+    c.paint(spine, "bone", 0.65, 0.2)
+    for i in range(5):                                  # żebra
+        x = 28 + i * 6
+        rib = c.ellipse(x, y0 - 5, 3.2, 7.5) & ~c.ellipse(x, y0 - 5, 1.6, 5.8)
+        c.paint(rib, "bone", 0.75, 0.2)
+    pel = c.ellipse(w * 0.64, y0 - 2, 6, 5)
+    c.paint(pel, "bone", 0.6, 0.2)
+    c.paint(c.line((w * 0.66, y0), (w - 8, y0 + 2 - rng.integers(0, 4)), 3), "bone", 0.7, 0.2)
+    c.paint(c.line((w * 0.64, y0 - 3), (w - 14, y0 - 9), 3) | c.line((w - 14, y0 - 9), (w - 4, y0 - 5), 3), "bone", 0.7, 0.2)
+    c.paint(c.line((24, y0 - 2), (15, y0 - 11), 3) | c.line((15, y0 - 11), (7, y0 - 6), 3), "bone", 0.7, 0.2)
+    c.outline()
+    return c.image()
+
+def rubble(w, h, seed=1):
+    c = Canvas(w, h); c.rng = np.random.default_rng(seed)
+    rng = np.random.default_rng(seed)
+    yy, xx = np.mgrid[0:h, 0:w]
+    c.paint(c.ellipse(w / 2, h - 4, w * 0.48, 5), "char", 0.5, 0.2)
+    for i in range(16):
+        cx = rng.uniform(8, w - 8); cy = h - 8 - rng.uniform(0, h * 0.5) * (1 - abs(cx - w / 2) / (w / 2))
+        r = rng.uniform(5, 11)
+        n = rng.integers(5, 8)
+        pts = [(cx + np.cos(a + rng.uniform(-0.3, 0.3)) * r * rng.uniform(0.7, 1.15), cy + np.sin(a) * r * 0.7 * rng.uniform(0.7, 1.1)) for a in np.linspace(0, 2 * np.pi, n, endpoint=False)]
+        m = c.poly(pts)
+        c.volume(m, "stone", bulge=3, noise=0.28, base=0.35 + 0.35 * rng.random())
+        c.inner_edge(m, OUTLINE)
+    for i in range(3):                                  # nadpalone belki
+        x0 = rng.uniform(6, w * 0.5); y0 = h - 6 - rng.uniform(2, 14)
+        ang = rng.uniform(-0.5, 0.5)
+        x1 = x0 + rng.uniform(26, 46); y1 = y0 - (x1 - x0) * ang
+        c.paint(c.line((x0, y0), (x1, y1), 4), "char" if i % 2 else "wood", 0.55, 0.25)
+    c.outline()
+    return c.image()
+
+def stake_victim(w, h, seed=1):
+    """Ofiara nabita na pal: pal z zaostrzonym czubkiem, zwisające ciało (seed 3 = szkielet), krew spływająca po palu."""
+    c = Canvas(w, h); c.rng = np.random.default_rng(seed)
+    rng = np.random.default_rng(seed)
+    yy, xx = np.mgrid[0:h, 0:w]
+    cx = w / 2 + rng.uniform(-3, 3)
+    skel = seed % 3 == 0
+    c.paint(c.ellipse(cx, h - 4, w * 0.4, 4), "char", 0.5, 0.2)
+    c.paint(c.poly([(cx - 3.2, h - 3), (cx - 3, 12), (cx, 2), (cx + 3, 12), (cx + 3.2, h - 3)]), "wood", lit_x(xx, cx - 3.5, cx + 3.5), 0.15)
+    # kamienie u podstawy
+    for k in range(4):
+        bx = cx + rng.uniform(-14, 14); c.paint(c.ellipse(bx, h - 5, 5, 3.5), "stone", 0.45, 0.25)
+    top = h * 0.30
+    body_c = "bone" if skel else "cloth"
+    # tułów (osunięty na palu)
+    tors = c.poly([(cx - 9, top), (cx + 9, top + 2), (cx + 7, top + 34), (cx - 6, top + 36)])
+    if skel:
+        c.paint(c.line((cx, top), (cx, top + 34), 3), "bone", 0.6, 0.2)
+        for i in range(5):
+            c.paint(c.ellipse(cx, top + 5 + i * 6, 8, 3) & ~c.ellipse(cx, top + 5 + i * 6, 6, 1.8), "bone", 0.75, 0.2)
+    else:
+        c.volume(tors, "cloth", bulge=5, noise=0.3, base=0.45)
+        c.paint(c.poly([(cx - 3, top + 6), (cx + 3, top + 8), (cx + 8, top + 36), (cx + 2, top + 36)]), "red", 0.55, 0.3)   # rana
+    # ręce zwisające na boki
+    for sgn in (-1, 1):
+        sh = (cx + sgn * 8, top + 4)
+        el = (cx + sgn * (14 + rng.uniform(0, 3)), top + 18)
+        ha = (cx + sgn * (12 + rng.uniform(0, 4)), top + 32)
+        arm = c.line(sh, el, 3) | c.line(el, ha, 3)
+        c.paint(arm, "bone" if skel else "skin", 0.6 if skel else 0.55, 0.25)
+    # głowa opuszczona
+    hx, hy = cx + rng.uniform(-4, 4), top - 4
+    if skel:
+        skull_at(c, hx, hy, 6.0, 0.7)
+    else:
+        c.volume(c.ellipse(hx, hy, 5.5, 6), "skin", bulge=4, noise=0.2, base=0.45)
+        c.paint(c.ellipse(hx, hy - 2.5, 5.7, 3.6), "fur", 0.3, 0.2)
+    # nogi zwisające
+    for sgn in (-1, 1):
+        a0 = (cx + sgn * 3, top + 35); a1 = (cx + sgn * (4 + rng.uniform(0, 3)), top + 52); a2 = (cx + sgn * (3 + rng.uniform(0, 4)), top + 66)
+        leg = c.line(a0, a1, 4) | c.line(a1, a2, 4)
+        c.paint(leg, "bone" if skel else "mud", 0.5, 0.25)
+    # krew spływająca po palu i na ziemi
+    if not skel:
+        for k in range(3):
+            x0 = cx + rng.uniform(-2, 2); l = rng.uniform(14, 34)
+            c.paint(c.line((x0, top + 34), (x0 + rng.uniform(-1, 1), top + 34 + l), 2), "red", 0.5, 0.2)
+        c.paint(c.ellipse(cx, h - 4, 10, 3), "red", 0.45, 0.25)
+    # wrony / kości na czubku
+    c.outline()
+    return c.image()
+
+def lit_x(xx, x0, x1):
+    return 0.85 - (xx - x0) / max(1.0, x1 - x0) * 0.6
+
+def crest_banner(w, h, seed=1):
+    """Maszt z czerwonym sztandarem i herbem Carroburga (wieś, etap 2)."""
+    from PIL import Image as _I
+    c = Canvas(w, h)
+    yy, xx = np.mgrid[0:h, 0:w]
+    cx = 6
+    c.paint(c.rect(cx - 2, 3, cx + 3, h - 2), "wood", lit_x(xx, cx - 2, cx + 3), 0.15)
+    c.paint(c.rect(cx - 2, 3, w - 3, 8), "wood", 0.6, 0.15)
+    c.paint(c.ellipse(cx, 3, 4, 3), "gold", 0.8, 0.0)
+    ban = c.poly([(cx + 4, 8), (w - 4, 8), (w - 4, h * 0.62), ((cx + 4 + w - 4) / 2, h * 0.52), (cx + 4, h * 0.62)])
+    c.volume(ban, "red", bulge=6, noise=0.12, base=0.6)
+    c.paint(c.rect(cx + 4, 8, w - 4, 11), "gold", 0.6, 0.0)
+    c.paint(c.ellipse(cx, h - 4, 9, 3), "char", 0.5, 0.2)
+    c.outline()
+    im = c.image()
+    cr = _I.open(os.path.join(HERE, "assets/ui/crest/carroburg_source.png")).convert("RGBA")
+    cr = cr.crop(cr.getbbox())
+    k = (w - 16) / cr.width
+    cr = cr.resize((int(cr.width * k), int(cr.height * k)), _I.LANCZOS)
+    im.alpha_composite(cr, (cx + 5, 14))
+    return im
+
 # ------------------------------------------------------------------------------------------ wspólne
 def barrel(w, h, seed=1):
     c = Canvas(w, h)
@@ -729,6 +874,11 @@ PROPS = {
     ("stage4_lair", "tree_twisted"): ((110, 150), D(tree_twisted), 3),
     ("stage4_lair", "bones"):        ((70, 70), D(bones), 2),
     ("stage4_lair", "crystals"):     ((45, 50), D(crystals), 3),
+    ("stage4_lair", "skull_pile"):   ((64, 46), D(skull_pile), 2),
+    ("stage4_lair", "skeleton"):     ((86, 34), D(skeleton_lying), 2),
+    ("stage4_lair", "rubble"):       ((100, 54), D(rubble), 3),
+    ("stage4_lair", "stake_victim"): ((54, 128), D(stake_victim), 3),
+    ("stage2_village", "crest_banner"): ((58, 118), D(crest_banner), 1),
     # wspólne
     ("common", "barrel"): ((36, 44), D(barrel), 1),
     ("common", "potion"): ((22, 28), D(potion), 1),

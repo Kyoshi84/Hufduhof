@@ -20,6 +20,7 @@ func layout() -> Dictionary:
 		"light": [Vector2(s.x - 130.0, s.y - 120.0), 68.0, "CIĘCIE"],
 		"heavy": [Vector2(s.x - 290.0, s.y - 82.0), 54.0, "MOCNY"],
 		"dodge": [Vector2(s.x - 100.0, s.y - 265.0), 48.0, "UNIK"],
+		"jump": [Vector2(s.x - 262.0, s.y - 214.0), 52.0, "SKOK"],
 	}
 
 func _button_at(pos: Vector2) -> String:

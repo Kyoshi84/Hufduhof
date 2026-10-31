@@ -7,7 +7,7 @@ Jeden poziom: 4 etapy, 10 fal, boss w 3 fazach. Oprawa: pixel-art w **jednej pal
 1. Godot 4.3 (standard, nie .NET): https://godotengine.org/download
 2. Otwórz `project.godot`, naciśnij **F5** (pierwsze otwarcie sam importuje zasoby).
 
-Sterowanie PC: `WASD`/strzałki - ruch (także w głąb sceny), `J` - cięcie, `K` - mocny atak, `L`/`Spacja` - unik, `Esc` - pauza, **`F3` - diagnostyka kolizji**.
+Sterowanie PC: `WASD`/strzałki - ruch (także w głąb sceny), `J` - cięcie, `K` - mocny atak, `Spacja` - skok (przeszkody, unik przed ciosami w powietrzu), `L`/`C` - unik, `Esc` - pauza, **`F3` - diagnostyka kolizji**.
 Combo: cięcie → cięcie → szeroki zamach obszarowy. Telefon: joystick po lewej, przyciski po prawej.
 
 ## Testy

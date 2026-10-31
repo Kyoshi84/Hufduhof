@@ -83,6 +83,10 @@
   "scarecrow": {
    "note": "strach na wróble",
    "size": "40x85"
+  },
+  "crest_banner": {
+   "note": "sztandar z herbem Carroburga",
+   "size": "58x118"
   }
  }
 }

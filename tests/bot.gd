@@ -44,4 +44,10 @@ func drive(delta: float) -> void:
 				heavy_t = 1.6
 			else:
 				Controls.press("light")
+	var ob = level.next_obstacle_ahead(p.position.x, 260.0)
+	if ob != null and not p.is_airborne() and ob.x0() - p.position.x < 70.0 and ob.x0() > p.position.x - 5.0 and ob.type != "puddle":
+		mv = Vector2(1.0, mv.y)
+		Controls.press("jump")
+	elif ob != null and ob.x0() - p.position.x < 260.0 and not level.wave_active and ob.x0() > p.position.x and best == null:
+		mv = Vector2(1.0, mv.y)
 	Controls.touch_move = mv

@@ -38,6 +38,8 @@ func _process(delta: float) -> void:
 	if actor == null:
 		return
 	if ivo_view != null:
+		var zz = actor.get("z")
+		ivo_view.position.y = -(float(zz) if zz != null else 0.0)
 		queue_redraw()
 		if actor.state == Actor.State.DEAD and actor.team == 1:
 			modulate.a = clampf(1.0 - (actor.dead_t - 0.5) / 0.6, 0.0, 1.0)
@@ -92,6 +94,9 @@ func _draw() -> void:
 	if a.state == Actor.State.DEAD:
 		rot = (PI * 0.5) * clampf(a.dead_t / 0.25, 0.0, 1.0) * -float(f)
 		off = Vector2(-f * 20.0 * clampf(a.dead_t / 0.25, 0.0, 1.0), 0)
+	var zz2 = a.get("z")
+	if zz2 != null:
+		off.y -= float(zz2)
 	draw_set_transform(off, rot, Vector2(f * sc, sc))
 	match kind:
 		"chaos_hound":
