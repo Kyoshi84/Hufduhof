@@ -17,7 +17,7 @@ func _ready() -> void:
 	var tests := [
 		"t_balance", "t_hit_geometry", "t_single_hit_per_attack", "t_invulnerability", "t_light_timing",
 		"t_skaven_ai", "t_hound_charge", "t_beastman_poise", "t_boss_phases", "t_wave_flow", "t_pause_state",
-		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_story", "t_tavern", "t_jump_obstacles", "t_road_decals", "t_music", "t_full_run_bot",
+		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_story", "t_tavern", "t_jump_obstacles", "t_road_decals", "t_stage_quota", "t_music", "t_full_run_bot",
 	]
 	for t in tests:
 		var t0 := Time.get_ticks_msec()
@@ -307,10 +307,12 @@ func t_wave_flow() -> void:
 	p.position.x = float(w0["trigger"]) + 10.0
 	step(lvl, 0.1)
 	ok(lvl.wave_active and lvl.locked, "wejście w trigger uruchamia falę i blokuje ekran")
-	step(lvl, 4.0)
 	var expected := 0
+	var last_t := 0.0
 	for s in w0["spawns"]:
 		expected += int(s["count"])
+		last_t = maxf(last_t, float(s.get("delay", 0.0)) + float(s.get("interval", 0.9)) * (int(s["count"]) - 1))
+	step(lvl, last_t + 1.0)
 	ok(lvl.enemies.size() == expected, "fala 0 zrodziła %d wrogów (jest %d)" % [expected, lvl.enemies.size()])
 	ok(lvl.next_wave == 0, "fala nie jest zakończona, dopóki wrogowie żyją")
 	GameState.god_mode = true
@@ -951,7 +953,8 @@ func t_story() -> void:
 		if is_prologue:
 			ok(str(e["phase"]) in ["pre", "post"] and not e.has("before_stage"), "%s: wpis prologu ma phase pre/post, bez before_stage" % id)
 		else:
-			ok(int(e.get("before_stage", -1)) >= 0 and int(e.get("before_stage", -1)) < stage_count, "%s: before_stage w zakresie etapów" % id)
+			var st: int = int(e.get("before_stage", e.get("after_stage", -1)))
+			ok(st >= 0 and st < stage_count, "%s: before_stage/after_stage w zakresie etapów" % id)
 		ok(str(e.get("title", "")) != "" and str(e.get("kicker", "")) != "", "%s: tytuł i podtytuł" % id)
 		ok(ResourceLoader.exists(str(e.get("image", ""))), "%s: istnieje ilustracja" % id)
 		var pages: Array = e.get("pages", [])
@@ -964,8 +967,21 @@ func t_story() -> void:
 	ok(str(StoryScreen.entry_for_phase("pre").get("id", "")) == "karczma", "prolog: opis przed minigrą")
 	ok(str(StoryScreen.entry_for_phase("post").get("id", "")) == "szczury", "prolog: opis po minigrze")
 	ok(StoryScreen.entry_for_phase("nieistniejaca").is_empty(), "nieznana faza => pusty wpis")
-	ok(str(StoryScreen.entry_for_stage(2).get("id", "")) == "las", "przed etapem 3: las")
-	ok(str(StoryScreen.entry_for_stage(3).get("id", "")) == "czempion", "przed etapem 4: czempion")
+	ok(str(StoryScreen.entry_after_stage(1).get("id", "")) == "las", "po etapie 2 (wieś): plansza z Borubarem przy studni")
+	ok(str(StoryScreen.entry_after_stage(2).get("id", "")) == "czempion", "po etapie 3 (las): plansza z Czempionem")
+	ok(StoryScreen.entry_after_stage(0).is_empty() and StoryScreen.entry_for_stage(2).is_empty(), "bez planszy po drodze i przy wejściu w las")
+	for e2 in [StoryScreen.entry_after_stage(1), StoryScreen.entry_after_stage(2)]:
+		ok(str(e2.get("speaker", "")) != "", "%s: plansza ma mówiącą postać (okno na portret)" % str(e2.get("id", "")))
+	for e3 in [StoryScreen.entry_after_stage(1), StoryScreen.entry_after_stage(2)]:
+		for pg2 in e3["pages"]:
+			ok(StoryScreen.page_to_bbcode(pg2).length() < 230, "%s: strona planszy z portretem mieści się pod oknem (<230 znaków)" % str(e3["id"]))
+	var last_page: Array = StoryScreen.entry_after_stage(2)["pages"][-1]
+	ok(str(last_page[-1]).contains("finałowa walka"), "plansza Czempiona kończy się zapowiedzią finałowej walki")
+	var sp := StoryScreen.new()
+	sp.setup(StoryScreen.entry_after_stage(1))
+	add_child(sp)
+	ok(sp.portrait_box != null and sp.portrait_box.get_global_rect().end.y < sp.rich.get_global_rect().position.y + 1.0, "czarne okno na portret leży nad tekstem")
+	sp.queue_free()
 	var bb := StoryScreen.page_to_bbcode(["Tekst [x]", "— Dialog"])
 	ok(bb.contains("[lb]x]") and bb.contains("[color=" + StoryScreen.DIALOG_COLOR + "]"), "BBCode: nawiasy escapowane, dialog złoty")
 	# przejście przez wszystkie strony: pierwsze advance kończy pisanie, drugie zmienia stronę
@@ -997,19 +1013,93 @@ func t_story() -> void:
 	var lvl := make_level()
 	ok(lvl._story_to_show(0).is_empty(), "start poziomu nie powtarza prologu z karczmy")
 	ok(lvl._story_to_show(1).is_empty(), "etap bez wpisu: brak ekranu")
-	ok(str(lvl._story_to_show(2).get("id", "")) == "las", "wejście w etap 3 pokazuje las")
+	ok(lvl._story_to_show(2).is_empty(), "wejście w etap 3: plansza była już na końcu wsi")
+	ok(str(lvl._story_after(1).get("id", "")) == "las" and lvl._story_after(1).is_empty(), "plansza po wsi pokazuje się raz")
 	free_level(lvl)
 	GameState.story_enabled = false
 	var lvl2 := make_level()
 	ok(lvl2._story_to_show(0).is_empty(), "story_enabled=false wyłącza ekrany")
 	free_level(lvl2)
 	GameState.story_enabled = true
-	var lvl3 := Level.new({}, 5)
+	var vw_idx := 0
+	var lvd := Level.load_level_data("res://data/level_1.json")
+	for k in (lvd["waves"] as Array).size():
+		if float(lvd["waves"][k]["trigger"]) > float(lvd["stages"][1]["start"]) + 600.0:
+			vw_idx = k
+			break
+	var lvl3 := Level.new({}, vw_idx)
 	lvl3.simulate_only = true
 	add_child(lvl3)
-	ok(lvl3._story_to_show(2).is_empty(), "kontynuacja z checkpointu nie powtarza fabuły etapów za graczem")
-	ok(str(lvl3._story_to_show(3).get("id", "")) == "czempion", "kontynuacja: przed bossem fabuła pokazuje się raz")
+	lvl3._story_to_show(lvl3.stage_idx)
+	ok(lvl3._story_after(0).is_empty(), "kontynuacja z checkpointu nie powtarza fabuły etapów za graczem")
+	ok(str(lvl3._story_after(1).get("id", "")) == "las", "kontynuacja we wsi: plansza po wsi wciąż przed graczem")
 	free_level(lvl3)
+
+func kill_all(lvl: Level) -> void:
+	for e in lvl.enemies.duplicate():
+		if e.is_alive():
+			e.hp = 1.0
+			e.invuln = 0.0
+			e.receive_hit(lvl.player, lvl.player.attack_defs["heavy"])
+	step(lvl, 0.3)
+
+func t_stage_quota() -> void:
+	var data := Level.load_level_data("res://data/level_1.json")
+	var quota: int = int(Balance.world("stage_quota"))
+	ok(quota == 50, "limit punktów etapu = 50")
+	ok(Level.enemy_points("skaven") == 1 and Level.enemy_points("chaos_hound") == 1 and Level.enemy_points("beastman") == 3, "punkty: szczury i psy 1, zwierzoludzie 3")
+	var stages: Array = data["stages"]
+	for i in stages.size():
+		var s0: float = float(stages[i]["start"])
+		var s1: float = float(stages[i + 1]["start"]) if i + 1 < stages.size() else float(data["length"])
+		var pts := 0
+		for w in data["waves"]:
+			if float(w["trigger"]) >= s0 and float(w["trigger"]) < s1:
+				pts += Level.wave_points(w)
+		ok(pts >= quota, "%s: fale dają %d pkt (>= %d)" % [str(stages[i]["folder"]), pts, quota])
+	# bramka: bez punktów ekran nie wyjeżdża poza etap, przy końcu przychodzą posiłki
+	GameState.story_enabled = false
+	GameState.god_mode = true
+	var lvl := make_level()
+	lvl.waves = []
+	var p: Player = lvl.player
+	var end0: float = lvl.stage_end(0)
+	ok(is_equal_approx(lvl.cam_max_left(), end0 - lvl.view_w), "zamknięta bramka: kamera kończy się na końcu etapu 1")
+	for k in 40:
+		p.position.x = minf(p.position.x + 120.0, end0 + 200.0)
+		step(lvl, 0.05)
+	ok(p.position.x < end0, "bez 50 pkt Ivo nie wychodzi z etapu (x=%.0f, koniec %.0f)" % [p.position.x, end0])
+	ok(lvl.wave_active and lvl.reinforcing, "przy końcu etapu bez punktów przychodzą posiłki")
+	var rounds := 0
+	while not lvl.quota_met(0) and rounds < 20:
+		step(lvl, 6.0)
+		kill_all(lvl)
+		step(lvl, 0.5)
+		rounds += 1
+	ok(lvl.quota_met(0) and int(lvl.stage_points[0]) >= quota, "posiłki wystarczają do zdobycia limitu (%d pkt)" % int(lvl.stage_points[0]))
+	step(lvl, 0.5)
+	ok(lvl.gate_open[0] and lvl.cam_max_left() > end0 - lvl.view_w, "po zdobyciu limitu bramka się otwiera")
+	free_level(lvl)
+	# wyjście ze wsi: Ivo idzie do krawędzi ekranu, potem plansza (w testach bez UI - od razu)
+	GameState.story_enabled = true
+	var lvl2 := make_level()
+	lvl2.waves = []
+	var p2: Player = lvl2.player
+	p2.position.x = lvl2.stage_start(1) + 100.0
+	step(lvl2, 0.1)
+	lvl2.gate_open[0] = true
+	lvl2.stage_points[1] = quota
+	var end1: float = lvl2.stage_end(1)
+	p2.position.x = end1 - lvl2.view_w * 0.45
+	lvl2.view_left = end1 - lvl2.view_w
+	step(lvl2, 0.1)
+	ok(lvl2.exit_walk == 1 and lvl2.go_prompt and not lvl2.gate_open[1], "wieś ukończona: Ivo ma dojść do krawędzi ekranu")
+	p2.position.x = end1 - 60.0
+	step(lvl2, 0.1)
+	ok(lvl2.exit_walk == -1 and lvl2.gate_open[1], "na krawędzi ekranu plansza i otwarcie drogi do lasu")
+	free_level(lvl2)
+	GameState.story_enabled = false
+	GameState.god_mode = false
 
 func make_tavern() -> TavernGame:
 	var g := TavernGame.new()
@@ -1239,7 +1329,7 @@ func t_full_run_bot() -> void:
 	var bot := TestBot.new()
 	bot.level = lvl
 	var ticks := 0
-	var max_ticks := 60 * 60 * 12
+	var max_ticks := 60 * 60 * 20
 	var peak_enemies := 0
 	while lvl.outcome != "won" and ticks < max_ticks:
 		bot.drive(1.0 / 60.0)
@@ -1253,6 +1343,10 @@ func t_full_run_bot() -> void:
 	ok(lvl.boss != null and not lvl.boss.is_alive(), "boss pokonany")
 	ok(lvl.boss != null and lvl.boss.phase == 3, "boss przeszedł przez fazy do 3")
 	ok(GameState.kills >= 25, "pokonano wielu wrogów (%d)" % GameState.kills)
+	var all_q := true
+	for i in lvl.stage_points.size():
+		all_q = all_q and int(lvl.stage_points[i]) >= int(Balance.world("stage_quota"))
+	ok(all_q, "bot zdobył limit punktów w każdym etapie (%s)" % str(lvl.stage_points))
 	print("  info: czas ~%.0f s, kills %d, wynik %d, szczyt wrogów %d" % [ticks / 60.0, GameState.kills, GameState.score, peak_enemies])
 	SaveData.clear_checkpoint()
 	free_level(lvl)

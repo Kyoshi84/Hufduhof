@@ -16,6 +16,7 @@ var typing: bool = false
 var rich: RichTextLabel
 var next_btn: Button
 var page_label: Label
+var portrait_box: Control             # czarne okno nad tekstem na grafikę mówiącej postaci (wpis: "speaker", "portrait")
 var _tween: Tween
 var _done: bool = false
 
@@ -35,6 +36,15 @@ static func entry_for_stage(stage: int, entries: Array = []) -> Dictionary:
 		entries = load_entries()
 	for e in entries:
 		if int(e.get("before_stage", -1)) == stage:
+			return e
+	return {}
+
+## Plansza pokazywana po ukończeniu etapu o danym numerze (Ivo doszedł do krawędzi ekranu) albo pusty słownik.
+static func entry_after_stage(stage: int, entries: Array = []) -> Dictionary:
+	if entries.is_empty():
+		entries = load_entries()
+	for e in entries:
+		if e.has("after_stage") and int(e["after_stage"]) == stage:
 			return e
 	return {}
 
@@ -111,11 +121,15 @@ func _ready() -> void:
 	kicker.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
 	kicker.add_theme_constant_override("outline_size", 6)
 	head.add_child(kicker)
-	var title := UI.make_label(str(entry.get("title", "")).to_upper(), 64, Color(0.88, 0.2, 0.15))
+	var has_window: bool = entry.has("speaker") or entry.has("portrait")
+	var title := UI.make_label(str(entry.get("title", "")).to_upper(), 46 if has_window else 64, Color(0.88, 0.2, 0.15))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.95))
 	title.add_theme_constant_override("outline_size", 10)
 	head.add_child(title)
+	# czarne okno na grafikę mówiącej postaci (Borubar, Czempion): nad panelem z tekstem
+	if entry.has("speaker") or entry.has("portrait"):
+		_build_portrait_window()
 	# panel z tekstem u dołu
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
@@ -168,6 +182,51 @@ func _ready() -> void:
 	row.add_child(next_btn)
 	grab_focus()
 	show_page(0)
+
+## Okno 520x290 z ramką: grafika z "portrait" (jeśli plik istnieje), pod nią imię mówiącego.
+func _build_portrait_window() -> void:
+	var win := PanelContainer.new()
+	win.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	win.anchor_left = 0.5
+	win.anchor_right = 0.5
+	win.anchor_top = 1.0
+	win.anchor_bottom = 1.0
+	win.offset_left = -120                         # przesunięte w prawo: miejsce na tytuł po lewej
+	win.offset_right = 400
+	win.offset_top = -328 - 300
+	win.offset_bottom = -328
+	win.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0, 0, 0, 1)
+	sb.border_color = Color(0.72, 0.58, 0.28)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(4)
+	sb.content_margin_left = 6
+	sb.content_margin_right = 6
+	sb.content_margin_top = 6
+	sb.content_margin_bottom = 6
+	win.add_theme_stylebox_override("panel", sb)
+	add_child(win)
+	portrait_box = win
+	var inner := Control.new()
+	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	win.add_child(inner)
+	var path: String = str(entry.get("portrait", ""))
+	if path != "" and ResourceLoader.exists(path):
+		var tr := TextureRect.new()
+		tr.texture = load(path)
+		tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tr.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		inner.add_child(tr)
+	var name_lbl := UI.make_label(str(entry.get("speaker", "")).to_upper(), 26, Color(0.9, 0.78, 0.45))
+	name_lbl.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	name_lbl.offset_top = -38
+	name_lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
+	name_lbl.add_theme_constant_override("outline_size", 8)
+	inner.add_child(name_lbl)
 
 func show_page(i: int) -> void:
 	page = i

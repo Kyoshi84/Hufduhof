@@ -1,5 +1,5 @@
 {
- "_opis": "Ekrany fabularne. before_stage = numer etapu (od 0, wg stages w level_1.json), przed którym ekran się pokazuje. Akapity zaczynające się od '—' to dialogi (złote). Edytuj tekst bez ruszania kodu.",
+ "_opis": "Ekrany fabularne. before_stage = numer etapu (od 0, wg stages w level_1.json), przed którym ekran się pokazuje; after_stage = etap, po którym plansza pojawia się, gdy Ivo dojdzie do prawej krawędzi ekranu. speaker / portrait = czarne okno nad tekstem z grafiką mówiącej postaci (portrait: ścieżka PNG, brak pliku = puste czarne okno). Akapity zaczynające się od '—' to dialogi (złote). Edytuj tekst bez ruszania kodu.",
  "stories": [
   {
    "id": "karczma",
@@ -43,49 +43,63 @@
   },
   {
    "id": "las",
-   "kicker": "SKRAJ LASU",
-   "title": "Las",
-   "before_stage": 2,
+   "kicker": "STUDNIA NA SKRAJU WSI",
+   "title": "Borubar",
    "image": "res://assets/ui/story/story_forest.png",
    "pages": [
     [
-     "Po opuszczeniu wsi Ivo dociera do starej studni przy skraju lasu. W pobliżu siedzi wyczerpany mężczyzna, który wygląda, jakby właśnie uciekł przed śmiercią.",
+     "Wieś ucichła. Ivo przechodzi między dymiącymi zgliszczami i dociera do starej studni na skraju wsi, tuż przy ścianie lasu."
+    ],
+    [
+     "Przy cembrowinie siedzi wyczerpany mężczyzna. Wygląda, jakby właśnie uciekł przed śmiercią.",
      "— Hej, ty! Jak cię zwą? — pyta Ivo."
     ],
     [
-     "— Jestem Borubar, panie. Ledwo uszedłem z życiem! W lesie zalęgły się Zwierzoludzie. Widziałem ich dziesiątki. Rozszarpują każdego, kto zapuści się między drzewa!"
+     "— Jestem Borubar, panie. Ledwo uszedłem z życiem! W lesie zalęgły się zwierzoludzie. Rozszarpują każdego, kto wejdzie między drzewa!"
     ],
     [
-     "Ivo spogląda na ciemną ścianę lasu.",
      "— Zwierzoludzie, szczuroludzie… Za dużo tego jak na jedną spokojną okolicę. Pokaż mi, którędy przyszli."
     ],
     [
-     "Borubar wskazuje zarośnięty trakt prowadzący w głąb puszczy. Ivo rusza przed siebie, a odgłosy rogów i dzikich wrzasków stają się coraz głośniejsze."
+     "Borubar wskazuje zarośnięty trakt prowadzący przez pola w głąb puszczy.",
+     "— Tam, panie. Za polami, gdzie las robi się czarny."
     ],
     [
-     "Między drzewami pojawiają się pierwsze sylwetki zwierzoludzi — potężnych, rogowych bestii uzbrojonych w topory, maczugi i prymitywne włócznie. Zastępują drogę i rzucają się do ataku.",
-     "Ivo musi przedrzeć się przez leśne zasadzki, pokonać wojowników i dotrzeć do obozowiska, w którym gromadzą się siły wroga."
+     "Ivo poprawia chwyt na rękojeści i rusza w stronę lasu."
     ]
-   ]
+   ],
+   "after_stage": 1,
+   "speaker": "Borubar",
+   "portrait": "res://assets/ui/story/portraits/borubar.png"
   },
   {
    "id": "czempion",
    "kicker": "PRZED FORTECĄ",
-   "title": "Czempion",
-   "before_stage": 3,
+   "title": "Czempion Chaosu",
    "image": "res://assets/ui/story/story_champion.png",
    "pages": [
     [
-     "Ivo dociera na otwartą przestrzeń przed fortecą. Słońce znika za horyzontem, choć jeszcze przed chwilą był środek dnia. Nad ziemią zaczyna pełznąć nienaturalna mgła. Ziemia drży, a z wnętrza murów dobiega głuchy dźwięk rogów wojennych."
+     "Las rzednie. Ivo wychodzi na otwartą przestrzeń przed fortecą. Słońce gaśnie w środku dnia, a nad ziemią pełznie nienaturalna mgła."
     ],
     [
-     "W oknach wież rozbłyskują czerwone światła. Na murach powiewają sztandary oznaczone bluźnierczymi symbolami.",
-     "Nagle brama fortecy otwiera się z przeciągłym zgrzytem."
+     "Brama fortecy otwiera się ze zgrzytem. Z mgły wyłania się olbrzym w czarnej, kolczastej zbroi, z rogami wyrastającymi z hełmu."
     ],
     [
-     "Z mgły wyłania się olbrzymia postać w czarnej, kolczastej zbroi. W dłoniach dzierży ogromną broń, a z jego hełmu wyrastają zakrzywione rogi. Każdy jego krok rozrywa ziemię pod stopami."
+     "— Mały żołnierzyk Imperium… Przeszedłeś przez wieś i las tylko po to, by umrzeć u moich stóp."
+    ],
+    [
+     "— Moja horda czeka w legowisku. Przebij się przez nią, a sam wyrwę ci serce i rzucę je moim bogom."
+    ],
+    [
+     "— Na Sigmara — odpowiada Ivo, unosząc miecz. — Dziś wrócisz do swoich bogów sam."
+    ],
+    [
+     "Rogi wojenne ryczą nad legowiskiem Chaosu. Rozpoczyna się finałowa walka!"
     ]
-   ]
+   ],
+   "after_stage": 2,
+   "speaker": "Czempion Chaosu",
+   "portrait": "res://assets/ui/story/portraits/czempion.png"
   }
  ]
 }

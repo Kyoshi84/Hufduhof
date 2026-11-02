@@ -27,6 +27,42 @@ var t: float = 0.0
 var ripple_t: float = 0.0
 var hit_count: int = 0              # ile razy gracz się o nią potknął (testy/statystyki)
 
+const ART_DIR := "res://assets/stages/common/props"
+const WPT := 4.0 / 3.0
+static var _art: Dictionary = {}       # typ -> { tex, y, flames, frames, fps, glow } z obstacles.json (pusty = grafika z kodu)
+static var _art_loaded: bool = false
+
+## Grafika przeszkody z assets/stages/common/props/obstacles.json (tools/build_obstacles.py) albo {}.
+static func art_for(p_type: String) -> Dictionary:
+	if not _art_loaded:
+		_art_loaded = true
+		var path: String = ART_DIR + "/obstacles.json"
+		if FileAccess.file_exists(path):
+			var m = JSON.parse_string(FileAccess.get_file_as_string(path))
+			if typeof(m) == TYPE_DICTIONARY:
+				for k in m.get("obstacles", {}).keys():
+					var spec: Dictionary = m["obstacles"][k]
+					var tex := CharacterSheet.load_tex(ART_DIR + "/" + str(spec.get("file", "")))
+					if tex == null:
+						continue
+					var a := { "tex": tex, "y": float(spec.get("y", 0.0)) }
+					if spec.has("flames"):
+						a["flames"] = CharacterSheet.load_tex(ART_DIR + "/" + str(spec["flames"]))
+						a["frames"] = int(spec.get("frames", 1))
+						a["fps"] = float(spec.get("fps", 10.0))
+					if spec.has("glow"):
+						a["glow"] = CharacterSheet.load_tex(ART_DIR + "/" + str(spec["glow"]))
+					_art[k] = a
+	return _art.get(p_type, {})
+
+## Rysuje teksturę przeszkody: x = środek przeszkody, y = wiersz pod horyzontem (px obrazu) górnej krawędzi.
+func _draw_art_tex(tex: Texture2D, y_px: float, mod: Color = Color(1, 1, 1, 1)) -> Rect2:
+	var w: float = tex.get_width() * WPT
+	var h: float = tex.get_height() * WPT
+	var r := Rect2(floorf(-w * 0.5), LevelBackground.HORIZON + y_px * WPT, w, h)
+	draw_texture_rect(tex, r, false, mod)
+	return r
+
 static func is_known(name: String) -> bool:
 	return TYPES.has(name)
 
@@ -177,6 +213,18 @@ func _draw_chasm() -> void:
 	var y0: float = _lane_top()
 	var y1: float = _lane_bot()
 	var w: float = half_w
+	var art: Dictionary = art_for("chasm")
+	if not art.is_empty():
+		_draw_art_tex(art["tex"], art["y"])
+		var gl: Texture2D = art.get("glow")
+		if gl != null:
+			_draw_art_tex(gl, art["y"], Color(1, 1, 1, 0.35 + 0.3 * sin(t * 1.8)))
+		for i in 6:                                                                              # kamyki spadające w głąb
+			var u: float = fmod(t * 0.55 + i * 0.167, 1.0)
+			var px: float = floorf((sin(i * 3.7) * w * 0.35 + u * 6.0) / WPT) * WPT
+			var py: float = floorf((lerpf(y0 + 30.0, y1 - 20.0, fmod(i * 0.37, 1.0)) + u * 40.0) / WPT) * WPT
+			draw_rect(Rect2(px, py, WPT, WPT), Color(0.42, 0.40, 0.38, 1.0 - u))
+		return
 	_poly([Vector2(-w - 18, y0), Vector2(w + 18, y0), Vector2(w + 26, y1), Vector2(-w - 26, y1)], Color(0.10, 0.07, 0.09))
 	var rim := PackedVector2Array()
 	var rim2 := PackedVector2Array()
@@ -202,6 +250,10 @@ func _draw_log() -> void:
 	var y0: float = _lane_top() + 6.0
 	var y1: float = _lane_bot() - 16.0
 	var w: float = half_w
+	var art: Dictionary = art_for("log")
+	if not art.is_empty():
+		_draw_art_tex(art["tex"], art["y"])
+		return
 	_ellipse(Vector2(0, y1 + 6), w + 8.0, 12.0, Color(0, 0, 0, 0.35))
 	# pień leżący w poprzek ścieżki (wzdłuż głębi): kora w pionowe pasy
 	var base_cols := [Color(0.20, 0.13, 0.08), Color(0.28, 0.18, 0.10), Color(0.36, 0.24, 0.13), Color(0.25, 0.16, 0.09)]
@@ -235,6 +287,21 @@ func _draw_fire() -> void:
 			var tex: Texture2D = vars[0]
 			var k: float = 4.0 / 3.0 * 1.5
 			draw_texture_rect(tex, Rect2(-tex.get_width() * k * 0.5, y0 - tex.get_height() * k + 54.0, tex.get_width() * k, tex.get_height() * k), false)
+	var art: Dictionary = art_for("fire")
+	if not art.is_empty():
+		_draw_art_tex(art["tex"], art["y"])
+		var fl: Texture2D = art.get("flames")
+		if fl != null:
+			var n: int = maxi(1, int(art["frames"]))
+			var fw: float = fl.get_width() / float(n)
+			var f: int = int(t * float(art["fps"])) % n
+			var dst := Rect2(floorf(-fw * WPT * 0.5), LevelBackground.HORIZON + float(art["y"]) * WPT, fw * WPT, fl.get_height() * WPT)
+			draw_texture_rect_region(fl, dst, Rect2(f * fw, 0, fw, fl.get_height()))
+		for i in 10:                                                                             # iskry (piksele)
+			var u: float = fmod(t * 0.8 + i * 0.113, 1.0)
+			var sx: float = floorf((sin(i * 5.3) * w * 0.6 + sin(t * 3.0 + i) * 8.0) / WPT) * WPT
+			draw_rect(Rect2(sx, floorf(((y0 + y1) * 0.5 - 40.0 - u * 190.0) / WPT) * WPT, WPT, WPT), Color(1.0, 0.72 - u * 0.3, 0.25, 1.0 - u))
+		return
 	_ellipse(Vector2(0, (y0 + y1) * 0.5), w + 12.0, (y1 - y0) * 0.5, Color(0.10, 0.04, 0.03))
 	_ellipse(Vector2(0, (y0 + y1) * 0.5), w * 0.8, (y1 - y0) * 0.42, Color(0.55, 0.16, 0.05, 0.55 + 0.15 * sin(t * 9.0)))
 	var n: int = 6

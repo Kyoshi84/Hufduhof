@@ -6,48 +6,102 @@
   {
    "name": "ETAP 1: DROGA DO HUFDUHOFU",
    "start": 0,
-   "folder": "stage1_road"
+   "folder": "stage1_road",
+   "reinforcements": [
+    "skaven",
+    "skaven",
+    "chaos_hound"
+   ]
   },
   {
    "name": "ETAP 2: WIEŚ",
    "start": 4300,
-   "folder": "stage2_village"
+   "folder": "stage2_village",
+   "reinforcements": [
+    "skaven",
+    "chaos_hound",
+    "skaven"
+   ]
   },
   {
    "name": "ETAP 3: POLA I LAS",
    "start": 8900,
-   "folder": "stage3_fields_forest"
+   "folder": "stage3_fields_forest",
+   "reinforcements": [
+    "beastman",
+    "skaven",
+    "chaos_hound"
+   ]
   },
   {
    "name": "ETAP 4: LEGOWISKO CHAOSU",
    "start": 13400,
-   "folder": "stage4_lair"
+   "folder": "stage4_lair",
+   "reinforcements": [
+    "beastman",
+    "skaven",
+    "chaos_hound"
+   ]
   }
  ],
  "waves": [
   {
-   "trigger": 900,
+   "trigger": 700,
    "spawns": [
     {
      "type": "skaven",
-     "count": 2,
-     "side": "right"
+     "count": 4,
+     "side": "right",
+     "interval": 0.9
+    },
+    {
+     "type": "skaven",
+     "count": 4,
+     "side": "both",
+     "delay": 3.0,
+     "interval": 0.8
     }
    ]
   },
   {
-   "trigger": 1700,
+   "trigger": 1250,
    "spawns": [
     {
      "type": "skaven",
-     "count": 2,
-     "side": "right"
+     "count": 5,
+     "side": "both",
+     "interval": 0.8
     },
     {
      "type": "skaven",
-     "count": 1,
+     "count": 3,
      "side": "left",
-     "delay": 2.0
+     "delay": 3.5,
+     "interval": 0.9
+    }
+   ]
+  },
+  {
+   "trigger": 1900,
+   "spawns": [
+    {
+     "type": "skaven",
+     "count": 5,
+     "side": "both",
+     "interval": 0.7
+    },
+    {
+     "type": "chaos_hound",
+     "count": 1,
+     "side": "right",
+     "delay": 3.0
+    },
+    {
+     "type": "skaven",
+     "count": 3,
+     "side": "both",
+     "delay": 5.0,
+     "interval": 0.8
     }
    ]
   },
@@ -56,69 +110,119 @@
    "spawns": [
     {
      "type": "skaven",
-     "count": 3,
-     "side": "both"
-    }
-   ]
-  },
-  {
-   "trigger": 3300,
-   "spawns": [
-    {
-     "type": "skaven",
-     "count": 3,
-     "side": "both"
+     "count": 5,
+     "side": "both",
+     "interval": 0.7
     },
     {
      "type": "chaos_hound",
      "count": 1,
      "side": "right",
      "delay": 3.0
+    },
+    {
+     "type": "skaven",
+     "count": 2,
+     "side": "left",
+     "delay": 5.0
     }
    ]
   },
   {
-   "trigger": 3950,
+   "trigger": 3150,
    "spawns": [
+    {
+     "type": "skaven",
+     "count": 5,
+     "side": "both",
+     "interval": 0.7
+    },
+    {
+     "type": "chaos_hound",
+     "count": 2,
+     "side": "right",
+     "delay": 3.0,
+     "interval": 1.2
+    },
+    {
+     "type": "skaven",
+     "count": 2,
+     "side": "both",
+     "delay": 6.0
+    }
+   ]
+  },
+  {
+   "trigger": 3600,
+   "spawns": [
+    {
+     "type": "skaven",
+     "count": 5,
+     "side": "both",
+     "delay": 1.0,
+     "interval": 0.7
+    },
+    {
+     "type": "chaos_hound",
+     "count": 2,
+     "side": "both",
+     "delay": 4.0,
+     "interval": 1.2
+    },
+    {
+     "type": "skaven",
+     "count": 1,
+     "side": "right",
+     "delay": 6.5
+    }
+   ]
+  },
+  {
+   "trigger": 4750,
+   "spawns": [
+    {
+     "type": "skaven",
+     "count": 5,
+     "side": "both",
+     "interval": 0.7
+    },
+    {
+     "type": "chaos_hound",
+     "count": 2,
+     "side": "right",
+     "delay": 3.0,
+     "interval": 1.0
+    },
+    {
+     "type": "skaven",
+     "count": 3,
+     "side": "both",
+     "delay": 5.5,
+     "interval": 0.8
+    }
+   ]
+  },
+  {
+   "trigger": 5550,
+   "spawns": [
+    {
+     "type": "chaos_hound",
+     "count": 3,
+     "side": "both",
+     "interval": 1.0
+    },
     {
      "type": "skaven",
      "count": 4,
      "side": "both",
-     "delay": 1.0,
-     "interval": 0.8
-    }
-   ]
-  },
-  {
-   "trigger": 4900,
-   "spawns": [
-    {
-     "type": "skaven",
-     "count": 3,
-     "side": "both"
-    },
-    {
-     "type": "chaos_hound",
-     "count": 1,
-     "side": "right",
-     "delay": 3.0
-    }
-   ]
-  },
-  {
-   "trigger": 5700,
-   "spawns": [
-    {
-     "type": "chaos_hound",
-     "count": 2,
-     "side": "both"
+     "delay": 2.5,
+     "interval": 0.7
     },
     {
      "type": "skaven",
      "count": 3,
-     "side": "both",
-     "delay": 2.0,
-     "interval": 0.8
+     "side": "left",
+     "delay": 6.0
     }
    ]
   },
@@ -127,49 +231,70 @@
    "spawns": [
     {
      "type": "skaven",
+     "count": 5,
+     "side": "both",
+     "interval": 0.6
+    },
+    {
+     "type": "chaos_hound",
+     "count": 3,
+     "side": "right",
+     "delay": 3.5,
+     "interval": 1.1
+    },
+    {
+     "type": "skaven",
+     "count": 2,
+     "side": "both",
+     "delay": 7.0
+    }
+   ]
+  },
+  {
+   "trigger": 7250,
+   "spawns": [
+    {
+     "type": "skaven",
      "count": 4,
      "side": "both",
      "interval": 0.7
     },
     {
      "type": "chaos_hound",
-     "count": 2,
-     "side": "right",
-     "delay": 3.5,
-     "interval": 1.2
-    }
-   ]
-  },
-  {
-   "trigger": 7300,
-   "spawns": [
+     "count": 3,
+     "side": "both",
+     "delay": 2.5,
+     "interval": 1.0
+    },
     {
      "type": "skaven",
      "count": 3,
-     "side": "both"
-    },
-    {
-     "type": "chaos_hound",
-     "count": 2,
-     "side": "both",
-     "delay": 2.5
+     "side": "right",
+     "delay": 6.0
     }
    ]
   },
   {
-   "trigger": 8300,
+   "trigger": 8150,
    "spawns": [
     {
      "type": "skaven",
-     "count": 4,
+     "count": 5,
      "side": "both",
-     "interval": 0.7
+     "interval": 0.6
     },
     {
      "type": "chaos_hound",
-     "count": 2,
+     "count": 3,
      "side": "right",
-     "delay": 4.0
+     "delay": 4.0,
+     "interval": 1.2
+    },
+    {
+     "type": "skaven",
+     "count": 2,
+     "side": "left",
+     "delay": 7.0
     }
    ]
   },
@@ -178,45 +303,50 @@
    "spawns": [
     {
      "type": "beastman",
-     "count": 1,
-     "side": "right"
+     "count": 2,
+     "side": "right",
+     "interval": 2.5
+    },
+    {
+     "type": "skaven",
+     "count": 4,
+     "side": "both",
+     "delay": 3.0,
+     "interval": 0.8
+    }
+   ]
+  },
+  {
+   "trigger": 10250,
+   "spawns": [
+    {
+     "type": "beastman",
+     "count": 2,
+     "side": "left",
+     "interval": 2.5
+    },
+    {
+     "type": "chaos_hound",
+     "count": 4,
+     "side": "right",
+     "delay": 3.0,
+     "interval": 1.0
+    }
+   ]
+  },
+  {
+   "trigger": 11100,
+   "spawns": [
+    {
+     "type": "beastman",
+     "count": 3,
+     "side": "both",
+     "interval": 2.2
     },
     {
      "type": "skaven",
      "count": 2,
      "side": "both",
-     "delay": 3.0
-    }
-   ]
-  },
-  {
-   "trigger": 10200,
-   "spawns": [
-    {
-     "type": "beastman",
-     "count": 1,
-     "side": "left"
-    },
-    {
-     "type": "chaos_hound",
-     "count": 2,
-     "side": "right",
-     "delay": 3.0
-    }
-   ]
-  },
-  {
-   "trigger": 11000,
-   "spawns": [
-    {
-     "type": "beastman",
-     "count": 2,
-     "side": "both"
-    },
-    {
-     "type": "chaos_hound",
-     "count": 2,
-     "side": "right",
      "delay": 4.0
     }
    ]
@@ -232,32 +362,21 @@
     },
     {
      "type": "beastman",
-     "count": 1,
+     "count": 2,
      "side": "right",
-     "delay": 2.0
+     "delay": 2.0,
+     "interval": 2.5
     }
    ]
   },
   {
-   "trigger": 12700,
+   "trigger": 12800,
    "spawns": [
     {
      "type": "beastman",
-     "count": 2,
-     "side": "both"
-    },
-    {
-     "type": "skaven",
      "count": 3,
      "side": "both",
-     "delay": 3.0,
-     "interval": 0.7
-    },
-    {
-     "type": "chaos_hound",
-     "count": 1,
-     "side": "right",
-     "delay": 5.0
+     "interval": 2.0
     }
    ]
   },
@@ -267,18 +386,20 @@
     {
      "type": "beastman",
      "count": 2,
-     "side": "both"
+     "side": "both",
+     "interval": 2.2
     },
     {
      "type": "skaven",
-     "count": 3,
+     "count": 4,
      "side": "both",
-     "delay": 2.0
+     "delay": 2.0,
+     "interval": 0.7
     }
    ]
   },
   {
-   "trigger": 14600,
+   "trigger": 14650,
    "spawns": [
     {
      "type": "beastman",
@@ -294,23 +415,25 @@
     },
     {
      "type": "chaos_hound",
-     "count": 2,
+     "count": 3,
      "side": "right",
-     "delay": 5.0
+     "delay": 5.0,
+     "interval": 1.0
     }
    ]
   },
   {
-   "trigger": 15500,
+   "trigger": 15450,
    "spawns": [
     {
      "type": "beastman",
      "count": 2,
-     "side": "both"
+     "side": "both",
+     "interval": 2.2
     },
     {
      "type": "chaos_hound",
-     "count": 3,
+     "count": 4,
      "side": "both",
      "delay": 3.0,
      "interval": 1.0
@@ -318,19 +441,19 @@
    ]
   },
   {
-   "trigger": 16200,
+   "trigger": 16150,
    "spawns": [
     {
      "type": "beastman",
      "count": 2,
-     "side": "both"
+     "side": "both",
+     "interval": 2.2
     },
     {
      "type": "skaven",
-     "count": 4,
+     "count": 2,
      "side": "both",
-     "delay": 2.0,
-     "interval": 0.7
+     "delay": 2.0
     },
     {
      "type": "chaos_hound",
@@ -341,17 +464,18 @@
    ]
   },
   {
-   "trigger": 16700,
+   "trigger": 16800,
    "spawns": [
     {
      "type": "beastman",
      "count": 3,
-     "side": "both"
+     "side": "both",
+     "interval": 2.0
     },
     {
      "type": "skaven",
-     "count": 3,
-     "side": "both",
+     "count": 1,
+     "side": "right",
      "delay": 3.0
     }
    ]

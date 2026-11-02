@@ -16,7 +16,7 @@ Grafiki etapu. Każdy brakujący plik jest zastępowany proceduralną grafiką t
 | sky | `sky.png` | 0.0 | 128x320 (szeroki 64-512, wysokość 320) | niebo; powtarzane poziomo, dolna krawędź na horyzoncie |
 | far1 | `far1.png` | 0.15 | 640x140, szew poziomy niewidoczny | daleki plan (wolny paralaks), powtarzany poziomo, dolna krawędź na horyzoncie |
 | far2 | `far2.png` | 0.32 | 640x110, szew niewidoczny | bliższy plan sylwetek (średni paralaks), powtarzany poziomo |
-| ground | `ground.png` | 0.0 | 128x320 | podłoże w pasie walki, powtarzane poziomo, górna krawędź na horyzoncie |
+| ground | `ground.png` | 0.0 | 1024x320 (`tools/build_road.py`) | podłoże w pasie walki, powtarzane poziomo, górna krawędź na horyzoncie |
 | foreground | `foreground.png` | 1.25 | 640x60, max 67 px wysokości | opcjonalny pierwszy plan przy dolnej krawędzi ekranu (poza pasem walki!) |
 
 Paralaksa i `y_offset` (przesunięcie pionowe, px) można zmienić w `stage.json`.
@@ -37,3 +37,11 @@ Paralaksa i `y_offset` (przesunięcie pionowe, px) można zmienić w `stage.json
 | `scarecrow` | `props/scarecrow.png` (warianty: `scarecrow_2.png` ... `scarecrow_6.png`) | 40x85 | strach na wróble |
 
 Sprawdzenie plików: `python3 tools/check_assets.py`.
+
+## Nakładki terenu (`decals/`, `decals.json`)
+Rysowane na podłożu pod rekwizytami i postaciami (niczego nie blokują), w stałych miejscach na każdym przejściu:
+rozdroża z drogowskazem (bez drzew i płotów obok), skarpy i kamienne murki, uskok przy przedniej krawędzi,
+bruk, wypalone plamy, siano, połamane deski, kałuże, głazy.
+Każdy plik można podmienić własnym; `y` w `decals.json` = wiersz (px pod horyzontem) górnej krawędzi PNG.
+Przebudowa: `python3 tools/build_road.py --stage stage2_village` (podgląd: `--preview KATALOG`).
+

@@ -6,6 +6,7 @@ var level
 var canvas: Control
 var score_label: Label
 var kills_label: Label
+var quota_label: Label
 var banner_label: Label
 var banner_t: float = 0.0
 var damage_flash: float = 0.0
@@ -26,6 +27,9 @@ func _ready() -> void:
 	kills_label = UI.make_label("", 24, Color(0.8, 0.75, 0.62))
 	kills_label.position = Vector2(300, 56)
 	canvas.add_child(kills_label)
+	quota_label = UI.make_label("", 24, Color(0.9, 0.78, 0.45))
+	quota_label.position = Vector2(24, 70)
+	canvas.add_child(quota_label)
 	banner_label = UI.make_label("", 52, Color(0.9, 0.78, 0.45))
 	banner_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	banner_label.size = Vector2(1280, 80)
@@ -62,6 +66,12 @@ func _process(delta: float) -> void:
 	t += delta
 	score_label.text = "WYNIK  %d" % GameState.score
 	kills_label.text = "Pokonani: %d" % GameState.kills
+	var si: int = level.stage_idx
+	if si >= 0 and si < level.stage_points.size() and level.stage_quota() > 0:
+		var pts: int = int(level.stage_points[si])
+		var q: int = level.stage_quota()
+		quota_label.text = "Etap %d: %d / %d pkt" % [si + 1, mini(pts, q), q]
+		quota_label.add_theme_color_override("font_color", Color(0.55, 0.85, 0.45) if pts >= q else Color(0.9, 0.78, 0.45))
 	if banner_t > 0.0:
 		banner_t -= delta
 		banner_label.modulate.a = clampf(banner_t / 0.5, 0.0, 1.0)
@@ -83,6 +93,12 @@ func _draw_hud() -> void:
 	canvas.draw_rect(Rect2(bx, by, bw * clampf(p.hp / p.max_hp, 0.0, 1.0), 28), Color(0.72, 0.1, 0.1))
 	canvas.draw_rect(Rect2(bx - 3, by - 3, bw + 6, 34), Color(0.72, 0.58, 0.28), false, 2.0)
 	canvas.draw_string(ThemeDB.fallback_font, Vector2(bx + 6, by + 22), "IVO", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(1, 1, 1, 0.9))
+	# postęp limitu punktów etapu (cienki pasek pod zdrowiem)
+	var si: int = level.stage_idx
+	if si >= 0 and si < level.stage_points.size() and level.stage_quota() > 0:
+		var f: float = clampf(float(level.stage_points[si]) / float(level.stage_quota()), 0.0, 1.0)
+		canvas.draw_rect(Rect2(bx - 3, by + 35, bw + 6, 10), Color(0.05, 0.03, 0.03, 0.85))
+		canvas.draw_rect(Rect2(bx, by + 37, bw * f, 6), Color(0.55, 0.85, 0.45) if f >= 1.0 else Color(0.85, 0.66, 0.25))
 	# pasek bossa
 	var b = level.boss
 	if b != null and is_instance_valid(b) and b.is_alive():

@@ -51,6 +51,14 @@ var story_active: bool = false       # ekran fabularny na wierzchu (gra wstrzyma
 var _story_checked: bool = false
 var _stories_seen: Dictionary = {}
 
+# limit punktów etapu: każdy etap wymaga stage_quota (balance.json) punktów za pokonanych wrogów,
+# dopiero wtedy "bramka" na końcu etapu się otwiera (szczury i psy 1 pkt, zwierzoludzie 3 pkt).
+var stage_points: Array = []
+var gate_open: Array = []
+var reinforcing: bool = false        # bieżąca fala to posiłki dosyłane, bo brakuje punktów
+var exit_walk: int = -1              # etap, z którego Ivo właśnie wychodzi do krawędzi ekranu (przed planszą)
+var _exit_entry: Dictionary = {}
+
 var outcome: String = ""
 var outcome_t: float = 0.0
 var boss: Boss = null
@@ -140,12 +148,22 @@ func build() -> void:
 		add_child(overlay_layer)
 		Controls.pause_pressed.connect(toggle_pause)
 		Sfx.play_music()
+	for i in stage_count():
+		stage_points.append(0)
+		gate_open.append(i == stage_count() - 1)
 	# checkpoint: kontynuacja od wskazanej fali
 	if start_wave_idx > 0 and start_wave_idx < waves.size():
 		next_wave = start_wave_idx
 		var tx: float = float(waves[next_wave]["trigger"])
 		player.position.x = maxf(float(data["player_start"]), tx - 520.0)
-		view_left = clampf(player.position.x - view_w * 0.42, 0.0, level_w - view_w)
+		var ps: int = stage_at(player.position.x)
+		for k in next_wave:                          # punkty z fal już pokonanych w bieżącym etapie
+			var ws: int = stage_at(float(waves[k]["trigger"]))
+			if ws == ps:
+				stage_points[ws] += wave_points(waves[k])
+		for i in ps:
+			gate_open[i] = true
+		view_left = clampf(player.position.x - view_w * 0.42, 0.0, cam_max_left())
 	update_stage_banner()
 
 ## Świat jest renderowany do SubViewport o mniejszej rozdzielczości (render_scale z balance.json,
@@ -272,7 +290,7 @@ func update_camera(delta: float) -> void:
 	if locked:
 		target = lock_left
 	else:
-		target = clampf(player.position.x - view_w * 0.42, 0.0, level_w - view_w)
+		target = clampf(player.position.x - view_w * 0.42, 0.0, cam_max_left())
 	view_left = lerpf(view_left, target, 1.0 - exp(-6.0 * delta))
 	var off := Vector2.ZERO
 	if shake > 0.0:
@@ -286,8 +304,16 @@ func update_waves(delta: float) -> void:
 		return
 	if not wave_active:
 		update_stage_banner()
+		if exit_walk >= 0:
+			update_exit_walk()
+			return
 		if next_wave < waves.size() and player.position.x >= float(waves[next_wave]["trigger"]):
-			start_wave(next_wave)
+			if bool(waves[next_wave].get("final", false)) and not quota_met(stage_idx):
+				start_reinforcements(stage_idx)         # czempion dopiero po zdobyciu limitu punktów
+			else:
+				start_wave(next_wave)
+		elif at_gate():
+			gate_check()
 		return
 	wave_time += delta
 	while not spawn_queue.is_empty() and float(spawn_queue[0]["t"]) <= wave_time:
@@ -302,7 +328,7 @@ func start_wave(i: int) -> void:
 	wave_time = 0.0
 	go_prompt = false
 	locked = true
-	lock_left = clampf(player.position.x - view_w * 0.42, 0.0, level_w - view_w)
+	lock_left = clampf(player.position.x - view_w * 0.42, 0.0, cam_max_left())
 	spawn_queue.clear()
 	for s in w["spawns"]:
 		var t0: float = float(s.get("delay", 0.0))
@@ -317,6 +343,11 @@ func start_wave(i: int) -> void:
 		hud.show_banner("CZEMPION CHAOSU", 2.5)
 
 func end_wave() -> void:
+	if reinforcing:
+		reinforcing = false
+		wave_active = false
+		locked = false
+		return
 	var w: Dictionary = waves[next_wave]
 	wave_active = false
 	locked = false
@@ -358,6 +389,117 @@ func remove_enemy(e: Enemy) -> void:
 	tokens.erase(e)
 	e.queue_free()
 
+# ------------------------------------------------------------------ etapy: limit punktów i wyjście
+
+func stage_count() -> int:
+	return (data["stages"] as Array).size()
+
+func stage_start(i: int) -> float:
+	return float(data["stages"][i]["start"])
+
+func stage_end(i: int) -> float:
+	return stage_start(i + 1) if i + 1 < stage_count() else level_w
+
+func stage_at(x: float) -> int:
+	var idx := 0
+	for i in stage_count():
+		if x >= stage_start(i):
+			idx = i
+	return idx
+
+func stage_quota() -> int:
+	return int(Balance.data["world"].get("stage_quota", 0))
+
+static func enemy_points(type: String) -> int:
+	return int(Balance.enemy(type).get("stage_points", 0))
+
+static func wave_points(w: Dictionary) -> int:
+	var n := 0
+	for s in w["spawns"]:
+		n += enemy_points(str(s["type"])) * int(s.get("count", 1))
+	return n
+
+func quota_met(i: int) -> bool:
+	return i < 0 or i >= stage_points.size() or int(stage_points[i]) >= stage_quota()
+
+## Prawa granica kamery: dopóki bramka etapu jest zamknięta, ekran nie wyjeżdża poza koniec etapu.
+func cam_max_left() -> float:
+	var lim: float = level_w - view_w
+	if stage_idx >= 0 and stage_idx < gate_open.size() and not gate_open[stage_idx]:
+		lim = minf(lim, stage_end(stage_idx) - view_w)
+	return maxf(lim, 0.0)
+
+## Ivo stoi przy końcu etapu, a wszystkie fale tego etapu są już za nim.
+func at_gate() -> bool:
+	var i: int = stage_idx
+	if i < 0 or i >= gate_open.size() or gate_open[i]:
+		return false
+	if player.position.x < stage_end(i) - view_w * 0.5:
+		return false
+	return next_wave >= waves.size() or float(waves[next_wave]["trigger"]) >= stage_end(i)
+
+func gate_check() -> void:
+	var i: int = stage_idx
+	if not quota_met(i):
+		start_reinforcements(i)
+		return
+	var entry: Dictionary = _story_after(i)
+	if entry.is_empty():
+		open_gate(i)
+		if hud != null:
+			hud.show_banner("DROGA WOLNA", 1.8)
+		return
+	# po wsi i lesie: Ivo idzie do prawej krawędzi ekranu, potem plansza fabularna
+	exit_walk = i
+	_exit_entry = entry
+	go_prompt = true
+
+func update_exit_walk() -> void:
+	var i: int = exit_walk
+	if player.position.x < stage_end(i) - 90.0:
+		return
+	exit_walk = -1
+	go_prompt = false
+	if overlay_layer == null:                      # testy (bez UI): plansza "przeczytana" od razu
+		open_gate(i)
+		return
+	show_story(_exit_entry, "", func(): open_gate(i))
+
+func open_gate(i: int) -> void:
+	if i >= 0 and i < gate_open.size():
+		gate_open[i] = true
+	go_prompt = true
+
+## Posiłki wroga, gdy po wszystkich falach etapu brakuje punktów do limitu (skład z level_1.json: stages[i].reinforcements).
+func start_reinforcements(i: int) -> void:
+	var need: int = stage_quota() - int(stage_points[i])
+	var mix: Array = data["stages"][i].get("reinforcements", ["skaven"])
+	spawn_queue.clear()
+	var pts := 0
+	var k := 0
+	while pts < need and k < 6:
+		var type: String = str(mix[k % mix.size()])
+		spawn_queue.append({ "t": 0.6 + k * 0.9, "type": type, "side": "left" if k % 2 == 1 else "right" })
+		pts += maxi(1, enemy_points(type))
+		k += 1
+	wave_active = true
+	reinforcing = true
+	wave_time = 0.0
+	go_prompt = false
+	locked = true
+	lock_left = clampf(player.position.x - view_w * 0.42, 0.0, cam_max_left())
+	if hud != null:
+		hud.show_banner("POSIŁKI WROGA! %d / %d" % [int(stage_points[i]), stage_quota()], 2.2)
+
+func _story_after(i: int) -> Dictionary:
+	if not GameState.story_enabled:
+		return {}
+	var entry: Dictionary = StoryScreen.entry_after_stage(i)
+	if entry.is_empty() or _stories_seen.has(str(entry.get("id", ""))):
+		return {}
+	_stories_seen[str(entry.get("id", ""))] = true
+	return entry
+
 func update_stage_banner() -> void:
 	var stages: Array = data["stages"]
 	var idx := 0
@@ -383,7 +525,7 @@ func _story_to_show(idx: int) -> Dictionary:
 	_story_checked = true
 	if first_check and start_wave_idx > 0:
 		for e in StoryScreen.load_entries():
-			if int(e.get("before_stage", -1)) <= idx:
+			if (e.has("before_stage") and int(e["before_stage"]) <= idx) or (e.has("after_stage") and int(e["after_stage"]) < idx):
 				_stories_seen[str(e.get("id", ""))] = true
 	var entry: Dictionary = StoryScreen.entry_for_stage(idx)
 	if entry.is_empty() or _stories_seen.has(str(entry.get("id", ""))):
@@ -391,8 +533,10 @@ func _story_to_show(idx: int) -> Dictionary:
 	_stories_seen[str(entry.get("id", ""))] = true
 	return entry
 
-func show_story(entry: Dictionary, banner: String = "") -> void:
+func show_story(entry: Dictionary, banner: String = "", on_done: Callable = Callable()) -> void:
 	if overlay_layer == null:
+		if on_done.is_valid():
+			on_done.call()
 		return
 	story_active = true
 	get_tree().paused = true
@@ -404,6 +548,8 @@ func show_story(entry: Dictionary, banner: String = "") -> void:
 		clear_overlay()
 		get_tree().paused = false
 		Controls.reset()
+		if on_done.is_valid():
+			on_done.call()
 		if banner != "" and hud != null:
 			hud.show_banner(banner, 2.4))
 	set_overlay(sc)
@@ -429,6 +575,9 @@ func on_hit(attacker: Actor, target, defn: Dictionary, dmg: float, stagger: bool
 func on_actor_died(a: Actor) -> void:
 	if a.team == 1:
 		GameState.add_kill((a as Enemy).score_value)
+		var si: int = clampi(stage_idx, 0, maxi(0, stage_points.size() - 1))
+		if si < stage_points.size():
+			stage_points[si] += enemy_points((a as Enemy).type_id)
 		Sfx.play("enemy_die")
 		if a is Boss:
 			on_boss_defeated(a)

@@ -33,7 +33,8 @@ GROUND_Y0 = 495                       # pierwszy wiersz podłoża w panoramie (p
 GROUND_W, GROUND_H = 128, 320
 GROUND_BLEND = 32
 GROUND_SCALE = 1.22
-GROUND_FROM_TOOL = {"stage1_road": "tools/build_road.py"}   # etapy z podłożem rysowanym od zera
+GROUND_FROM_TOOL = {"stage1_road": "tools/build_road.py", "stage2_village": "tools/build_road.py",
+                    "stage3_fields_forest": "tools/build_road.py"}   # etapy z podłożem rysowanym od zera
 FG_W, FG_H = 640, 60
 PARALLAX_FAR = 0.2
 

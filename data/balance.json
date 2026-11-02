@@ -13,7 +13,8 @@
     "barrel_hp": 24,
     "barrel_potion_chance": 0.7,
     "foot_half_depth": 8,
-    "render_scale": 0.75
+    "render_scale": 0.75,
+    "stage_quota": 50
   },
   "player": {
     "max_hp": 160,
@@ -126,7 +127,8 @@
           "stun": 0.22,
           "sfx": "skaven_squeak"
         }
-      }
+      },
+      "stage_points": 1
     },
     "chaos_hound": {
       "behavior": "charger",
@@ -170,7 +172,8 @@
           "track": true,
           "sfx": "hound_bark"
         }
-      }
+      },
+      "stage_points": 1
     },
     "beastman": {
       "behavior": "brute",
@@ -214,7 +217,8 @@
           "interrupts": true,
           "sfx": "beast_roar"
         }
-      }
+      },
+      "stage_points": 3
     },
     "chaos_champion": {
       "behavior": "boss",
@@ -401,7 +405,8 @@
             }
           ]
         }
-      ]
+      ],
+      "stage_points": 0
     }
   },
   "score": {

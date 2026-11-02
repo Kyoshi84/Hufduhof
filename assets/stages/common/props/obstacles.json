@@ -1,0 +1,25 @@
+{
+ "note": "Grafika przeszkód (tools/build_obstacles.py, kałuża: tools/build_road.py). y = wiersz (px pod horyzontem) górnej krawędzi PNG, x = środek przeszkody. Strefy kolizji: scripts/level/obstacle.gd (TYPES).",
+ "obstacles": {
+  "fire": {
+   "file": "obstacle_fire.png",
+   "y": -78,
+   "flames": "obstacle_fire_flames.png",
+   "frames": 8,
+   "fps": 12
+  },
+  "log": {
+   "file": "obstacle_log.png",
+   "y": -86
+  },
+  "chasm": {
+   "file": "obstacle_chasm.png",
+   "y": -2,
+   "glow": "obstacle_chasm_glow.png"
+  },
+  "puddle": {
+   "file": "obstacle_puddle.png",
+   "center": true
+  }
+ }
+}

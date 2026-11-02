@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_props as BP
 
 HERE = BP.HERE
-OUT = os.path.join(HERE, "assets/stages/stage1_road")
+OUT = os.path.join(HERE, "assets/stages/stage1_road")      # ustawiane przez set_style()
 W, H = 1024, 320
 BACK_EDGE, FRONT_EDGE = 26, 202
 OUTLINE = (14, 9, 8)
@@ -77,6 +77,7 @@ class Layer:
         self.rgb = np.zeros((h, w, 3)); self.a = np.zeros((h, w), bool)
 
     def put(self, y, x, col):
+        y = int(y); x = int(x)
         if 0 <= y < self.h:
             if self.wrap:
                 x %= self.w
@@ -99,7 +100,8 @@ def blade(L, x, y, hgt, ramp, rng, lean=0):
         ci = min(len(ramp) - 1, int(1 + t * (len(ramp) - 2) + rng.random() * 0.9))
         L.put(y - k, xi, ramp[ci])
 
-def tuft(L, x, y, size, rng, ramp=GRASS, dry=0.0):
+def tuft(L, x, y, size, rng, ramp=None, dry=0.0):
+    ramp = GRASS if ramp is None else ramp
     n = int(3 + size * 1.6)
     for i in range(n):
         r = DRY if rng.random() < dry else ramp
@@ -107,8 +109,9 @@ def tuft(L, x, y, size, rng, ramp=GRASS, dry=0.0):
         hg = int(2 + size * (0.6 + rng.random() * 0.9))
         blade(L, bx, y + rng.integers(-1, 2), hg, r, rng, lean=rng.uniform(-1.6, 1.6))
 
-def pebble(L, cx, cy, rx, ry, rng, ramp=STONE, outline=True):
+def pebble(L, cx, cy, rx, ry, rng, ramp=None, outline=True):
     """Kamień: kontur, cieniowanie światłem z lewej-góry, połysk."""
+    ramp = STONE if ramp is None else ramp
     rx = max(rx, 1.0); ry = max(ry, 0.8)
     x0, x1 = int(cx - rx - 2), int(cx + rx + 3)
     y0, y1 = int(cy - ry - 2), int(cy + ry + 3)
@@ -128,7 +131,8 @@ def pebble(L, cx, cy, rx, ry, rng, ramp=STONE, outline=True):
     if rx >= 2 and ry >= 1.5:
         L.put(int(cy - ry * 0.45), int(cx - rx * 0.35), ramp[-1])
 
-def contact_shadow(L, cx, cy, rx, col=EARTH[1]):
+def contact_shadow(L, cx, cy, rx, col=None):
+    col = EARTH[1] if col is None else col
     for x in range(int(cx - rx), int(cx + rx + 1)):
         L.put(int(cy + 1), x, col)
 
@@ -201,7 +205,7 @@ def grass_fill(L, y0, y1, x0, x1, seed, back, dry=0.25, density=0.32):
         ramp = DRY if isdry else GRASS[1:]
         blade(L, x, min(y, y1 - 1), hg, ramp, rng, lean=rng.uniform(-1.4, 1.4))
     # kwiatki
-    for _ in range(int(w * hh / 700)):
+    for _ in range(int(w * hh / 700 * STYLE.get("flowers", 1.0))):
         x = x0 + rng.integers(0, w); y = y0 + rng.integers(2, max(hh - 1, 3))
         L.put(y, x, FLOWER[rng.integers(0, len(FLOWER))]); L.put(y + 1, x, GRASS[1])
 
@@ -210,11 +214,11 @@ def road_base(rng):
     """Zwraca Layer z całym kafelkiem podłoża."""
     L = Layer(H, W, wrap=True)
     road = np.zeros((H, W), bool); road[BACK_EDGE - 2:FRONT_EDGE + 2] = True
-    v = earth_fill(L, road, 11)
+    v = earth_fill(L, road, 11 + STYLE["seed"])
 
     # --- koleiny: dwie pary szerokich rowków; łagodnie wygięte, głębokość zmienna, zanikają ditheringiem
     by = np.tile(BAYER, (H // 4 + 1, W // 4 + 1))[:H, :W]
-    for (yc, gap, th, ph, amp, sd) in ((70, 10, 2, 0.0, 4.0, 21), (134, 17, 4, 1.3, 6.0, 23)):
+    for (yc, gap, th, ph, amp, sd) in STYLE["ruts"]:
         wob = vnoise(1, W, 1, 170, sd)[0]
         depth = vnoise(1, W, 1, 110, sd + 1)[0]
         for x in range(W):
@@ -235,14 +239,14 @@ def road_base(rng):
                     else:
                         c = EARTH[1] if t < th - 1 else EARTH[3]
                     L.put(y, x, c)
-            if d > 0.6 and rng.random() < 0.14:      # grzbiet między koleinami: trochę trawy
+            if d > 0.6 and rng.random() < STYLE["rut_grass"]:      # grzbiet między koleinami: trochę trawy
                 yg = int(round(yc + gap * 0.5 + off)) + 2
                 blade(L, x, yg, int(1 + gap * 0.18 + rng.random() * 2), GRASS[1:6], rng, lean=rng.uniform(-1, 1))
             if d > 0.92:                              # woda na dnie najgłębszych kolein
                 L.put(int(round(yc + gap + off)) + 1, x, WATER[2] if x % 7 else WATER[3])
 
     # --- ślady kopyt
-    for _ in range(90):
+    for _ in range(STYLE["hooves"]):
         x = rng.integers(0, W); y = rng.integers(BACK_EDGE + 8, FRONT_EDGE - 8)
         s = 1 + int(persp(y) * 2)
         for dx in range(-s, s + 1):
@@ -251,7 +255,7 @@ def road_base(rng):
         L.put(y + 1, x, EARTH[7])
 
     # --- kamyki, większe bliżej
-    for _ in range(150):
+    for _ in range(STYLE["pebbles"]):
         x = rng.integers(0, W); y = rng.integers(BACK_EDGE + 4, FRONT_EDGE - 3)
         r = 0.9 + persp(y) * 2.6 * rng.random() ** 1.5
         pebble(L, x, y, r * 1.3, r * 0.8, rng)
@@ -260,15 +264,17 @@ def road_base(rng):
         pp = persp(y)
         pebble(L, x, y, 2.5 + pp * 4, 1.6 + pp * 2.4, rng)
     # kępy trawy na środku drogi
-    for _ in range(26):
+    for _ in range(STYLE["road_tufts"]):
         x = rng.integers(0, W); y = rng.integers(BACK_EDGE + 12, FRONT_EDGE - 6)
-        tuft(L, x, y, 1 + int(persp(y) * 2), rng, dry=0.5)
+        tuft(L, x, y, 1 + int(persp(y) * 2), rng, dry=STYLE["dry"] + 0.2)
 
-    for (x, y, w) in ((300, 74, 26), (790, 140, 34)):
+    for (x, y, w) in STYLE["puddles"]:
         puddle(L, x, y, w, max(3, w // 7), rng)
+    for extra in STYLE.get("extras", []):
+        extra(L, rng)
 
-    grass_band(L, 0, BACK_EDGE, rng, back=True)
-    grass_band(L, FRONT_EDGE, H, rng, back=False)
+    grass_band(L, 0, BACK_EDGE, rng, back=True, dry=STYLE["dry"])
+    grass_band(L, FRONT_EDGE, H, rng, back=False, dry=STYLE["dry"])
     return L
 
 def grass_band(L, y0, y1, rng, back, x_range=None, dry=0.28):
@@ -580,6 +586,244 @@ def puddle_decal(seed, y, w):
     puddle(L, (w + 10) / 2 + w * 0.42, y + 3, w * 0.35, max(3, w // 14), rng)
     return finish_decal(L)
 
+
+# ---------------------------------------------------------------- dodatki etapów (podłoże)
+WOOD = [(30, 20, 12), (54, 36, 22), (82, 58, 34), (112, 82, 50), (146, 112, 70)]
+CHAR = [(10, 8, 8), (22, 18, 16), (38, 32, 28), (58, 52, 46), (86, 80, 72)]
+EMBER = [(120, 30, 16), (190, 70, 24), (236, 140, 50)]
+LEAF = [(92, 52, 22), (128, 76, 28), (160, 110, 40), (110, 92, 40), (70, 84, 36)]
+
+def straw_bits(L, rng, n=420):
+    """Rozwleczona słoma i siano (wieś): krótkie żółte kreski z cieniem."""
+    for _ in range(n):
+        x = rng.integers(0, L.w); y = rng.integers(BACK_EDGE + 3, FRONT_EDGE - 2)
+        ln = 3 + int(rng.random() * (3 + persp(y) * 5))
+        dx = rng.choice([-1, 1]); sl = rng.uniform(-0.35, 0.35)
+        c = DRY[2 + rng.integers(0, 3)]
+        for k in range(ln):
+            yk = int(round(y + sl * k))
+            L.put(yk, x + dx * k, c if k % 4 else DRY[4])
+            L.put(yk + 1, x + dx * k, EARTH[1])
+
+def splinters(L, rng, n=60):
+    """Drzazgi, kawałki desek i węgielki po pożarach."""
+    for _ in range(n):
+        x = rng.integers(0, L.w); y = rng.integers(BACK_EDGE + 6, FRONT_EDGE - 4)
+        if rng.random() < 0.5:
+            ln = 3 + int(persp(y) * 5 * rng.random())
+            for k in range(ln):
+                L.put(y, x + k, WOOD[3] if k % 3 else WOOD[2]); L.put(y + 1, x + k, WOOD[0])
+        else:
+            L.put(y, x, CHAR[0]); L.put(y, x + 1, CHAR[1]); L.put(y - 1, x, CHAR[2])
+
+def leaf_litter(L, rng, n=900, y0=None, y1=None):
+    """Opadłe liście i igliwie (las)."""
+    y0 = BACK_EDGE + 2 if y0 is None else y0
+    y1 = FRONT_EDGE - 2 if y1 is None else y1
+    for _ in range(n):
+        x = rng.integers(0, L.w); y = rng.integers(y0, y1)
+        if rng.random() < 0.55:
+            c = LEAF[rng.integers(0, len(LEAF))]
+            L.put(y, x, c)
+            if persp(y) > 0.4 and rng.random() < 0.6:
+                L.put(y, x + 1, c); L.put(y + 1, x, EARTH[1])
+        else:                                                        # igła
+            d = rng.choice([-1, 1])
+            L.put(y, x, (44, 52, 30)); L.put(y + (rng.random() < 0.5), x + d, (60, 64, 36))
+
+def overgrow(L, rng, amount=0.5, seed=91):
+    """Dukt zarastający trawą: łaty trawy na drodze (gęściej przy brzegach i na grzbiecie między koleinami)."""
+    h, w = L.h, L.w
+    n = fbm(h, w, seed, ((10, 60, 0.6), (4, 14, 0.3), (1, 2, 0.1)))
+    yy = np.arange(h)[:, None] * np.ones((1, w))
+    near_back = np.clip(1 - (yy - BACK_EDGE) / 26, 0, 1)
+    near_front = np.clip(1 - (FRONT_EDGE - yy) / 22, 0, 1)
+    ridge = np.clip(1 - np.abs(yy - 104) / 14, 0, 1)
+    road = (yy > BACK_EDGE) & (yy < FRONT_EDGE)
+    score = n + near_back * 0.45 + near_front * 0.35 + ridge * 0.25
+    m = road & (score > 1.05 - amount * 0.5)
+    col = ramp_map(0.15 + n * 0.35, GRASS[1:], dither=1.0)
+    L.rgb[m] = col[m]
+    ys, xs = np.where(m)
+    for k in rng.integers(0, len(ys), int(len(ys) * 0.22)):
+        y, x = ys[k], xs[k]
+        blade(L, x, y, 1 + int(rng.random() * (2 + persp(y) * 4)), GRASS[1:], rng, lean=rng.uniform(-1.3, 1.3))
+    # ciemniejsza obwódka łat (ziemia przy trawie)
+    edge = road & ~m & (np.roll(m, 1, 0) | np.roll(m, -1, 1) | np.roll(m, 1, 1))
+    L.rgb[edge] = np.array(EARTH[2], float)
+
+def leaf_clusters(L, rng, n=60):
+    """Skupiska liści (las) - widoczne plamy, nie pojedyncze piksele."""
+    for _ in range(n):
+        cx = rng.integers(0, L.w); cy = rng.integers(BACK_EDGE + 6, FRONT_EDGE - 6)
+        r = 4 + persp(cy) * 10 * rng.random()
+        for _ in range(int(r * r * 1.2)):
+            a = rng.random() * 2 * np.pi; rr = rng.random() ** 0.7 * r
+            x = int(cx + np.cos(a) * rr * 1.8); y = int(cy + np.sin(a) * rr * 0.6)
+            c = LEAF[rng.integers(0, len(LEAF))]
+            L.put(y, x, c)
+            if rng.random() < 0.4:
+                L.put(y, x + 1, c)
+            if rng.random() < 0.3:
+                L.put(y + 1, x, EARTH[1])
+
+def moss_edges(L, rng):
+    """Mech i trawa wchodzące na drogę (leśny dukt): pas trawy pośrodku i przy brzegach."""
+    n = vnoise(1, L.w, 1, 60, 77)[0]
+    for x in range(L.w):
+        if n[x] > 0.45:
+            for k in range(int((n[x] - 0.45) * 14)):
+                y = BACK_EDGE + 1 + k + rng.integers(0, 2)
+                if rng.random() < 0.6:
+                    L.put(y, x, GRASS[2 + rng.integers(0, 3)])
+        yc = 104 + int((n[x] - 0.5) * 10)
+        if n[x] > 0.35 and rng.random() < 0.35:
+            blade(L, x, yc + rng.integers(-3, 4), 2 + rng.integers(0, 3), GRASS[1:6], rng, lean=rng.uniform(-1, 1))
+
+def scorch(seed, w=150, hgt=56, y_top=70):
+    """Wypalona plama: popiół, sadza, zwęglone deski, tlące się węgielki."""
+    rng = np.random.default_rng(seed)
+    L = decal_layer(w, y_top + hgt)
+    cx, cy = w / 2, y_top + hgt / 2
+    sh = fbm(y_top + hgt, w, seed, ((8, 20, 0.7), (3, 5, 0.3)), wrap=False)
+    yy, xx = np.mgrid[0:y_top + hgt, 0:w]
+    d = ((xx - cx) / (w / 2)) ** 2 + ((yy - cy) / (hgt / 2)) ** 2 + (sh - 0.5) * 0.8
+    gn = vnoise(y_top + hgt, w, 1, 1, seed + 1, wrap=False)
+    for y, x in zip(*np.where(d < 1.0)):
+        if d[y, x] > 0.75 and gn[y, x] < 0.5:
+            continue
+        ring = np.clip((d[y, x] - 0.35) / 0.4, 0, 1)                  # popiół na brzegu, sadza w środku
+        v = 0.26 + ring * 0.5 + (gn[y, x] - 0.5) * 0.6
+        L.put(y, x, CHAR[int(np.clip(v, 0, 0.999) * len(CHAR))])
+    for _ in range(rng.integers(2, 5)):                               # zwęglone deski
+        x0 = rng.uniform(w * 0.2, w * 0.6); y0 = rng.uniform(cy - hgt * 0.25, cy + hgt * 0.25)
+        ln = rng.integers(16, 34); sl = rng.uniform(-0.25, 0.25)
+        for k in range(ln):
+            yk = int(y0 + sl * k)
+            L.put(yk - 1, int(x0 + k), OUTLINE)
+            L.put(yk, int(x0 + k), CHAR[3] if k % 5 else CHAR[4])
+            L.put(yk + 1, int(x0 + k), CHAR[2] if k % 3 else EMBER[0])
+            L.put(yk + 2, int(x0 + k), OUTLINE)
+    for _ in range(18):                                               # tlące się węgielki
+        ys, xs = np.where(d < 0.6)
+        k = rng.integers(0, len(ys))
+        L.put(ys[k], xs[k], EMBER[rng.integers(0, 3)])
+    return finish_decal(L)
+
+def hay(seed, w=110, hgt=34, y_top=None):
+    """Rozsypane siano (spadło z wozu): niski kopczyk ze źdźbeł, jaśniejsza góra, cień u podstawy."""
+    rng = np.random.default_rng(seed)
+    y_top = rng.integers(40, 140) if y_top is None else y_top
+    L = decal_layer(w, y_top + hgt + 4)
+    cx, base = w / 2, y_top + hgt
+    for x in range(int(cx - w * 0.47), int(cx + w * 0.47)):          # cień
+        L.put(base + 1, x, EARTH[0]); L.put(base + 2, x, EARTH[1])
+    for _ in range(int(w * hgt * 1.4)):
+        u = rng.uniform(-1, 1)
+        top = base - hgt * 0.75 * (1 - u * u) ** 0.8 - rng.uniform(0, 3)
+        x = cx + u * w * 0.46
+        y = rng.uniform(top, base)
+        t = (y - top) / max(base - top, 1)                              # 0 = góra kopczyka
+        ln = rng.integers(3, 8); dx = rng.choice([-1, 1]); sl = rng.uniform(-0.6, 0.6)
+        lv = 4 - int(t * 3.6 + rng.uniform(-0.8, 0.8))
+        c = DRY[int(np.clip(lv, 0, 4))] if rng.random() > 0.08 else DRY[0]
+        for k in range(ln):
+            L.put(int(y + sl * k), int(x + dx * k), c)
+    for _ in range(int(w * 0.8)):                                       # pojedyncze źdźbła dookoła
+        x = cx + rng.uniform(-w * 0.5, w * 0.5); y = base + rng.uniform(-3, 3)
+        for k in range(rng.integers(3, 7)):
+            L.put(int(y), int(x + k), DRY[3])
+    return finish_decal(L)
+
+def planks(seed, y_base):
+    """Połamane deski i klepki przy krawędzi drogi."""
+    rng = np.random.default_rng(seed)
+    w = 90
+    L = decal_layer(w, y_base + 10)
+    for _ in range(rng.integers(3, 6)):
+        x0 = rng.uniform(6, w - 40); y0 = y_base - rng.uniform(0, 8)
+        ln = rng.integers(18, 36); sl = rng.uniform(-0.2, 0.2); th = rng.integers(2, 4)
+        for k in range(ln):
+            yk = y0 + sl * k
+            for t in range(th):
+                c = WOOD[3] if t == 0 else (WOOD[2] if t < th - 1 else WOOD[1])
+                if k == ln - 1 or (k > ln - 4 and rng.random() < 0.5):
+                    c = WOOD[4]                                         # jasny złom
+                L.put(int(yk) + t, int(x0 + k), c)
+            L.put(int(yk) - 1, int(x0 + k), OUTLINE); L.put(int(yk) + th, int(x0 + k), OUTLINE)
+        L.put(int(y0), int(x0 + 3), STONE[5])                           # gwóźdź
+    for _ in range(4):
+        tuft(L, rng.uniform(4, w - 4), y_base + 2, rng.integers(1, 3), rng, dry=0.5)
+    return finish_decal(L)
+
+def roots(seed, w=200):
+    """Korzenie drzewa wychodzące z tylnego pobocza na dukt."""
+    rng = np.random.default_rng(seed)
+    L = decal_layer(w, 90)
+    for _ in range(rng.integers(3, 6)):
+        x = rng.uniform(w * 0.25, w * 0.75); y = rng.uniform(4, BACK_EDGE - 4)
+        ang = rng.uniform(0.25, 1.1) * rng.choice([-1, 1])
+        th = rng.uniform(2.5, 4.5)
+        ln = rng.integers(30, 70)
+        for k in range(ln):
+            ang += rng.uniform(-0.12, 0.12)
+            x += np.sin(ang) * 1.2; y += np.cos(ang) * 0.75
+            t = th * (1 - k / ln)
+            for j in range(-int(t), int(t) + 1):
+                yy = int(y + j * 0.6)
+                if j == -int(t):
+                    c = (44, 30, 20)
+                elif j < 0:
+                    c = (118, 88, 58) if k % 5 else (98, 73, 50)
+                elif j == int(t):
+                    c = OUTLINE
+                else:
+                    c = (74, 52, 34)
+                L.put(yy, int(x), c)
+            if k % 9 == 0 and t > 1.5:
+                L.put(int(y + t * 0.6) + 1, int(x), EARTH[0])            # cień pod korzeniem
+    return finish_decal(L)
+
+def branch(seed, y_base):
+    """Złamana gałąź leżąca przy krawędzi duktu."""
+    rng = np.random.default_rng(seed)
+    w = 120
+    L = decal_layer(w, y_base + 16)
+    x = 8.0; y = float(y_base); sl = rng.uniform(-0.15, 0.1)
+    pts = []
+    for k in range(rng.integers(70, 100)):
+        x += 1; y += sl + rng.uniform(-0.2, 0.2)
+        pts.append((x, y))
+        th = 3 if k < 40 else 2
+        for t in range(th):
+            L.put(int(y) + t, int(x), (112, 84, 54) if t == 0 else (62, 44, 28))
+        L.put(int(y) - 1, int(x), OUTLINE); L.put(int(y) + th, int(x), OUTLINE)
+        L.put(int(y) + th + 1, int(x), EARTH[1])
+    for _ in range(rng.integers(4, 8)):                               # gałązki
+        px, py = pts[rng.integers(10, len(pts) - 5)]
+        d = rng.choice([-1, 1]); ln = rng.integers(6, 16)
+        for k in range(ln):
+            L.put(int(py - d * k * 0.55), int(px + k * 0.8), (78, 56, 36))
+        if rng.random() < 0.6:
+            for j in range(3):
+                L.put(int(py - d * ln * 0.55) + rng.integers(-1, 2), int(px + ln * 0.8) + rng.integers(-1, 2), LEAF[rng.integers(0, len(LEAF))])
+    return finish_decal(L)
+
+def leaves_patch(seed, w=130, hgt=50, y_top=None):
+    """Kopczyk opadłych liści (las)."""
+    rng = np.random.default_rng(seed)
+    y_top = rng.integers(36, 130) if y_top is None else y_top
+    L = decal_layer(w, y_top + hgt)
+    cx, cy = w / 2, y_top + hgt / 2
+    for _ in range(int(w * hgt * 0.7)):
+        a = rng.random() * 2 * np.pi; r = rng.random() ** 0.7
+        x = cx + np.cos(a) * r * w * 0.48; y = cy + np.sin(a) * r * hgt * 0.45
+        c = LEAF[rng.integers(0, len(LEAF))]
+        L.put(int(y), int(x), c)
+        if rng.random() < 0.5:
+            L.put(int(y), int(x) + 1, c); L.put(int(y) + 1, int(x), EARTH[1])
+    return finish_decal(L)
+
 def obstacle_puddle(seed):
     """Przeszkoda 'kałuża' (trzeba ją przeskoczyć): rozlewisko na całej głębi drogi, w stylu podłoża.
     Środek PNG = środek przeszkody (obstacle.gd rysuje ją wyśrodkowaną na x i na środku pasa walki)."""
@@ -650,75 +894,166 @@ def obstacle_puddle(seed):
     return finish_decal(L)
 
 # ---------------------------------------------------------------- zapis
-DECALS = {
-    # nazwa: (lista (funkcja, argumenty)), y nakładki = wiersz pod horyzontem (górna krawędź PNG)
-    "crossroad":  [(crossroad, (401, False)), (crossroad, (402, True)), (crossroad, (403, True))],
-    "bank_back":  [(bank_back, (501, False)), (bank_back, (502, False)), (bank_back, (503, True))],
-    "bank_front": [(bank_front, (601,)), (bank_front, (602,))],
-    "cobble":     [(cobble, (701,)), (cobble, (702, 160, 64)), (cobble, (703, 260, 104))],
-    "rocks_back": [(rocks, (801, BACK_EDGE + 2, 3, True)), (rocks, (802, BACK_EDGE + 2, 2, True)), (rocks, (803, BACK_EDGE + 1, 4, False))],
-    "rocks_front": [(rocks, (811, FRONT_EDGE + 8, 3, True)), (rocks, (812, FRONT_EDGE + 6, 4, False))],
-    "puddle":     [(puddle_decal, (901, 78, 44)), (puddle_decal, (902, 140, 60)), (puddle_decal, (903, 104, 36))],
-}
+NOTE = ("Nakładki terenu rysowane na podłożu (pod rekwizytami i postaciami, nic nie blokują). "
+        "y = wiersz pod horyzontem (px obrazu) górnej krawędzi PNG. Sloty: co 'step' jednostek świata gra losuje "
+        "(deterministycznie) jedną nakładkę wg 'chance'. clear_props = promień (jedn. świata) bez drzew/płotów; "
+        "prop = rekwizyt stawiany obok (np. drogowskaz na rozdrożu). Generator: tools/build_road.py")
 
-MANIFEST = {
-    "note": "Nakładki terenu rysowane na podłożu (pod rekwizytami i postaciami, nic nie blokują). "
-            "y = wiersz pod horyzontem (px obrazu) górnej krawędzi PNG. Sloty: co 'step' jednostek świata gra losuje "
-            "(deterministycznie) jedną nakładkę wg 'chance'. clear_props = promień (jedn. świata) bez drzew/płotów; "
-            "prop = rekwizyt stawiany obok (np. drogowskaz na rozdrożu). Generator: tools/build_road.py",
-    "slots": [
-        {"step": 620, "salt": 71, "jitter": 0.3, "items": [
-            {"name": "crossroad", "chance": 0.22, "clear_props": 170, "prop": "signpost", "prop_dx": -125, "prop_dy": 12},
-            {"name": "bank_back", "chance": 0.30, "clear_props": 0},
-            {"name": "bank_front", "chance": 0.22},
-        ]},
-        {"step": 290, "salt": 83, "jitter": 0.35, "items": [
-            {"name": "cobble", "chance": 0.16},
-            {"name": "puddle", "chance": 0.16},
-            {"name": "rocks_back", "chance": 0.18},
-            {"name": "rocks_front", "chance": 0.16},
-        ]},
-    ],
-    "decals": {},
+PAL1 = dict(GRASS=GRASS, DRY=DRY, EARTH=EARTH, FACE=FACE, STONE=STONE)
+STAGES = {
+    "stage1_road": dict(
+        pal=PAL1,
+        style=dict(seed=0, ruts=((70, 10, 2, 0.0, 4.0, 21), (134, 17, 4, 1.3, 6.0, 23)), rut_grass=0.14, hooves=90,
+                   pebbles=150, road_tufts=26, puddles=((300, 74, 26), (790, 140, 34)), dry=0.28, flowers=1.0, extras=[]),
+        decals={
+            "crossroad":  [(crossroad, (401, False)), (crossroad, (402, True)), (crossroad, (403, True))],
+            "bank_back":  [(bank_back, (501, False)), (bank_back, (502, False)), (bank_back, (503, True))],
+            "bank_front": [(bank_front, (601,)), (bank_front, (602,))],
+            "cobble":     [(cobble, (701,)), (cobble, (702, 160, 64)), (cobble, (703, 260, 104))],
+            "rocks_back": [(rocks, (801, BACK_EDGE + 2, 3, True)), (rocks, (802, BACK_EDGE + 2, 2, True)), (rocks, (803, BACK_EDGE + 1, 4, False))],
+            "rocks_front": [(rocks, (811, FRONT_EDGE + 8, 3, True)), (rocks, (812, FRONT_EDGE + 6, 4, False))],
+            "puddle":     [(puddle_decal, (901, 78, 44)), (puddle_decal, (902, 140, 60)), (puddle_decal, (903, 104, 36))],
+        },
+        slots=[
+            {"step": 620, "salt": 71, "jitter": 0.3, "items": [
+                {"name": "crossroad", "chance": 0.22, "clear_props": 170, "prop": "signpost", "prop_dx": -125, "prop_dy": 12},
+                {"name": "bank_back", "chance": 0.30, "clear_props": 0},
+                {"name": "bank_front", "chance": 0.22}]},
+            {"step": 290, "salt": 83, "jitter": 0.35, "items": [
+                {"name": "cobble", "chance": 0.16}, {"name": "puddle", "chance": 0.16},
+                {"name": "rocks_back", "chance": 0.18}, {"name": "rocks_front", "chance": 0.16}]},
+        ],
+        preview=[("bank_back", 0, 180), ("crossroad", 1, 620), ("bank_back", 2, 1000), ("bank_front", 0, 1300),
+                 ("cobble", 0, 330), ("puddle", 1, 900), ("rocks_back", 0, 1450), ("rocks_front", 1, 760),
+                 ("cobble", 2, 1420), ("crossroad", 0, 1650)],
+    ),
+    # wieś: ubłocona, cieplejsza ulica, słoma, drzazgi i sadza; więcej bruku i kamiennych murków, wypalone plamy
+    "stage2_village": dict(
+        pal=dict(
+            GRASS=[(18, 22, 10), (34, 38, 18), (48, 52, 24), (63, 66, 32), (78, 80, 38), (94, 94, 45), (110, 108, 52), (126, 122, 60)],
+            DRY=DRY,
+            EARTH=[(28, 18, 11), (42, 28, 17), (56, 38, 24), (70, 48, 30), (86, 60, 38), (104, 74, 47), (122, 88, 58), (140, 104, 70), (160, 124, 86)],
+            FACE=FACE, STONE=STONE),
+        style=dict(seed=100, ruts=((64, 9, 3, 0.7, 5.0, 31), (128, 16, 4, 2.1, 7.0, 33), (168, 14, 3, 0.2, 4.0, 35)),
+                   rut_grass=0.05, hooves=160, pebbles=170, road_tufts=12, puddles=((180, 92, 30), (640, 150, 40), (900, 60, 22)),
+                   dry=0.45, flowers=0.35, extras=[lambda L, rng: straw_bits(L, rng, 1400), lambda L, rng: splinters(L, rng, 140)]),
+        decals={
+            "crossroad":  [(crossroad, (411, False)), (crossroad, (412, True))],
+            "bank_back":  [(bank_back, (511, True)), (bank_back, (512, True)), (bank_back, (513, False))],
+            "bank_front": [(bank_front, (611,))],
+            "cobble":     [(cobble, (711, 280, 110)), (cobble, (712, 220, 90)), (cobble, (713, 180, 70))],
+            "scorch":     [(scorch, (1011,)), (scorch, (1012, 120, 44, 120)), (scorch, (1013, 170, 60, 50))],
+            "hay":        [(hay, (1111,)), (hay, (1112, 90, 28))],
+            "planks_back": [(planks, (1211, BACK_EDGE + 3)), (planks, (1212, BACK_EDGE + 2))],
+            "planks_front": [(planks, (1221, FRONT_EDGE + 6))],
+            "puddle":     [(puddle_decal, (911, 96, 50)), (puddle_decal, (912, 150, 64))],
+            "rocks_front": [(rocks, (821, FRONT_EDGE + 8, 3, True))],
+        },
+        slots=[
+            {"step": 600, "salt": 91, "jitter": 0.3, "items": [
+                {"name": "crossroad", "chance": 0.24, "clear_props": 170, "prop": "signpost", "prop_dx": -125, "prop_dy": 12},
+                {"name": "bank_back", "chance": 0.34, "clear_props": 0},
+                {"name": "bank_front", "chance": 0.18}]},
+            {"step": 260, "salt": 97, "jitter": 0.35, "items": [
+                {"name": "cobble", "chance": 0.22}, {"name": "scorch", "chance": 0.18}, {"name": "puddle", "chance": 0.14},
+                {"name": "hay", "chance": 0.12}, {"name": "planks_back", "chance": 0.10}, {"name": "planks_front", "chance": 0.08},
+                {"name": "rocks_front", "chance": 0.06}]},
+        ],
+        preview=[("cobble", 0, 330), ("bank_back", 0, 200), ("crossroad", 1, 700), ("scorch", 0, 1050),
+                 ("hay", 0, 860), ("planks_back", 0, 1150), ("puddle", 1, 1450), ("bank_back", 2, 1600), ("bank_front", 0, 1400)],
+    ),
+    # pola i las: ciemniejsza, chłodniejsza ziemia, trawa i mech na dukcie, liście, korzenie, gałęzie
+    "stage3_fields_forest": dict(
+        pal=dict(
+            GRASS=[(10, 22, 12), (20, 36, 20), (30, 50, 26), (42, 64, 32), (54, 78, 38), (68, 94, 44), (82, 108, 50), (98, 124, 58)],
+            DRY=DRY,
+            EARTH=[(20, 16, 11), (32, 26, 18), (44, 36, 25), (56, 46, 32), (70, 58, 40), (86, 72, 50), (102, 86, 60), (118, 100, 70), (136, 116, 82)],
+            FACE=[(26, 20, 14), (44, 34, 24), (62, 50, 34), (82, 66, 44), (102, 84, 56), (124, 104, 70)],
+            STONE=[(20, 22, 20), (38, 42, 38), (58, 62, 56), (80, 84, 76), (104, 108, 98), (130, 134, 122), (156, 160, 146)]),
+        style=dict(seed=200, ruts=((72, 9, 2, 0.4, 4.0, 41), (136, 15, 3, 1.9, 5.0, 43)), rut_grass=0.35, hooves=50,
+                   pebbles=110, road_tufts=70, puddles=((420, 96, 28),), dry=0.12, flowers=0.7,
+                   extras=[lambda L, rng: overgrow(L, rng, 0.55), lambda L, rng: leaf_litter(L, rng, 1400),
+                           lambda L, rng: leaf_clusters(L, rng), lambda L, rng: moss_edges(L, rng)]),
+        decals={
+            "crossroad":  [(crossroad, (421, False)), (crossroad, (422, True))],
+            "bank_back":  [(bank_back, (521, False)), (bank_back, (522, False)), (bank_back, (523, True))],
+            "bank_front": [(bank_front, (621,)), (bank_front, (622,))],
+            "roots":      [(roots, (1311,)), (roots, (1312,)), (roots, (1313, 160))],
+            "branch_back": [(branch, (1411, BACK_EDGE + 4)), (branch, (1412, BACK_EDGE + 6))],
+            "branch_front": [(branch, (1421, FRONT_EDGE - 2))],
+            "leaves":     [(leaves_patch, (1511,)), (leaves_patch, (1512, 100, 40))],
+            "rocks_back": [(rocks, (831, BACK_EDGE + 2, 3, True)), (rocks, (832, BACK_EDGE + 1, 4, False))],
+            "rocks_front": [(rocks, (841, FRONT_EDGE + 8, 3, True))],
+            "puddle":     [(puddle_decal, (921, 90, 40))],
+            "cobble":     [(cobble, (731, 150, 60))],
+        },
+        slots=[
+            {"step": 600, "salt": 101, "jitter": 0.3, "items": [
+                {"name": "crossroad", "chance": 0.22, "clear_props": 170, "prop": "signpost", "prop_dx": -125, "prop_dy": 12},
+                {"name": "bank_back", "chance": 0.32, "clear_props": 0},
+                {"name": "bank_front", "chance": 0.22}]},
+            {"step": 250, "salt": 107, "jitter": 0.35, "items": [
+                {"name": "roots", "chance": 0.18}, {"name": "branch_back", "chance": 0.10}, {"name": "branch_front", "chance": 0.08},
+                {"name": "leaves", "chance": 0.14}, {"name": "rocks_back", "chance": 0.12}, {"name": "rocks_front", "chance": 0.10},
+                {"name": "puddle", "chance": 0.08}, {"name": "cobble", "chance": 0.05}]},
+        ],
+        preview=[("roots", 0, 200), ("bank_back", 0, 520), ("crossroad", 1, 980), ("leaves", 0, 760),
+                 ("branch_front", 0, 1300), ("rocks_back", 0, 1450), ("bank_front", 0, 1600), ("branch_back", 0, 1250)],
+    ),
 }
+STYLE = STAGES["stage1_road"]["style"]
+
+def set_style(stage):
+    """Ustawia palety i parametry etapu (funkcje rysujące czytają globalne rampy w chwili wywołania)."""
+    global STYLE, OUT
+    st = STAGES[stage]
+    for k, v in st["pal"].items():
+        globals()[k] = v
+    STYLE = st["style"]
+    OUT = os.path.join(HERE, "assets/stages", stage)
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--preview", default=None)
+    ap.add_argument("--stage", default=None, help="tylko ten etap (np. stage2_village)")
     a = ap.parse_args()
     P = np.array(Image.open(os.path.join(HERE, "assets/palette/hufduhof_256.png")).convert("RGB")).reshape(-1, 3)
     plab = BP.mp.srgb2lab(P)
-    rng = np.random.default_rng(7)
-    L = road_base(rng)
-    g = Image.fromarray(np.dstack([np.clip(L.rgb, 0, 255).astype(np.uint8), np.full((H, W), 255, np.uint8)]), "RGBA")
-    g = BP.quantize(g, P, plab)
-    g.save(os.path.join(OUT, "ground.png"))
-    print("ground.png", g.size)
-    ddir = os.path.join(OUT, "decals")
-    os.makedirs(ddir, exist_ok=True)
-    man = json.loads(json.dumps(MANIFEST))
-    for name, makers in DECALS.items():
-        files = []
-        for i, (fn, args) in enumerate(makers):
-            im = fn(*args)
-            bb = im.getbbox()
-            top = bb[1]
-            im = im.crop((0, top, im.width, bb[3]))
-            q = BP.quantize(im, P, plab)
-            f = f"{name}.png" if i == 0 else f"{name}_{i + 1}.png"
-            q.save(os.path.join(ddir, f))
-            files.append({"file": f, "y": int(top)})
-            print(f"decals/{f} {q.width}x{q.height} y={top}")
-        man["decals"][name] = files
-    op = BP.quantize(obstacle_puddle(951), P, plab)
-    op.save(os.path.join(HERE, "assets/stages/common/props/obstacle_puddle.png"))
-    print("common/props/obstacle_puddle.png", op.size)
-    with open(os.path.join(OUT, "decals.json"), "w", encoding="utf-8") as fh:
-        json.dump(man, fh, ensure_ascii=False, indent=1)
-    if a.preview:
-        preview(a.preview, man)
+    for stage, st in STAGES.items():
+        if a.stage and stage != a.stage:
+            continue
+        set_style(stage)
+        rng = np.random.default_rng(7 + st["style"]["seed"])
+        L = road_base(rng)
+        g = Image.fromarray(np.dstack([np.clip(L.rgb, 0, 255).astype(np.uint8), np.full((H, W), 255, np.uint8)]), "RGBA")
+        g = BP.quantize(g, P, plab)
+        g.save(os.path.join(OUT, "ground.png"))
+        print(f"{stage}/ground.png", g.size)
+        ddir = os.path.join(OUT, "decals")
+        os.makedirs(ddir, exist_ok=True)
+        man = {"note": NOTE, "slots": st["slots"], "decals": {}}
+        for name, makers in st["decals"].items():
+            files = []
+            for i, (fn, args) in enumerate(makers):
+                im = fn(*args)
+                bb = im.getbbox()
+                top = bb[1]
+                im = im.crop((0, top, im.width, bb[3]))
+                q = BP.quantize(im, P, plab)
+                f = f"{name}.png" if i == 0 else f"{name}_{i + 1}.png"
+                q.save(os.path.join(ddir, f))
+                files.append({"file": f, "y": int(top)})
+            man["decals"][name] = files
+        print(f"{stage}/decals: {sum(len(v) for v in man['decals'].values())} plików")
+        if stage == "stage1_road":
+            op = BP.quantize(obstacle_puddle(951), P, plab)
+            op.save(os.path.join(HERE, "assets/stages/common/props/obstacle_puddle.png"))
+        with open(os.path.join(OUT, "decals.json"), "w", encoding="utf-8") as fh:
+            json.dump(man, fh, ensure_ascii=False, indent=1)
+        if a.preview:
+            preview(a.preview, man, stage, st["preview"])
 
-def preview(d, man):
+def preview(d, man, stage, placements):
     """Scena 1280x720 jak w grze (skala 4/3 -> tu 1.333 px na px obrazu, zaokrąglone do x1.33 NEAREST)."""
     os.makedirs(d, exist_ok=True)
     WPT = 4 / 3
@@ -746,15 +1081,16 @@ def preview(d, man):
     def prop(fn, xw, dy=8):
         im = Image.open(os.path.join(props, fn)).convert("RGBA")
         world.alpha_composite(im, (int(xw - im.width / 2), hor + dy - im.height))
-    dec("bank_back", 0, 180); dec("crossroad", 1, 620); dec("bank_back", 2, 1000); dec("bank_front", 0, 1300)
-    dec("cobble", 0, 330); dec("puddle", 1, 900); dec("rocks_back", 0, 1450); dec("rocks_front", 1, 760)
-    dec("cobble", 2, 1420); dec("crossroad", 0, 1650)
-    prop("tree_oak.png", 120, 6); prop("fence.png", 330, 14); prop("signpost.png", 520, 16); prop("tree_oak_5.png", 840, 7)
-    prop("bush_2.png", 960, 12); prop("tree_oak_3.png", 1120, 7); prop("fence_broken.png", 1300, 14); prop("bush.png", 1540, 12)
-    prop("tree_dead.png", 1760, 7)
+    for (name, k, xw) in placements:
+        dec(name, k, xw)
+    pdir = os.path.join(OUT, "props")
+    pr = sorted(f for f in os.listdir(pdir) if f.endswith(".png") and not f.startswith(("fence", "gate")))
+    for j, xw in enumerate(range(120, world.width, 260)):
+        im = Image.open(os.path.join(pdir, pr[(j * 7) % len(pr)])).convert("RGBA")
+        world.alpha_composite(im, (int(xw - im.width / 2), hor + 8 - im.height))
     for i, x in enumerate(range(0, world.width, 600)):
         sc = world.crop((x, 0, x + 960, 540)).resize((1280, 720), Image.NEAREST)
-        sc.convert("RGB").save(os.path.join(d, f"road_view_{i + 1}.png"))
+        sc.convert("RGB").save(os.path.join(d, f"{stage}_view_{i + 1}.png"))
         if x + 960 >= world.width:
             break
 
