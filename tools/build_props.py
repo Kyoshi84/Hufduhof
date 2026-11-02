@@ -837,6 +837,9 @@ def well_raw():
 def D(fn, **kw):
     return ("draw", fn, kw)
 
+# dęby i krzewy etapów 1 i 3 powstają z obrazu autora: tools/build_oak_from_source.py
+FROM_AUTHOR_SOURCE = {"tree_oak", "bush"}
+
 PROPS = {
     # etap 1
     ("stage1_road", "fence"):        ((96, 40), D(fence, n=4), 2),
@@ -931,6 +934,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--preview", default=None)
     ap.add_argument("--only", default=None)
+    ap.add_argument("--generated-oak", action="store_true",
+                    help="nadpisz dęby i krzewy wersją rysowaną kodem (zamiast obrazu autora)")
     a = ap.parse_args()
     only = set(a.only.split(",")) if a.only else None
     P = np.array(Image.open(os.path.join(HERE, "assets/palette/hufduhof_256.png")).convert("RGB")).reshape(-1, 3)
@@ -938,6 +943,9 @@ def main():
     sheets = {}
     for (stage, name) in PROPS:
         if only and name not in only:
+            continue
+        if name in FROM_AUTHOR_SOURCE and not a.generated_oak:
+            print(f"pomijam {stage}/{name}: budowany z obrazu autora (tools/build_oak_from_source.py)")
             continue
         outs = render(stage, name)
         pdir = os.path.join(HERE, "assets/stages", stage, "props")

@@ -8,10 +8,10 @@ oraz obiekty, z którymi gracz wchodzi w interakcję (beczka, mikstura). Każdy 
 |---|---|---|---|---|
 | stage1_road | `fence` | płot (4 przęsła) | 96x40 | tak |
 | stage1_road | `fence_broken` | zniszczony płot | 96x40 | tak |
-| stage1_road | `tree_oak` | drzewo liściaste | 100x150 | tak |
+| stage1_road | `tree_oak` | dąb – 6 wariantów z obrazu autora (`tools/build_oak_from_source.py`) | 100x150 | tak |
 | stage1_road | `tree_dead` | martwe drzewo | 100x150 | tak |
 | stage1_road | `signpost` | drogowskaz | 60x60 | tak |
-| stage1_road | `bush` | krzew | 50x32 | tak |
+| stage1_road | `bush` | krzew – 6 wariantów w stylu dębu autora | 50x32 | tak |
 | stage1_road | `milestone` | kamień milowy | 28x32 | tak |
 | stage1_road | `stump_axe` | pieniek z toporem | 40x45 | tak |
 | stage2_village | `house_thatch` | chata ze strzechą | 130x150 | tak |
@@ -25,10 +25,10 @@ oraz obiekty, z którymi gracz wchodzi w interakcję (beczka, mikstura). Każdy 
 | stage2_village | `well` | studnia | 45x70 | tak |
 | stage2_village | `crates` | skrzynie i worek | 60x50 | tak |
 | stage2_village | `scarecrow` | strach na wróble | 40x85 | tak |
-| stage3_fields_forest | `tree_oak` | drzewo liściaste | 110x150 | tak |
+| stage3_fields_forest | `tree_oak` | dąb – 6 wariantów z obrazu autora (`tools/build_oak_from_source.py`) | 110x150 | tak |
 | stage3_fields_forest | `tree_dead` | martwe drzewo | 110x150 | tak |
 | stage3_fields_forest | `tree_pine` | świerk | 80x170 | tak |
-| stage3_fields_forest | `bush` | krzew | 50x32 | tak |
+| stage3_fields_forest | `bush` | krzew – 6 wariantów w stylu dębu autora | 50x32 | tak |
 | stage3_fields_forest | `stone_big` | głaz | 45x38 | tak |
 | stage3_fields_forest | `fence_broken` | zniszczony płot | 80x40 | tak |
 | stage3_fields_forest | `tent` | namiot obozowy | 70x50 | tak |
