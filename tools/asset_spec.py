@@ -80,7 +80,7 @@ LAYERS = {
     "sky": ("sky.png", 0.0, "niebo; powtarzane poziomo, dolna krawędź na horyzoncie", "128x320 (szeroki 64-512, wysokość 320)"),
     "far1": ("far1.png", 0.15, "daleki plan (wolny paralaks), powtarzany poziomo, dolna krawędź na horyzoncie", "640x140, szew poziomy niewidoczny"),
     "far2": ("far2.png", 0.32, "bliższy plan sylwetek (średni paralaks), powtarzany poziomo", "640x110, szew niewidoczny"),
-    "ground": ("ground.png", 1.0, "podłoże w pasie walki, powtarzane poziomo, górna krawędź na horyzoncie", "128x320"),
+    "ground": ("ground.png", 1.0, "podłoże w pasie walki, powtarzane poziomo, górna krawędź na horyzoncie", "128x320 (szerokość dowolna, np. 1024)"),
     "foreground": ("foreground.png", 1.25, "opcjonalny pierwszy plan przy dolnej krawędzi ekranu (poza pasem walki!)", "640x60, max 67 px wysokości"),
 }
 

@@ -11,6 +11,10 @@
   "potion": {
    "note": "mikstura lecząca",
    "size": "22x28"
+  },
+  "obstacle_puddle": {
+   "note": "przeszkoda 'kałuża' do przeskoczenia (tools/build_road.py); środek PNG = środek przeszkody",
+   "size": "224x172"
   }
  }
 }

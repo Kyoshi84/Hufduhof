@@ -126,6 +126,22 @@ func _draw_puddle() -> void:
 	var y1: float = _lane_bot() - 30.0
 	var cy: float = (y0 + y1) * 0.5
 	var ry: float = (y1 - y0) * 0.42
+	# grafika z pliku (assets/stages/common/props/obstacle_puddle.png, tools/build_road.py) + pikselowe kręgi na wodzie
+	var tex: Texture2D = StageArt.common_prop("obstacle_puddle")
+	if tex != null:
+		var k: float = 4.0 / 3.0
+		var tw: float = tex.get_width() * k
+		var th: float = tex.get_height() * k
+		draw_texture_rect(tex, Rect2(floorf(-tw * 0.5), floorf(cy - th * 0.5), tw, th), false)
+		for i in 4:
+			var ph: float = fmod(t * 0.6 + i * 0.29, 1.0)
+			var c := Vector2(sin(i * 2.3) * half_w * 0.45, cy + 12.0 + cos(i * 1.7) * ry * 0.4)
+			var rx: float = 6.0 + ph * 34.0
+			var pts := PackedVector2Array()
+			for a in 17:
+				pts.append(c + Vector2(cos(TAU * a / 16.0) * rx, sin(TAU * a / 16.0) * rx * 0.35))
+			draw_polyline(pts, Color(0.59, 0.64, 0.67, 0.75 * (1.0 - ph)), k)
+		return
 	_ellipse(Vector2(0, cy + 6), half_w + 10.0, ry + 4.0, Color(0.12, 0.09, 0.07))             # mokry brzeg
 	_ellipse(Vector2(0, cy), half_w, ry, Color(0.20, 0.25, 0.32))
 	_ellipse(Vector2(-6, cy - 4), half_w * 0.82, ry * 0.8, Color(0.30, 0.39, 0.48))

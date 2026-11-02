@@ -33,6 +33,7 @@ GROUND_Y0 = 495                       # pierwszy wiersz podłoża w panoramie (p
 GROUND_W, GROUND_H = 128, 320
 GROUND_BLEND = 32
 GROUND_SCALE = 1.22
+GROUND_FROM_TOOL = {"stage1_road": "tools/build_road.py"}   # etapy z podłożem rysowanym od zera
 FG_W, FG_H = 640, 60
 PARALLAX_FAR = 0.2
 
@@ -231,6 +232,9 @@ def main():
             "far2": (band[BAND_H - FAR2_H:], alpha_full[BAND_H - FAR2_H:]),
             "ground": (make_ground(pan, st), np.full((GROUND_H, GROUND_W), 255)),
         }
+        if sid in GROUND_FROM_TOOL:                   # podłoże rysowane osobnym skryptem - nie nadpisujemy
+            print(f"{sid}/ground.png: pomijam (budowane przez {GROUND_FROM_TOOL[sid]})")
+            del layers["ground"]
         fg_rgb, fg_a = make_foreground(pan, st, fence)
         layers["foreground"] = (fg_rgb, fg_a)
         for name, (rgb, al) in layers.items():

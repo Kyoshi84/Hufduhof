@@ -165,6 +165,7 @@ func _draw() -> void:
 	else:
 		draw_tiled(self, f2, vl, vw, HORIZON)
 	_draw_haze(vl, vw, th)
+	_draw_decals(vl, vw)
 	var step := 150.0
 	var first: int = int(floor((vl - 300.0) / step))
 	var last: int = int(ceil((vl + vw + 300.0) / step))
@@ -313,6 +314,82 @@ func _pick_prop(stage: int, r: float, v: float, _i: int, k: float = 0.0) -> Arra
 			elif r < 0.92: return ["stake_victim", 14.0]
 	return []
 
+# ------------------------------------------------------------------ nakładki terenu (decals.json)
+
+const DECAL_MARGIN := 520.0            # bez nakładek przy granicy etapów (tam podłoże przenika w następne)
+
+func _stage_span(stage: int) -> Vector2:
+	var stages: Array = level.data["stages"]
+	var s0: float = float(stages[stage]["start"])
+	var s1: float = float(stages[stage + 1]["start"]) if stage + 1 < stages.size() else float(level.data.get("length", s0 + 4000.0))
+	return Vector2(s0, s1)
+
+## Nakładka slotu i etapu albo {} (wybór i pozycja deterministyczne: zależą tylko od numeru slotu).
+func _decal_at(stage: int, slot: Dictionary, i: int) -> Dictionary:
+	var salt: int = int(slot.get("salt", 0))
+	var step: float = float(slot.get("step", 400.0))
+	var r: float = _hash(i, salt)
+	var acc := 0.0
+	for it in slot.get("items", []):
+		acc += float(it.get("chance", 0.0))
+		if r < acc:
+			var x: float = (i + 0.5) * step + (_hash(i, salt + 1) - 0.5) * step * float(slot.get("jitter", 0.0))
+			var span := _stage_span(stage)
+			if x < span.x + DECAL_MARGIN or x > span.y - DECAL_MARGIN:
+				return {}
+			return { "item": it, "x": x, "mirror": bool(it.get("mirror", true)) and _hash(i, salt + 3) < 0.5, "var": _hash(i, salt + 2) }
+	return {}
+
+func _draw_decals(vl: float, vw: float) -> void:
+	for stage in art.size():
+		var sa: StageArt = art[stage]
+		if sa == null or sa.decal_cfg.is_empty():
+			continue
+		var span := _stage_span(stage)
+		var a: float = maxf(vl - 400.0, span.x)
+		var b: float = minf(vl + vw + 400.0, span.y)
+		if a > b:
+			continue
+		for slot in sa.decal_cfg.get("slots", []):
+			var step: float = float(slot.get("step", 400.0))
+			for i in range(int(floor(a / step)) - 1, int(ceil(b / step)) + 1):
+				var d: Dictionary = _decal_at(stage, slot, i)
+				if not d.is_empty():
+					_draw_decal(stage, sa, d, i)
+
+func _draw_decal(stage: int, sa: StageArt, d: Dictionary, i: int) -> void:
+	var it: Dictionary = d["item"]
+	var vars: Array = sa.decal_variants(str(it["name"]))
+	if vars.is_empty():
+		return
+	var v: Array = vars[int(float(d["var"]) * vars.size()) % vars.size()]
+	var tex: Texture2D = v[0]
+	var x: float = d["x"]
+	var w: float = tex.get_width() * WPT
+	var h: float = tex.get_height() * WPT
+	var y: float = HORIZON + float(v[1]) * WPT
+	if d["mirror"]:
+		draw_texture_rect(tex, Rect2(x + w * 0.5, y, -w, h), false)
+	else:
+		draw_texture_rect(tex, Rect2(x - w * 0.5, y, w, h), false)
+	if it.has("prop"):                     # np. drogowskaz na rozdrożu
+		var dx: float = float(it.get("prop_dx", 0.0)) * (-1.0 if d["mirror"] else 1.0)
+		_draw_named(stage, str(it["prop"]), x + dx, HORIZON + 10.0 + float(it.get("prop_dy", 0.0)), 1.0, i)
+
+## Czy w punkcie x stoi nakładka, która nie chce rekwizytów obok (np. rozdroże - droga w bok zamiast płotu).
+func _decal_clears(stage: int, x: float) -> bool:
+	var sa: StageArt = art[stage] if stage < art.size() else null
+	if sa == null or sa.decal_cfg.is_empty():
+		return false
+	for slot in sa.decal_cfg.get("slots", []):
+		var step: float = float(slot.get("step", 400.0))
+		var c: int = int(floor(x / step))
+		for i in range(c - 1, c + 2):
+			var d: Dictionary = _decal_at(stage, slot, i)
+			if not d.is_empty() and absf(float(d["x"]) - x) < float(d["item"].get("clear_props", 0.0)):
+				return true
+	return false
+
 ## Postęp przez etap 3 (las) w punkcie x świata: 0..1 (używany do zagęszczania drzew).
 func _forest_k(x: float) -> float:
 	var stages: Array = level.data["stages"]
@@ -324,6 +401,8 @@ func _forest_k(x: float) -> float:
 
 func _draw_prop(i: int, x: float) -> void:
 	var stage: int = _stage_index_at(x)
+	if _decal_clears(stage, x):
+		return
 	var p: Array = _pick_prop(stage, _hash(i, 7), _hash(i, 8), i, _forest_k(x) if stage == 2 else 0.0)
 	if p.is_empty():
 		return

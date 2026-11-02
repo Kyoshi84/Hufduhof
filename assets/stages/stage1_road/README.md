@@ -16,7 +16,7 @@ Grafiki etapu. Każdy brakujący plik jest zastępowany proceduralną grafiką t
 | sky | `sky.png` | 0.0 | 128x320 (szeroki 64-512, wysokość 320) | niebo; powtarzane poziomo, dolna krawędź na horyzoncie |
 | far1 | `far1.png` | 0.15 | 640x140, szew poziomy niewidoczny | daleki plan (wolny paralaks), powtarzany poziomo, dolna krawędź na horyzoncie |
 | far2 | `far2.png` | 0.32 | 640x110, szew niewidoczny | bliższy plan sylwetek (średni paralaks), powtarzany poziomo |
-| ground | `ground.png` | 0.0 | 128x320 | podłoże w pasie walki, powtarzane poziomo, górna krawędź na horyzoncie |
+| ground | `ground.png` | 0.0 | 1024x320 (etap 1: `tools/build_road.py`) | podłoże w pasie walki, powtarzane poziomo, górna krawędź na horyzoncie |
 | foreground | `foreground.png` | 1.25 | 640x60, max 67 px wysokości | opcjonalny pierwszy plan przy dolnej krawędzi ekranu (poza pasem walki!) |
 
 Paralaksa i `y_offset` (przesunięcie pionowe, px) można zmienić w `stage.json`.
@@ -34,3 +34,12 @@ Paralaksa i `y_offset` (przesunięcie pionowe, px) można zmienić w `stage.json
 | `stump_axe` | `props/stump_axe.png` (warianty: `stump_axe_2.png` ... `stump_axe_6.png`) | 40x45 | pieniek z toporem |
 
 Sprawdzenie plików: `python3 tools/check_assets.py`.
+
+## Nakładki terenu (`decals/`, `decals.json`)
+Droga ma nakładki rysowane na podłożu pod rekwizytami i postaciami (niczego nie blokują):
+rozdroża (`crossroad`, z drogowskazem, bez drzew i płotów obok), skarpy za drogą (`bank_back`, w tym kamienny murek),
+uskok przy przedniej krawędzi (`bank_front`), resztki bruku (`cobble`), głazy przy poboczach (`rocks_back`, `rocks_front`)
+i kałuże (`puddle`). `decals.json` mówi, jak często i gdzie gra je losuje (stałe miejsca na każdym przejściu).
+Każdy plik można podmienić własnym; `y` w `decals.json` = wiersz (px pod horyzontem) górnej krawędzi PNG.
+Przebudowa: `python3 tools/build_road.py` (podłoże + nakładki), podgląd: `--preview KATALOG`.
+

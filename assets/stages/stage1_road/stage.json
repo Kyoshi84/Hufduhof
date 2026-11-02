@@ -28,8 +28,8 @@
    "file": "ground.png",
    "parallax": 0.0,
    "y_offset": 0,
-   "note": "podłoże w pasie walki, powtarzane poziomo, górna krawędź na horyzoncie",
-   "size": "128x320"
+   "note": "droga rysowana pixel-artem 1:1 (tools/build_road.py), powtarzana poziomo; nakładki terenu w decals.json",
+   "size": "1024x320"
   },
   "foreground": {
    "file": "foreground.png",

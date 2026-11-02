@@ -13,6 +13,8 @@ var folder: String = ""
 var wpt: float = 4.0 / 3.0
 var layers: Dictionary = {}          # nazwa -> { "tex", "parallax", "y_offset" }
 var _props: Dictionary = {}          # nazwa -> Array[Texture2D] (puste = brak)
+var decal_cfg: Dictionary = {}       # decals.json: nakładki terenu (rozdroża, skarpy, bruk...); puste = brak
+var _decals: Dictionary = {}         # nazwa -> Array[[Texture2D, y_px]]
 
 static func clear_cache() -> void:
 	_cache.clear()
@@ -42,7 +44,24 @@ func _load(folder_name: String) -> bool:
 		var tex := CharacterSheet.load_tex("%s/%s" % [base, str(spec["file"])])
 		if tex != null:
 			layers[lname] = { "tex": tex, "parallax": float(spec.get("parallax", 0.0)), "y_offset": float(spec.get("y_offset", 0.0)) }
+	var dpath: String = base + "/decals.json"
+	if FileAccess.file_exists(dpath):
+		var dc = JSON.parse_string(FileAccess.get_file_as_string(dpath))
+		if typeof(dc) == TYPE_DICTIONARY:
+			decal_cfg = dc
 	return true
+
+## Warianty nakładki terenu: [[tekstura, y w px pod horyzontem], ...] z decals/<plik> (leniwie, zapamiętywane).
+func decal_variants(dname: String) -> Array:
+	if _decals.has(dname):
+		return _decals[dname]
+	var out: Array = []
+	for spec in decal_cfg.get("decals", {}).get(dname, []):
+		var t := CharacterSheet.load_tex("%s/%s/decals/%s" % [root, folder, str(spec["file"])])
+		if t != null:
+			out.append([t, float(spec.get("y", 0))])
+	_decals[dname] = out
+	return out
 
 func layer(lname: String) -> Dictionary:
 	return layers.get(lname, {})

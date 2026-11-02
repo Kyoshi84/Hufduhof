@@ -17,7 +17,7 @@ func _ready() -> void:
 	var tests := [
 		"t_balance", "t_hit_geometry", "t_single_hit_per_attack", "t_invulnerability", "t_light_timing",
 		"t_skaven_ai", "t_hound_charge", "t_beastman_poise", "t_boss_phases", "t_wave_flow", "t_pause_state",
-		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_story", "t_tavern", "t_jump_obstacles", "t_music", "t_full_run_bot",
+		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_story", "t_tavern", "t_jump_obstacles", "t_road_decals", "t_music", "t_full_run_bot",
 	]
 	for t in tests:
 		var t0 := Time.get_ticks_msec()
@@ -1123,6 +1123,54 @@ func t_tavern() -> void:
 	# assety prologu
 	for n in ["tavern_bg", "balcony_rail", "door_open", "borubar", "borubar_dizzy", "tankard_big", "innkeeper", "mug", "mug_gold", "splash", "stars", "guest_1", "guest_2", "guest_3", "guest_4", "guest_5", "guest_6"]:
 		ok(ResourceLoader.exists("res://assets/minigame/%s.png" % n), "istnieje grafika prologu: " + n)
+
+func t_road_decals() -> void:
+	var prev_root: String = StageArt.root
+	StageArt.root = "res://assets/stages"
+	StageArt.clear_cache()
+	var sa := StageArt.get_stage("stage1_road")
+	ok(sa != null and not sa.decal_cfg.is_empty(), "droga: decals.json etapu 1 wczytany")
+	if sa == null or sa.decal_cfg.is_empty():
+		StageArt.root = prev_root
+		StageArt.clear_cache()
+		return
+	var g: Texture2D = sa.layer("ground")["tex"]
+	ok(g.get_width() == 1024 and g.get_height() == 320, "droga: podłoże 1:1 1024x320 (jest %dx%d)" % [g.get_width(), g.get_height()])
+	var missing := []
+	for slot in sa.decal_cfg["slots"]:
+		var sum := 0.0
+		for it in slot["items"]:
+			sum += float(it["chance"])
+			if sa.decal_variants(str(it["name"])).is_empty():
+				missing.append(it["name"])
+		ok(sum <= 1.0, "droga: suma szans w slocie co %s <= 1 (%.2f)" % [str(slot["step"]), sum])
+	ok(missing.is_empty(), "droga: każda nakładka ma pliki PNG (brak: %s)" % str(missing))
+	var data := Level.load_level_data("res://data/level_1.json")
+	var lvl := Level.new(data, 0)
+	lvl.simulate_only = true
+	add_child(lvl)
+	var bg: LevelBackground = lvl.bg
+	var span: Vector2 = bg._stage_span(0)
+	var counts := {}
+	var inside := true
+	var cross_x := -1.0
+	for slot in sa.decal_cfg["slots"]:
+		var st: float = float(slot["step"])
+		for i in range(int(span.x / st) - 1, int(span.y / st) + 2):
+			var d: Dictionary = bg._decal_at(0, slot, i)
+			if d.is_empty():
+				continue
+			var nm := str(d["item"]["name"])
+			counts[nm] = int(counts.get(nm, 0)) + 1
+			inside = inside and float(d["x"]) >= span.x + LevelBackground.DECAL_MARGIN and float(d["x"]) <= span.y - LevelBackground.DECAL_MARGIN
+			if nm == "crossroad":
+				cross_x = float(d["x"])
+	ok(inside, "droga: nakładki tylko wewnątrz etapu (z dala od przejścia w wieś)")
+	ok(counts.size() >= 5, "droga: etap 1 ma różne nakładki terenu (%s)" % str(counts))
+	ok(cross_x > 0.0 and bg._decal_clears(0, cross_x) and not bg._decal_clears(0, cross_x + 400.0), "droga: na rozdrożu nie stoją drzewa ani płoty")
+	free_level(lvl)
+	StageArt.root = prev_root
+	StageArt.clear_cache()
 
 func t_jump_obstacles() -> void:
 	var lvl := make_level()
