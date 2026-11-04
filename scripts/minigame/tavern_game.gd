@@ -16,7 +16,10 @@ const ART := "res://assets/minigame/"
 const GOAL := 50
 const GOLD_VALUE := 3                   # złoty kufel Bugmana liczy się za 3
 const FLOOR_Y := 660.0                  # stopy Borubara / podłoga, o którą rozbijają się kufle
-const CATCH_Y := 482.0                  # linia piany w wielkim kuflu Borubara
+const CATCH_Y := 482.0                  # otwór beczki nad głową Borubara (tools/build_borubar.py wypisuje geometrię)
+const BODY_DX := 26.7                   # boru_x = środek otworu beczki; stopy (pivot sprite'a) są o tyle w prawo
+const BODY_PIVOT_PX := 44.0             # pivot (stopy) w pikselach sprite'a borubar.png, od lewej
+const STARS_DY := -112.0                # gwiazdki ogłuszenia nad czapką (względem podłogi)
 const CATCH_HALF := 54.0
 const BORU_MIN := 90.0
 const BORU_MAX := 1190.0
@@ -61,7 +64,6 @@ var rng := RandomNumberGenerator.new()
 var bg: Sprite2D
 var door_spr: Sprite2D
 var boru: Sprite2D
-var tank: Sprite2D
 var keeper: Sprite2D
 var guests: Array = []                  # { spr, x, y, away }
 var ivo: Sprite2D
@@ -341,14 +343,8 @@ func _build_scene() -> void:
 	rail.scale = Vector2(S, S)
 	rail.position = Vector2(0, 152)
 	add_child(rail)
-	boru = _sprite("borubar", Vector2(boru_x, FLOOR_Y))
-	tank = Sprite2D.new()
-	tank.texture = tx("tankard_big")
-	tank.centered = false
-	tank.offset = Vector2(-29, -56)
-	tank.position = Vector2(0, -90)
-	tank.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	boru.add_child(tank)
+	boru = _sprite("borubar", Vector2(boru_x + BODY_DX, FLOOR_Y))   # Borubar z beczką nad głową (z obrazu autora)
+	boru.offset.x = -BODY_PIVOT_PX
 	fx = DrawLayer.new()
 	fx.cb = _draw_fx
 	fx.z_index = 2
@@ -440,14 +436,11 @@ func _sync_visuals() -> void:
 	var swayv: float = sin(t * 2.3) * 0.035 + clampf(boru_vx / BORU_SPEED, -1.0, 1.0) * 0.07
 	if stun > 0.0:
 		swayv = sin(t * 14.0) * 0.12
-	boru.position = Vector2(boru_x, FLOOR_Y)
+	boru.position = Vector2(boru_x + BODY_DX, FLOOR_Y)
 	boru.rotation = swayv
-	var sq: float = 1.0 + sin(t * 4.6) * 0.012
+	var sq: float = (1.0 + sin(t * 4.6) * 0.012) * (1.0 - tank_pop * 0.06)   # złapany kufel: beczka lekko przysiada
 	boru.scale = Vector2(S * (1.0 / sq), S * sq)
 	boru.texture = tx("borubar_dizzy") if stun > 0.0 or phase == Phase.CUTSCENE else tx("borubar")
-	var pop: float = 1.0 + tank_pop * 0.16
-	tank.scale = Vector2(pop, 1.0 / pop if tank_pop > 0.0 else 1.0)
-	tank.position.y = -90.0 + tank_pop * 4.0
 	keeper.position = Vector2(keeper_x, KEEPER_Y)
 	keeper.scale = Vector2(-S if keeper_to < keeper_x else S, S * (1.0 + keeper_bounce * 0.06))
 	for g in guests:
@@ -472,7 +465,7 @@ func _draw_shadows(c: Node2D) -> void:
 	for g in guests:
 		_shadow(c, Vector2(float(g["x"]) + float(g["away"]), float(g["y"])), 26.0)
 	_shadow(c, ivo_pos, 30.0)
-	_shadow(c, Vector2(boru_x, FLOOR_Y), 44.0)
+	_shadow(c, Vector2(boru_x + BODY_DX, FLOOR_Y), 44.0)
 
 func _shadow(c: Node2D, p: Vector2, rx: float) -> void:
 	var pts := PackedVector2Array()
@@ -493,7 +486,7 @@ func _draw_fx(c: Node2D) -> void:
 		c.draw_texture(mt, -Vector2(mt.get_width(), mt.get_height()) * 0.5)
 	if stun > 0.0:
 		var stt: Texture2D = tx("stars")
-		c.draw_set_transform(Vector2(boru_x, FLOOR_Y - 190.0), sin(t * 8.0) * 0.12, Vector2(S, S))
+		c.draw_set_transform(Vector2(boru_x + BODY_DX - 4.0, FLOOR_Y + STARS_DY), sin(t * 8.0) * 0.12, Vector2(S, S))
 		c.draw_texture(stt, -Vector2(stt.get_width(), stt.get_height()) * 0.5)
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	var font := ThemeDB.fallback_font

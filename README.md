@@ -38,6 +38,9 @@ od razu do etapu 1; „Kontynuuj” i ponowna próba po porażce w ogóle pomija
   przełączanie w `scripts/main.gd` (`start_game`, `show_prologue`, `show_tavern`).
 - Teksty: wpisy z `"phase": "pre"` / `"post"` w `data/story.json`.
 - Grafiki: `assets/minigame/*.png`, generator `tools/build_tavern_art.py` (w razie potrzeby podmień pliki własnymi o tych samych nazwach).
+- Borubar (z beczką nad głową, w beczkę łapie kufle) i jego portret na planszy przy studni powstają z obrazu autora
+  `assets/characters/borubar/source/borubar_painting.jpg`: `python3 tools/build_borubar.py` -> `assets/minigame/borubar*.png`,
+  `assets/ui/story/portraits/borubar.png` (skrypt wypisuje geometrię sprite'a: otwór beczki = `CATCH_Y`, stopy = `BODY_DX`).
 - Zrzuty: `tests/shots_tavern.tscn` (wymaga xvfb), testy: `t_tavern` w `tests/test_runner.gd`.
 
 ## Muzyka

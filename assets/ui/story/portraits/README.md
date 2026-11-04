@@ -10,3 +10,5 @@ Wrzuć tu grafikę, a gra sama ją pokaże (skalowanie z zachowaniem proporcji, 
 
 Okno ma 508x288 px wnętrza (proporcje ok. 16:9). Imię mówiącego jest wypisane na dole okna.
 Brak pliku = puste czarne okno. Ścieżkę zmienisz w `data/story.json` (pole `portrait`).
+
+`borubar.png` (254x144, w oknie 2x) jest generowany z obrazu autora: `python3 tools/build_borubar.py`.

@@ -183,53 +183,6 @@ def innkeeper(w, h):
     c.outline()
     return c.image()
 
-def borubar(w, h, dizzy=False):
-    """Pijak Borubar: łysy z kępką włosów, czerwony nos, łachmany, ręce wyciągnięte w górę (trzyma kufel)."""
-    c = Canvas(w, h)
-    c.rng = np.random.default_rng(11)
-    yy, xx = np.mgrid[0:h, 0:w]
-    cx = w / 2
-    leg_y = h * 0.7
-    for dx, sh in ((-0.12, 0), (0.12, 2)):
-        c.paint(c.rect(cx + dx * w - 7, leg_y, cx + dx * w + 7, h - 3), "tunic_green", lit(xx, cx - 24, cx + 24, 0.15, 0.6), 0.2)
-        c.paint(c.rect(cx + dx * w - 9, h - 9 + sh * 0, cx + dx * w + 9, h - 2), "char", 0.5, 0.1)
-    top = h * 0.5
-    belly = c.ellipse(cx, top + h * 0.12, w * 0.3, h * 0.2) | c.poly([(cx - w * 0.2, top - 2), (cx + w * 0.2, top - 2), (cx + w * 0.3, top + h * 0.1), (cx - w * 0.3, top + h * 0.1)])
-    c.volume(belly, "tunic_brown", bulge=9, noise=0.2, base=0.5)
-    for (px, py) in ((cx - 12, top + h * 0.1), (cx + 9, top + h * 0.17), (cx - 3, top + h * 0.05)):   # łaty
-        c.paint(c.rect(px, py, px + 8, py + 6), "tunic_green", 0.5, 0.2)
-    c.flat(c.rect(cx - w * 0.3, top + h * 0.2, cx + w * 0.3, top + h * 0.2 + 3), RAMPS["char"][2])
-    # ręce w górę
-    for sgn in (-1, 1):
-        sh = (cx + sgn * w * 0.22, top + 3)
-        hand = (cx + sgn * w * 0.2, h * 0.07)
-        arm = c.line(sh, (cx + sgn * w * 0.3, top - h * 0.22), 9) | c.line((cx + sgn * w * 0.3, top - h * 0.22), hand, 8)
-        c.volume(arm, "tunic_brown", bulge=3, base=0.5)
-        c.paint(c.ellipse(hand[0], hand[1], 5, 5), "skin", 0.65, 0.0)
-    # głowa
-    hy = top - h * 0.1
-    head = c.ellipse(cx, hy, w * 0.19, h * 0.115)
-    c.volume(head, "skin", bulge=6, base=0.7)
-    c.paint(c.ellipse(cx, hy + h * 0.02, w * 0.075, h * 0.05), "tunic_red", 0.7 + 0.1 * dizzy, 0.15)   # czerwony nos
-    ey = hy - h * 0.02
-    if dizzy:
-        for ex in (cx - w * 0.09, cx + w * 0.09):
-            c.flat(c.line((ex - 3, ey - 3), (ex + 3, ey + 3), 2), (20, 14, 12))
-            c.flat(c.line((ex - 3, ey + 3), (ex + 3, ey - 3), 2), (20, 14, 12))
-        c.flat(c.ellipse(cx, hy + h * 0.075, 4, 3), (60, 14, 14))
-    else:
-        for ex in (cx - w * 0.09, cx + w * 0.09):
-            c.flat(c.rect(ex - 3, ey - 2, ex + 3, ey + 2), (232, 224, 196))
-            c.flat(c.rect(ex - 1, ey - 1, ex + 1, ey + 2), (20, 14, 12))
-        c.flat(c.rect(cx - 7, hy + h * 0.07, cx + 7, hy + h * 0.07 + 2), (60, 14, 14))
-    c.paint(c.rect(cx - w * 0.2, ey - 5, cx - w * 0.04, ey - 3), "hair_ginger", 0.4, 0.2)               # brwi
-    c.paint(c.rect(cx + w * 0.04, ey - 5, cx + w * 0.2, ey - 3), "hair_ginger", 0.4, 0.2)
-    c.paint(c.poly([(cx - 5, hy - h * 0.11), (cx, hy - h * 0.2), (cx + 5, hy - h * 0.11)]), "hair_ginger", 0.55, 0.25)    # kępka
-    brd = c.poly([(cx - w * 0.18, hy + h * 0.04), (cx + w * 0.18, hy + h * 0.04), (cx + w * 0.1, hy + h * 0.13), (cx - w * 0.1, hy + h * 0.13)])
-    c.paint(brd & ~c.ellipse(cx, hy + h * 0.06, w * 0.08, h * 0.03), "hair_ginger", 0.45, 0.3)           # zarost
-    c.outline()
-    return c.image()
-
 def stars(w=48, h=14):
     c = Canvas(w, h)
     for i, x in enumerate((8, 24, 40)):
@@ -522,8 +475,7 @@ def build():
         "tavern_bg": background_from_reference() if os.path.exists(REF) else background(),
         "balcony_rail": balcony_rail(),
         "door_open": door_open_new(),
-        "borubar": borubar(84, 104),
-        "borubar_dizzy": borubar(84, 104, dizzy=True),
+        # borubar.png / borubar_dizzy.png: z obrazu autora, tools/build_borubar.py
         "tankard_big": tankard(76, 56, big=True),
         "innkeeper": innkeeper(84, 100),
         "mug": tankard(24, 28, big=False),
