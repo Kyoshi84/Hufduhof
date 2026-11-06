@@ -1,0 +1,790 @@
+{
+ "_opis": "Poziom 1: wioska Hufduhof. 'mapa' = wiersze znaków (y), znak = komórka (x). Legenda w 'legenda'. Obiekty: komorka [x, y]; budynek zajmuje rozmiar [w, h] komórek od komórki (narożnik północny). Grafiki: assets/levels/level1/props/<grafika>.png, kafle: assets/levels/level1/tiles/.",
+ "nazwa": "Wioska Hufduhof",
+ "kafle": "res://assets/levels/level1/tiles/",
+ "rekwizyty": "res://assets/levels/level1/props/",
+ "muzyka": "wioska",
+ "legenda": {
+  ".": "trawa",
+  ",": "trawa z kwiatami",
+  ":": "ścieżka (ziemia)",
+  "=": "bruk",
+  "~": "błoto",
+  "T": "drzewo (blokuje)",
+  "#": "skraj lasu (blokuje)",
+  "-": "płot wzdłuż osi x (blokuje)",
+  "|": "płot wzdłuż osi y (blokuje)",
+  "b": "krzak (blokuje)",
+  "W": "ściana (blokuje)",
+  "o": "podłoga karczmy",
+  "r": "dywan",
+  "s": "kamienna posadzka",
+  "x": "niewidzialna ściana (blokuje)"
+ },
+ "mapa": [
+  "###############################################===##############",
+  "###############################################===##############",
+  "##.............................................===............##",
+  "##............,..T......T......................===............##",
+  "##....~~~~~~~.....~~~~~~~......................===..........b.##",
+  "##....~~~~~~~.....~~~~~~~..----------..........===....,.......##",
+  "##....~~~~~~~.,..,~~~~~~~..|........|..........===............##",
+  "##....~~~~~~~.....~~~~~~~..|........|.........,===............##",
+  "##....~~~~~~~....,~~~~~~~..|........|..........===............##",
+  "##....~~~~~~~..............|........|.....,....===............##",
+  "##.,...,..T................|........|......T...===............##",
+  "##......,...........T......|...::...|..........===,...T.....T.##",
+  "##.........................----::.---......,,..===..........,.##",
+  "##...........,.::......T.......::..............===........,...##",
+  "##.............::..........,...::,.........T...===............##",
+  "##.........,...::.....,........::...........,..===............##",
+  "##...T.........::,.............::....,..,......===.....,,.....##",
+  "##.......T.....::..............::..T...........===..T.........##",
+  "##............,:::...,.........::...........T..===............##",
+  "##..............::.............::.......T,.....===............##",
+  "##..............::....,........:::.....T.T.....===.........T..##",
+  "##..............::..T.bT........::.............===.b..........##",
+  "##.....,........::..............::......-----..===............##",
+  "##.............,::..............::.,....|...|..===.,..........##",
+  "##........,T....::.........,....::......|.,.|..===............##",
+  "##..............::,.............::,.........|..===............##",
+  "##..............:::.............::..........|..===............##",
+  "##...............::,............::......|...|..===....T.......##",
+  "##...............::...,......===::======-----..===............##",
+  "##...............::..........===========.....,.===........,...##",
+  "##.......T.......::::::::::::::=======::::::::::::.........,..##",
+  "##...............::::::::::::::=======::::::::::::........,...##",
+  "##...............::::::::::::::=======::::::::::::......b.....##",
+  "##...........................===========.......:::............##",
+  "##.......,................,..===========.......::::...........##",
+  "##......,..............T.....=========::.......::::...........##",
+  "##.................,....,....====:::==:::.......:::......T....##",
+  "##............,....,.........====:::===::.....,.:::...........##",
+  "##.......,..........---..--......:::...:::......:::...........##",
+  "##.........,........|..,..|......:::.T..:::.....:::.,.....T...##",
+  "##......---..--.,...|.....|.,....:::.....:::....:::..b........##",
+  "##..T...|.....|..b..|............:::......::....::::..,.......##",
+  "##......|.....|.....|........,...:::......:::.,.::::.....,....##",
+  "##......|,....|...,.|....,|.....,:::.....,.:::...:::..........##",
+  "##......|.....|.....-------......:::........:::-.::-----.,....##",
+  "##......-------..................:::.........::|.:::...|......##",
+  "##.......................:::::::::::.........::|.:::...|......##",
+  "##..............::::::::::::::::::::.....,.T..:|:......|......##",
+  "##.....:::::::::::::::::::::::::::::.,...T.....|:.....,|......##",
+  "##:::::::::::::::::::::::::..................,.|::.,..,|...,..##",
+  "##::::::::::::::::.........,...................---------......##",
+  "##:::::::......,.,.......,...,..................,:::..........##",
+  "##....,........b.........................,.T......::..........##",
+  "##.............,.........,........................:::..b......##",
+  "##.............,.................T....T.........,..::....T....##",
+  "##...............................T............................##",
+  "##.......,....T,...............,.........,....................##",
+  "##.................,...............,..........................##",
+  "##..T...............................................,...,.....##",
+  "##.....T...,..................................................##",
+  "##............T.,.T...................b.,......,..............##",
+  "##............................................................##",
+  "################################################################",
+  "################################################################"
+ ],
+ "obiekty": [
+  {
+   "typ": "budynek",
+   "grafika": "tavern_outside",
+   "komorka": [
+    3,
+    52
+   ],
+   "rozmiar": [
+    4,
+    3
+   ],
+   "nazwa": "Karczma"
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_a",
+   "komorka": [
+    22,
+    40
+   ],
+   "rozmiar": [
+    3,
+    3
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_b",
+   "komorka": [
+    26,
+    22
+   ],
+   "rozmiar": [
+    3,
+    2
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_c",
+   "komorka": [
+    41,
+    24
+   ],
+   "rozmiar": [
+    2,
+    3
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_a",
+   "komorka": [
+    41,
+    38
+   ],
+   "rozmiar": [
+    3,
+    3
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_burnt",
+   "komorka": [
+    36,
+    42
+   ],
+   "rozmiar": [
+    3,
+    3
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_b",
+   "komorka": [
+    10,
+    42
+   ],
+   "rozmiar": [
+    3,
+    2
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_c",
+   "komorka": [
+    54,
+    20
+   ],
+   "rozmiar": [
+    2,
+    3
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_a",
+   "komorka": [
+    24,
+    54
+   ],
+   "rozmiar": [
+    3,
+    3
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "smithy",
+   "komorka": [
+    16,
+    33
+   ],
+   "rozmiar": [
+    3,
+    2
+   ],
+   "nazwa": "Kuźnia"
+  },
+  {
+   "typ": "budynek",
+   "grafika": "mill",
+   "komorka": [
+    13,
+    10
+   ],
+   "rozmiar": [
+    2,
+    2
+   ],
+   "nazwa": "Młyn"
+  },
+  {
+   "typ": "budynek",
+   "grafika": "barn",
+   "komorka": [
+    49,
+    46
+   ],
+   "rozmiar": [
+    4,
+    3
+   ],
+   "nazwa": "Stodoła"
+  },
+  {
+   "typ": "budynek",
+   "grafika": "herbalist_hut",
+   "komorka": [
+    54,
+    55
+   ],
+   "rozmiar": [
+    2,
+    2
+   ],
+   "nazwa": "Chata zielarki"
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "grave_0",
+   "komorka": [
+    29,
+    7
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "grave_1",
+   "komorka": [
+    31,
+    7
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "grave_1",
+   "komorka": [
+    33,
+    7
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "grave_2",
+   "komorka": [
+    29,
+    9
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "grave_0",
+   "komorka": [
+    33,
+    9
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "grave_0",
+   "komorka": [
+    35,
+    8
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "grave_1",
+   "komorka": [
+    30,
+    10
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "studnia",
+   "komorka": [
+    34,
+    32
+   ]
+  },
+  {
+   "typ": "barykada",
+   "id": "barykada_0",
+   "komorka": [
+    47,
+    6
+   ]
+  },
+  {
+   "typ": "barykada",
+   "id": "barykada_1",
+   "komorka": [
+    48,
+    6
+   ]
+  },
+  {
+   "typ": "barykada",
+   "id": "barykada_2",
+   "komorka": [
+    49,
+    6
+   ]
+  },
+  {
+   "typ": "wyjscie",
+   "komorka": [
+    48,
+    1
+   ],
+   "promien": 2
+  },
+  {
+   "typ": "wiadro",
+   "id": "wiadro_kuznia",
+   "komorka": [
+    19,
+    35
+   ]
+  },
+  {
+   "typ": "wiadro",
+   "id": "wiadro_mlyn",
+   "komorka": [
+    16,
+    13
+   ]
+  },
+  {
+   "typ": "wiadro",
+   "id": "wiadro_stodola",
+   "komorka": [
+    50,
+    51
+   ]
+  },
+  {
+   "typ": "npc",
+   "id": "borubar",
+   "komorka": [
+    36,
+    34
+   ]
+  },
+  {
+   "typ": "start",
+   "komorka": [
+    8,
+    50
+   ]
+  },
+  {
+   "typ": "skrzynia",
+   "id": "skrzynia_kuznia",
+   "komorka": [
+    20,
+    36
+   ]
+  },
+  {
+   "typ": "skrzynia",
+   "id": "skrzynia_mlyn",
+   "komorka": [
+    12,
+    13
+   ]
+  },
+  {
+   "typ": "skrzynia",
+   "id": "skrzynia_stodola",
+   "komorka": [
+    54,
+    51
+   ]
+  },
+  {
+   "typ": "skrzynia",
+   "id": "skrzynia_cmentarz",
+   "komorka": [
+    34,
+    6
+   ]
+  },
+  {
+   "typ": "skrzynia",
+   "id": "skrzynia_zielarka",
+   "komorka": [
+    57,
+    57
+   ]
+  },
+  {
+   "typ": "skrzynia",
+   "id": "skrzynia_sad",
+   "komorka": [
+    17,
+    57
+   ]
+  },
+  {
+   "typ": "kapliczka",
+   "id": "ulryk_1",
+   "rodzaj": "ulryk",
+   "komorka": [
+    40,
+    52
+   ]
+  },
+  {
+   "typ": "kapliczka",
+   "id": "ulryk_2",
+   "rodzaj": "ulryk",
+   "komorka": [
+    24,
+    18
+   ]
+  },
+  {
+   "typ": "kapliczka",
+   "id": "rhya_1",
+   "rodzaj": "rhya",
+   "komorka": [
+    30,
+    13
+   ]
+  },
+  {
+   "typ": "kapliczka",
+   "id": "rhya_2",
+   "rodzaj": "rhya",
+   "komorka": [
+    6,
+    30
+   ]
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "barrel",
+   "komorka": [
+    21,
+    35
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "crate",
+   "komorka": [
+    20,
+    34
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "barrel",
+   "komorka": [
+    37,
+    33
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "barrel",
+   "komorka": [
+    37,
+    34
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "haystack",
+   "komorka": [
+    52,
+    50
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "haystack",
+   "komorka": [
+    47,
+    48
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "cart",
+   "komorka": [
+    44,
+    32
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "crate",
+   "komorka": [
+    33,
+    37
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "signpost",
+   "komorka": [
+    30,
+    46
+   ],
+   "blokuje": false
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "signpost",
+   "komorka": [
+    47,
+    12
+   ],
+   "blokuje": false
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "haystack",
+   "komorka": [
+    10,
+    8
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "cart",
+   "komorka": [
+    26,
+    47
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "barrel",
+   "komorka": [
+    7,
+    53
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "crate",
+   "komorka": [
+    8,
+    53
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "tree_dead",
+   "komorka": [
+    37,
+    45
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "barrel",
+   "komorka": [
+    56,
+    54
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "rat_hole",
+   "komorka": [
+    38,
+    44
+   ],
+   "blokuje": false
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "rat_hole",
+   "komorka": [
+    15,
+    16
+   ],
+   "blokuje": false
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "exit_banner",
+   "komorka": [
+    46,
+    3
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "exit_banner",
+   "komorka": [
+    50,
+    3
+   ],
+   "blokuje": true
+  }
+ ],
+ "grupy": [
+  {
+   "id": "kuznia",
+   "komorka": [
+    19,
+    37
+   ],
+   "promien": 2,
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_spear",
+    "skaven_spear"
+   ]
+  },
+  {
+   "id": "mlyn",
+   "komorka": [
+    16,
+    15
+   ],
+   "promien": 2,
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_spear",
+    "skaven_slinger"
+   ]
+  },
+  {
+   "id": "stodola",
+   "komorka": [
+    51,
+    52
+   ],
+   "promien": 2,
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_spear",
+    "skaven_spear",
+    "skaven_slinger"
+   ]
+  },
+  {
+   "id": "cmentarz",
+   "komorka": [
+    32,
+    9
+   ],
+   "promien": 2,
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_spear",
+    "skaven_warlock"
+   ]
+  },
+  {
+   "id": "zielarka",
+   "komorka": [
+    55,
+    58
+   ],
+   "promien": 2,
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_spear",
+    "skaven_warlock"
+   ]
+  },
+  {
+   "id": "droga_zachod",
+   "komorka": [
+    20,
+    48
+   ],
+   "promien": 2,
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_spear",
+    "skaven_slinger"
+   ]
+  },
+  {
+   "id": "plac_wschod",
+   "komorka": [
+    44,
+    34
+   ],
+   "promien": 2,
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_spear",
+    "skaven_spear"
+   ]
+  },
+  {
+   "id": "polnoc",
+   "komorka": [
+    40,
+    16
+   ],
+   "promien": 2,
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_spear",
+    "skaven_slinger"
+   ]
+  },
+  {
+   "id": "brama",
+   "komorka": [
+    48,
+    10
+   ],
+   "promien": 2,
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_spear",
+    "skaven_slinger"
+   ]
+  },
+  {
+   "id": "sad",
+   "komorka": [
+    18,
+    56
+   ],
+   "promien": 2,
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_slinger"
+   ]
+  }
+ ]
+}

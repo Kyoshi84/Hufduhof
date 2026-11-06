@@ -1,0 +1,10 @@
+{
+  "_opis": "Muzyka. file = ścieżka do pliku (ogg/wav/mp3) - można podmienić własnym. volume_db: 0 = bez zmian, -6 = ok. połowa. Utwory z poprzedniej wersji gry (melodia 'Oath of the Carroburg Guard').",
+  "fade_in": 0.8,
+  "tracks": {
+    "menu":    { "file": "res://assets/audio/music/menu_theme.ogg",  "volume_db": 0.0 },
+    "karczma": { "file": "res://assets/audio/music/menu_theme.ogg",  "volume_db": -8.0 },
+    "walka":   { "file": "res://assets/audio/music/boss_theme.ogg",  "volume_db": -4.0 },
+    "wioska":  { "file": "res://assets/audio/music/stage_theme.ogg", "volume_db": -5.0 }
+  }
+}

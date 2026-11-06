@@ -1,0 +1,67 @@
+{
+  "_opis": "Kapliczki, handel Borubara, dialogi i karczma. Kapliczka ma 'uzycia' (1 = jednorazowa).",
+  "kapliczki": {
+    "ulryk": {
+      "nazwa": "Kapliczka Ulryka",
+      "efekt": "niezniszczalnosc",
+      "czas": 8.0,
+      "uzycia": 1,
+      "komunikat": "Ulryk patrzy na ciebie. Jesteś nietykalny!"
+    },
+    "rhya": {
+      "nazwa": "Kapliczka Rhyi",
+      "efekt": "leczenie",
+      "procent": 100,
+      "uzycia": 1,
+      "komunikat": "Rhya koi twoje rany."
+    }
+  },
+  "handel": {
+    "borubar": {
+      "sprzedaje": [
+        {
+          "id": "piwo",
+          "zapas": -1
+        },
+        {
+          "id": "mikstura_zycia",
+          "zapas": 4
+        },
+        {
+          "id": "mikstura_many",
+          "zapas": 4
+        }
+      ],
+      "skupuje": true
+    }
+  },
+  "dialogi": {
+    "borubar_start": [
+      "Na Sigmara, ratunku! Szczuroludzie! Wyleźli z kanałów i z pól, wszędzie ich pełno!",
+      "Podpalili barykadę przy bramie, a tylko tamtędy da się wyjść z wioski. Ogień nie gaśnie!",
+      "Potrzeba wody. Wiadra... były wiadra! W kuźni, w stodole, gdzieś przy młynie... Szczury je pewnie porozwlekały.",
+      "Znajdź trzy wiadra, napełnij je przy studni na placu i zalej ogień. Błagam, ja się tu schowam przy beczce...",
+      "A jak będziesz czegoś potrzebować - mam piwo. Najlepsze w Hufduhofie! Leczy rany i rozjaśnia umysł."
+    ],
+    "borubar_w_trakcie": [
+      "Wiadra, wiadra! Studnia jest na placu. A ogień przy bramie wciąż się pali...",
+      "Chcesz piwa? Za kilka koron wyleczy cię lepiej niż cyrulik."
+    ],
+    "borubar_koniec": [
+      "Ugasiłeś! Brama wolna! Sigmar cię zesłał, mówię ci!",
+      "Masz, weź to - wszystko, co odłożyłem na czarną godzinę. I uciekaj, zanim przylezie ich więcej.",
+      "Za bramą droga prowadzi dalej... Niech Ulryk prowadzi twój miecz."
+    ],
+    "borubar_potem": [
+      "Brama otwarta. Idź, zanim szczury wrócą! A piwo zawsze się znajdzie."
+    ],
+    "borubar_karczma": [
+      "Hej, hej! Pij, póki leją! Karczmarz dziś rzuca kuflami jak z procy!",
+      "Złap kufel, zanim się rozbije - szkoda dobrego piwa!"
+    ],
+    "borubar_karczma_po": [
+      "Szczury... w karczmie! Słyszysz? Krzyki z wioski!",
+      "Uciekam do domu przy studni. Spotkamy się na placu - tam będę się chował!"
+    ]
+  }
+}

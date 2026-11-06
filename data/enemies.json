@@ -1,0 +1,38 @@
+{
+  "_opis": "Wrogowie. profil jak u bohatera (uproszczony). ai: wrecz / dystans / czarownik. Czasy w sekundach: zamach = zapowiedź ataku (telegraph), po niej uderzenie. Odległości w px podłoża.",
+  "wrogowie": {
+    "skaven_spear": {
+      "nazwa": "Skaven z dzidą",
+      "grafika": "res://assets/enemies/skaven_spear",
+      "profil": { "WW": 30, "US": 20, "K": 30, "Odp": 30, "Zr": 34, "Int": 20, "SW": 18, "Ogd": 10,
+                  "A": 5, "Zyw": 2, "Sz": 4, "Mag": 0, "PO": 0, "PP": 0 },
+      "bron_obrazenia": 5, "obrona": 2,
+      "ai": "wrecz", "zasieg_ataku": 64, "szerokosc_pchniecia": 22, "zamach": 0.75, "odpoczynek": 0.9,
+      "zasieg_wykrycia": 300, "smycz": 750, "promien_ciala": 13,
+      "xp": 10, "lup": "skaven_spear"
+    },
+    "skaven_slinger": {
+      "nazwa": "Skaven procarz",
+      "grafika": "res://assets/enemies/skaven_slinger",
+      "profil": { "WW": 24, "US": 34, "K": 24, "Odp": 26, "Zr": 38, "Int": 22, "SW": 18, "Ogd": 10,
+                  "A": 4, "Zyw": 2, "Sz": 4, "Mag": 0, "PO": 0, "PP": 0 },
+      "bron_obrazenia": 4, "obrona": 0,
+      "ai": "dystans", "dystans_min": 170, "dystans_max": 290, "zasieg_ataku": 330, "zamach": 0.9, "odpoczynek": 1.2,
+      "pocisk": "stone", "predkosc_pocisku": 230,
+      "zasieg_wykrycia": 340, "smycz": 800, "promien_ciala": 12,
+      "xp": 12, "lup": "skaven_slinger"
+    },
+    "skaven_warlock": {
+      "nazwa": "Czarownik skaveński",
+      "grafika": "res://assets/enemies/skaven_warlock",
+      "profil": { "WW": 22, "US": 30, "K": 22, "Odp": 28, "Zr": 30, "Int": 40, "SW": 35, "Ogd": 15,
+                  "A": 3, "Zyw": 3, "Sz": 4, "Mag": 1, "PO": 0, "PP": 0 },
+      "bron_obrazenia": 3, "obrona": 2,
+      "ai": "czarownik", "dystans_min": 200, "dystans_max": 320, "ucieczka_dystans": 190, "zasieg_ataku": 340,
+      "zamach": 1.3, "odpoczynek": 1.6, "pocisk": "warp_orb", "czas_lotu": 0.8,
+      "spaczenie": { "obrazenia_trafienia": 6, "kaluza_promien": 46, "kaluza_czas": 5.0, "kaluza_na_sekunde": 4 },
+      "zasieg_wykrycia": 360, "smycz": 850, "promien_ciala": 12,
+      "xp": 30, "lup": "skaven_warlock"
+    }
+  }
+}

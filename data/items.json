@@ -1,0 +1,44 @@
+{
+  "_opis": "Przedmioty. sloty: bron, zbroja, helm, amulet. obrazenia = obrażenia broni (wzór: broń + S - Wt celu). obrona = punkty odejmowane od szansy trafienia przeciwnika. bonus = premie do cech. cena = cena bazowa w koronach (kupno/sprzedaż zależy od Ogłady). Ikony: assets/ui/items/<ikona>.png.",
+  "przedmioty": {
+    "miecz_dwureczny":   { "nazwa": "Miecz dwuręczny", "slot": "bron", "obrazenia": 8, "bonus": {}, "cena": 60, "ikona": "greatsword" },
+    "miecz":             { "nazwa": "Miecz", "slot": "bron", "obrazenia": 6, "bonus": {}, "cena": 40, "ikona": "sword" },
+    "kostur_niebios":    { "nazwa": "Kostur Niebios", "slot": "bron", "obrazenia": 3, "bonus": { "Int": 5 }, "cena": 55, "ikona": "staff" },
+    "dzida_skavenow":    { "nazwa": "Dzida skavenów", "slot": "bron", "obrazenia": 6, "bonus": { "WW": -5 }, "cena": 12, "ikona": "spear" },
+    "tasak_skavenow":    { "nazwa": "Zardzewiały tasak", "slot": "bron", "obrazenia": 5, "bonus": {}, "cena": 10, "ikona": "cleaver" },
+    "topor":             { "nazwa": "Topór drwala", "slot": "bron", "obrazenia": 7, "bonus": { "K": 5 }, "cena": 45, "ikona": "axe" },
+    "kostur_spaczony":   { "nazwa": "Spaczony kostur", "slot": "bron", "obrazenia": 4, "bonus": { "Int": 10, "SW": -5 }, "cena": 50, "ikona": "warpstaff" },
+    "miecz_carroburski": { "nazwa": "Miecz z Carroburga", "slot": "bron", "obrazenia": 10, "bonus": { "WW": 5 }, "cena": 140, "ikona": "greatsword" },
+    "kaftan_gwardii":    { "nazwa": "Kaftan Gwardii", "slot": "zbroja", "obrona": 3, "bonus": {}, "cena": 30, "ikona": "jerkin" },
+    "skora_wilka":       { "nazwa": "Wilcza skóra", "slot": "zbroja", "obrona": 2, "bonus": { "Zr": 5 }, "cena": 35, "ikona": "fur" },
+    "szata_niebios":     { "nazwa": "Szata Niebios", "slot": "zbroja", "obrona": 1, "bonus": { "SW": 5 }, "cena": 40, "ikona": "robe" },
+    "kurta_skorzana":    { "nazwa": "Skórzana kurta", "slot": "zbroja", "obrona": 4, "bonus": {}, "cena": 25, "ikona": "jerkin" },
+    "kolczuga":          { "nazwa": "Kolczuga", "slot": "zbroja", "obrona": 8, "bonus": { "Zr": -5 }, "cena": 80, "ikona": "mail" },
+    "napiersnik":        { "nazwa": "Napierśnik", "slot": "zbroja", "obrona": 10, "bonus": { "Wt": 1, "Zr": -5 }, "cena": 150, "ikona": "plate" },
+    "beret_gwardii":     { "nazwa": "Beret Gwardii", "slot": "helm", "obrona": 1, "bonus": { "Ogd": 5 }, "cena": 15, "ikona": "beret" },
+    "kaptur":            { "nazwa": "Kaptur", "slot": "helm", "obrona": 1, "bonus": {}, "cena": 8, "ikona": "hood" },
+    "kapalin":           { "nazwa": "Kapalin", "slot": "helm", "obrona": 4, "bonus": {}, "cena": 40, "ikona": "helmet" },
+    "helm_gwardii":      { "nazwa": "Hełm Gwardii", "slot": "helm", "obrona": 5, "bonus": { "Odp": 5 }, "cena": 90, "ikona": "helmet" },
+    "amulet_sigmara":    { "nazwa": "Młot Sigmara", "slot": "amulet", "bonus": { "SW": 5 }, "cena": 50, "ikona": "amulet" },
+    "zab_szczura":       { "nazwa": "Ząb szczura na rzemieniu", "slot": "amulet", "bonus": { "Zr": 5 }, "cena": 20, "ikona": "tooth" },
+    "talizman_ulryka":   { "nazwa": "Talizman Ulryka", "slot": "amulet", "bonus": { "WW": 5 }, "cena": 60, "ikona": "wolf" },
+    "amulet_rhyi":       { "nazwa": "Kłos Rhyi", "slot": "amulet", "bonus": { "Zyw": 1 }, "cena": 90, "ikona": "amulet" },
+    "oko_spaczenia":     { "nazwa": "Oko spaczenia", "slot": "amulet", "bonus": { "Int": 5, "SW": -3 }, "cena": 45, "ikona": "warpeye" }
+  },
+  "pas": {
+    "mikstura_zycia": { "nazwa": "Mikstura życia", "cena": 25, "ikona": "potion_red" },
+    "mikstura_many":  { "nazwa": "Mikstura many", "cena": 25, "ikona": "potion_blue" },
+    "piwo":           { "nazwa": "Piwo Borubara", "cena": 15, "ikona": "beer" }
+  },
+  "afiksy": [
+    { "nazwa": "Siły", "bonus": { "K": 5 } },
+    { "nazwa": "Zręczności", "bonus": { "Zr": 5 } },
+    { "nazwa": "Wytrwałości", "bonus": { "Wt": 1 } },
+    { "nazwa": "Walki", "bonus": { "WW": 5 } },
+    { "nazwa": "Celności", "bonus": { "US": 5 } },
+    { "nazwa": "Mądrości", "bonus": { "Int": 5 } },
+    { "nazwa": "Woli", "bonus": { "SW": 5 } },
+    { "nazwa": "Życia", "bonus": { "Zyw": 1 } }
+  ],
+  "afiks_mnoznik_ceny": 1.6
+}

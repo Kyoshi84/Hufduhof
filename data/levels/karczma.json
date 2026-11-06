@@ -1,0 +1,233 @@
+{
+ "_opis": "Minigra: impreza w karczmie. Faza 1: łapanie kufli (stań w cieniu, zanim kufel spadnie). Faza 2: skaveny wpadają drzwiami - fale w 'fale'. Liczby w 'impreza'.",
+ "nazwa": "Karczma 'Pod Złotym Kuflem'",
+ "kafle": "res://assets/levels/tavern/tiles/",
+ "rekwizyty": "res://assets/levels/tavern/props/",
+ "muzyka": "karczma",
+ "legenda": {
+  ".": "trawa",
+  ",": "trawa z kwiatami",
+  ":": "ścieżka (ziemia)",
+  "=": "bruk",
+  "~": "błoto",
+  "T": "drzewo (blokuje)",
+  "#": "skraj lasu (blokuje)",
+  "-": "płot wzdłuż osi x (blokuje)",
+  "|": "płot wzdłuż osi y (blokuje)",
+  "b": "krzak (blokuje)",
+  "W": "ściana (blokuje)",
+  "o": "podłoga karczmy",
+  "r": "dywan",
+  "s": "kamienna posadzka",
+  "x": "niewidzialna ściana (blokuje)"
+ },
+ "mapa": [
+  "WWWWWWWWWWWWWx",
+  "Woooooooooooox",
+  "Woooooooooooox",
+  "Woooooooooooox",
+  "Wssoooooooooox",
+  "Wssoorrrroooox",
+  "Wssoorrrroooox",
+  "Woooorrrroooox",
+  "Woooooooooooox",
+  "Woooooooooooox",
+  "Woooooooooooox",
+  "Wxxxxxxxxxxxxx"
+ ],
+ "obiekty": [
+  {
+   "typ": "start",
+   "komorka": [
+    7,
+    8
+   ]
+  },
+  {
+   "typ": "drzwi",
+   "id": "drzwi",
+   "komorka": [
+    7,
+    0
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "bar_counter",
+   "komorka": [
+    2,
+    1
+   ],
+   "rozmiar": [
+    2,
+    1
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "fireplace",
+   "komorka": [
+    1,
+    4
+   ],
+   "rozmiar": [
+    1,
+    1
+   ]
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "table",
+   "komorka": [
+    4,
+    8
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "bench",
+   "komorka": [
+    4,
+    9
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "table",
+   "komorka": [
+    10,
+    4
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "bench",
+   "komorka": [
+    10,
+    5
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "table",
+   "komorka": [
+    10,
+    8
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "bench",
+   "komorka": [
+    10,
+    9
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "barrel",
+   "komorka": [
+    1,
+    1
+   ],
+   "blokuje": true,
+   "zestaw": "level1"
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "barrel",
+   "komorka": [
+    1,
+    2
+   ],
+   "blokuje": true,
+   "zestaw": "level1"
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "barrel",
+   "komorka": [
+    12,
+    1
+   ],
+   "blokuje": true,
+   "zestaw": "level1"
+  },
+  {
+   "typ": "goscie",
+   "komorki": [
+    [
+     3,
+     9
+    ],
+    [
+     5,
+     9
+    ],
+    [
+     11,
+     6
+    ],
+    [
+     11,
+     9
+    ],
+    [
+     9,
+     4
+    ],
+    [
+     3,
+     7
+    ]
+   ]
+  },
+  {
+   "typ": "karczmarz",
+   "komorka": [
+    3,
+    2
+   ]
+  },
+  {
+   "typ": "npc",
+   "id": "borubar_karczma",
+   "komorka": [
+    9,
+    7
+   ]
+  }
+ ],
+ "impreza": {
+  "kufle_cel": 6,
+  "odstep": 1.9,
+  "czas_lotu": 1.35,
+  "promien_zlapania": 30,
+  "rozrzut": 150,
+  "leczenie_za_kufel": 0
+ },
+ "fale": [
+  {
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_spear"
+   ],
+   "podpowiedz": "Skaveny! Atak: przycisk ATAK (PC: lewy przycisk myszy albo J). Patrz na zamach wroga i odsuń się!"
+  },
+  {
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_spear",
+    "skaven_slinger"
+   ],
+   "podpowiedz": "Procarz rzuca kamienie - zejdź z linii lotu. Umiejętność: przycisk UMIEJĘTNOŚĆ (PC: prawy przycisk albo K)."
+  }
+ ],
+ "grupy": []
+}
