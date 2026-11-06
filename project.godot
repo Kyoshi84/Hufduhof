@@ -1,18 +1,21 @@
+; Hufduhof - izometryczny hack and slash (Godot 4.3, GDScript)
 config_version=5
 
 [application]
 
-config/name="Ivo Eggert: Obrona Hufduhofu"
+config/name="Hufduhof"
+config/description="Izometryczny hack and slash w klimacie Warhammer Fantasy."
 run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
-boot_splash/bg_color=Color(0.05, 0.04, 0.04, 1)
+boot_splash/bg_color=Color(0.04, 0.03, 0.03, 1)
+config/icon="res://assets/ui/crest/crest_small.png"
 
 [autoload]
 
-Balance="*res://scripts/autoload/balance.gd"
-GameState="*res://scripts/autoload/game_state.gd"
-SaveData="*res://scripts/autoload/save_data.gd"
-Sfx="*res://scripts/autoload/sfx.gd"
+Data="*res://scripts/autoload/data.gd"
+Game="*res://scripts/autoload/game.gd"
+Save="*res://scripts/autoload/save.gd"
+Audio="*res://scripts/autoload/audio.gd"
 Controls="*res://scripts/autoload/controls.gd"
 
 [display]
@@ -21,11 +24,23 @@ window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-window/handheld/orientation=0
+window/handheld/orientation=4
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=false
+
+[layer_names]
+
+2d_physics/layer_1="sciany"
+2d_physics/layer_2="bohater"
+2d_physics/layer_3="wrogowie"
 
 [rendering]
 
+textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
-environment/defaults/default_clear_color=Color(0.04, 0.03, 0.03, 1)
+environment/defaults/default_clear_color=Color(0.03, 0.02, 0.02, 1)
+2d/snap/snap_2d_transforms_to_pixel=true
