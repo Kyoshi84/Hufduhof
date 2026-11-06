@@ -8,6 +8,7 @@ var body_half: float = 22.0
 var team: int = 2
 var alive: bool = true
 var wobble: float = 0.0
+var contains: String = ""          # "brick" = po rozbiciu wypada cegła (na most)
 
 func setup(lvl, pos: Vector2) -> void:
 	level = lvl

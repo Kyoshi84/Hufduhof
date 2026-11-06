@@ -1,10 +1,10 @@
 class_name Pickup
 extends Node2D
-## Mikstura lecząca.
+## Znajdźka na drodze: mikstura (leczy), spaczenie (rani), wiadro wody (do gaszenia płonącego wozu), cegła (na most).
 
 var level
 var heal_amount: float = 35.0       # dla kind = "slime": obrażenia
-var kind: String = "potion"         # "potion" leczy, "slime" (spaczenie, seledynowy glut) rani
+var kind: String = "potion"         # "potion" leczy, "slime" (spaczenie, seledynowy glut) rani, "bucket" wiadro wody, "brick" cegła
 var taken: bool = false
 var t: float = 0.0
 
@@ -20,6 +20,18 @@ func tick(delta: float) -> void:
 	var p = level.player
 	if p != null and p.is_alive() and not taken:
 		if absf(p.position.x - position.x) < 44.0 and absf(p.position.y - position.y) < 36.0:
+			if kind == "bucket":
+				if p.carry != "":
+					return                                # już niesie wiadro
+				taken = true
+				p.carry = "bucket"
+				Sfx.play("pickup", 0.8)
+				return
+			if kind == "brick":
+				taken = true
+				p.bricks += 1
+				Sfx.play("pickup", 0.6)
+				return
 			if kind == "slime":
 				if p.z > 40.0:
 					return                                # skok nad glutem: omijasz go
@@ -58,9 +70,26 @@ func _draw_slime() -> void:
 		var u: float = fmod(t * 0.8 + k * 0.33, 1.0)
 		draw_circle(Vector2(sin(k * 2.0 + t) * 8.0, -22.0 - u * 18.0), 2.0 * (1.0 - u), Color(0.75, 1.0, 0.8, 0.8 * (1.0 - u)))
 
+func _draw_item(name: String) -> void:
+	var bob: float = sin(t * 4.0) * 2.0
+	draw_circle(Vector2(0, 2), 12, Color(0, 0, 0, 0.25))
+	var tex: Texture2D = StageArt.common_prop(name)
+	if tex != null:
+		var k: float = 4.0 / 3.0
+		draw_texture_rect(tex, Rect2(floorf(-tex.get_width() * k * 0.5), floorf(bob - tex.get_height() * k), tex.get_width() * k, tex.get_height() * k), false)
+		return
+	if name == "bucket":
+		draw_rect(Rect2(-10, bob - 24, 20, 22), Color(0.5, 0.35, 0.2))
+		draw_rect(Rect2(-9, bob - 24, 18, 4), Color(0.4, 0.6, 0.85))
+	else:
+		draw_rect(Rect2(-12, bob - 12, 24, 11), Color(0.62, 0.28, 0.16))
+
 func _draw() -> void:
 	if kind == "slime":
 		_draw_slime()
+		return
+	if kind == "bucket" or kind == "brick":
+		_draw_item(kind)
 		return
 	var bob: float = sin(t * 4.0) * 4.0 - 22.0
 	var pt: Texture2D = StageArt.common_prop("potion")

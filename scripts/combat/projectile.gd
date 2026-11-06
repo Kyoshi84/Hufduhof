@@ -8,6 +8,7 @@ extends Node2D
 
 var level
 var shooter                        # Player (atakujący w receive_hit: kierunek odrzutu, mnożnik obrażeń)
+var attack_name: String = ""       # nazwa ataku strzelca ("heavy" = kula ognia rąbie barykadę)
 var defn: Dictionary = {}          # definicja ataku (damage, knockback, stun, breaks_poise, hit_sfx...)
 var spec: Dictionary = {}          # defn["projectile"]
 var kind: String = "bolt"
@@ -21,6 +22,7 @@ var explode_radius: float = 0.0
 var explode_depth: float = 60.0
 var height: float = 80.0
 var travelled: float = 0.0
+var tail_x: float = 0.0            # skąd pocisk przyleciał w tej klatce (test kolizji po całym odcinku, także z bliska)
 var hit_ids: Array = []
 var hits: int = 0                  # ilu wrogów trafił (testy)
 var boom_t: float = -1.0           # >= 0: trwa wybuch (tylko efekt)
@@ -33,6 +35,8 @@ func setup(lvl, p_shooter, p_defn: Dictionary) -> void:
 	level = lvl
 	shooter = p_shooter
 	defn = p_defn
+	var an = p_shooter.get("attack_name")
+	attack_name = str(an) if an != null else ""
 	spec = p_defn.get("projectile", {})
 	kind = str(spec.get("kind", "bolt"))
 	dir = 1 if int(p_shooter.facing) >= 0 else -1
@@ -48,6 +52,7 @@ func setup(lvl, p_shooter, p_defn: Dictionary) -> void:
 	if zz != null:
 		height += float(zz)
 	position = p_shooter.position + Vector2(dir * float(spec.get("spawn_dx", 40.0)), 0.0)
+	tail_x = p_shooter.position.x                      # pierwszy test obejmuje też wroga tuż przy rzucającym
 	z_index = 40
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
@@ -75,6 +80,16 @@ func tick(delta: float) -> void:
 	position.x += dir * stepx
 	travelled += stepx
 	var r := hit_rect()
+	r = r.merge(Rect2(minf(tail_x, position.x) - half_len, r.position.y, absf(position.x - tail_x) + half_len * 2.0, r.size.y))
+	tail_x = position.x
+	if level.projectile_blocker(r) != null:              # barykada zatrzymuje pocisk
+		if explode_radius > 0.0:
+			explode()
+		else:
+			done = true
+			if level.fx != null:
+				level.fx.burst(position + Vector2(0, -height), 8, Pal.r("ember", 1), 160.0, -dir)
+		return
 	for target in level.opponents_of(shooter):
 		var tid: int = target.get_instance_id()
 		if hit_ids.has(tid) or not target.can_be_hit():
@@ -97,6 +112,7 @@ func tick(delta: float) -> void:
 func explode() -> void:
 	boom_t = 0.0
 	var r := explode_rect()
+	level.strike_obstacles(attack_name, r)
 	for target in level.opponents_of(shooter):
 		var tid: int = target.get_instance_id()
 		if hit_ids.has(tid) or not target.can_be_hit():

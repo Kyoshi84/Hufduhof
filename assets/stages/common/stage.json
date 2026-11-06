@@ -15,6 +15,22 @@
   "obstacle_puddle": {
    "note": "przeszkoda 'kałuża' do przeskoczenia (tools/build_road.py); środek PNG = środek przeszkody",
    "size": "224x172"
+  },
+  "bucket": {
+   "note": "wiadro wody (znajdźka przy studni; gasi płonący wóz)",
+   "size": "24x26"
+  },
+  "brick": {
+   "note": "cegła na most (znajdźka na drodze i w beczkach)",
+   "size": "26x16"
+  },
+  "rat_hole": {
+   "note": "nora szczuroludzi (3 ciosy ją niszczą)",
+   "size": "76x40"
+  },
+  "rat_hole_broken": {
+   "note": "zawalona nora",
+   "size": "76x40"
   }
  }
 }

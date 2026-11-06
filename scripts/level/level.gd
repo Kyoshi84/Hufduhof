@@ -13,6 +13,9 @@ var enemies: Array = []
 var barrels: Array = []
 var pickups: Array = []
 var projectiles: Array = []         # Projectile: pociski bohatera (ognisty pocisk, kula ognia)
+var rat_holes: Array = []           # RatHole: nory szczurów do zniszczenia (blokują koniec etapu)
+var _hints_seen: Dictionary = {}    # podpowiedzi przy pierwszym spotkaniu z przeszkodą-zadaniem
+var _block_hint_t: float = 0.0
 var obstacles: Array = []           # Obstacle: kałuże, ogień, powalone drzewa, rzeki, przepaście (trzeba skoczyć)
 var obstacle_layer: Node2D
 var ambient: Ambient                # uciekający wieśniacy i zwierzęta (tylko dekoracja)
@@ -101,7 +104,12 @@ func build() -> void:
 	entities.y_sort_enabled = true
 	world.add_child(entities)
 	for od in data.get("obstacles", []):
-		if Obstacle.is_known(str(od.get("type", ""))):
+		if str(od.get("type", "")) == "rat_hole":
+			var rh := RatHole.new()
+			rh.setup(self, Vector2(float(od["x"]), float(od.get("y", lane_min() + 40.0))))
+			entities.add_child(rh)
+			rat_holes.append(rh)
+		elif Obstacle.is_known(str(od.get("type", ""))):
 			var o := Obstacle.new()
 			o.setup(self, str(od["type"]), float(od["x"]))
 			obstacle_layer.add_child(o)
@@ -123,9 +131,14 @@ func build() -> void:
 	world.add_child(debug_overlay)
 	for bx in data.get("barrels", []):
 		var b := Barrel.new()
-		b.setup(self, Vector2(float(bx), randf_range(lane_min() + 20.0, lane_max() - 20.0)))
+		var bxx: float = float(bx["x"]) if typeof(bx) == TYPE_DICTIONARY else float(bx)
+		b.setup(self, Vector2(bxx, randf_range(lane_min() + 20.0, lane_max() - 20.0)))
+		if typeof(bx) == TYPE_DICTIONARY:
+			b.contains = str(bx.get("contains", ""))        # np. "brick": cegła na most
 		entities.add_child(b)
 		barrels.append(b)
+	for kx in data.get("bricks", []):
+		drop_pickup(Vector2(float(kx), randf_range(lane_min() + 25.0, lane_max() - 25.0)), "brick")
 	for px in data.get("potions", []):
 		drop_pickup(Vector2(float(px), randf_range(lane_min() + 25.0, lane_max() - 25.0)))
 	for sx in data.get("slimes", []):
@@ -242,6 +255,9 @@ func opponents_of(a: Actor) -> Array:
 		for b in barrels:
 			if b.is_alive():
 				out.append(b)
+		for rh in rat_holes:
+			if rh.is_alive():
+				out.append(rh)
 		return out
 	if player != null and player.is_alive():
 		return [player]
@@ -276,12 +292,15 @@ func tick(delta: float) -> void:
 	player.speed_mult = 1.0
 	for o in obstacles:
 		o.resolve(player, prev_x, delta)
+	for rh in rat_holes:
+		rh.tick(delta)
 	for pr in projectiles.duplicate():
 		pr.tick(delta)
 		if pr.done:
 			projectiles.erase(pr)
 			pr.queue_free()
 	update_jump_hint()
+	update_puzzle_hints(delta)
 	for e in enemies.duplicate():
 		e.tick(delta)
 		if e.remove_me:
@@ -322,7 +341,11 @@ func update_waves(delta: float) -> void:
 			update_exit_walk()
 			return
 		if next_wave < waves.size() and player.position.x >= float(waves[next_wave]["trigger"]):
-			if bool(waves[next_wave].get("final", false)) and not quota_met(stage_idx):
+			if bool(waves[next_wave].get("final", false)) and stage_blocked(stage_idx):
+				if hud != null and _block_hint_t <= 0.0:
+					hud.show_banner("ZNISZCZ NORĘ SZCZURÓW!", 2.0)
+				_block_hint_t = 3.0
+			elif bool(waves[next_wave].get("final", false)) and not quota_met(stage_idx):
 				start_reinforcements(stage_idx)         # czempion dopiero po zdobyciu limitu punktów
 			else:
 				start_wave(next_wave)
@@ -385,7 +408,10 @@ func spawn_enemy(type: String, side: String) -> Enemy:
 		x = left - 70.0
 	else:
 		x = left + view_w + 70.0
-	var pos := Vector2(x, randf_range(lane_min(), lane_max()))
+	return spawn_enemy_at(type, Vector2(x, randf_range(lane_min(), lane_max())))
+
+## Wróg w podanym miejscu (np. wychodzący z nory szczurów).
+func spawn_enemy_at(type: String, pos: Vector2) -> Enemy:
 	var e: Enemy = Boss.new() if str(Balance.enemy(type)["behavior"]) == "boss" else Enemy.new()
 	e.setup(self, type, pos)
 	attach_visual(e, type)
@@ -452,8 +478,20 @@ func at_gate() -> bool:
 		return false
 	return next_wave >= waves.size() or float(waves[next_wave]["trigger"]) >= stage_end(i)
 
+## W etapie stoi jeszcze nora szczurów: etap się nie kończy, dopóki jej nie zniszczysz.
+func stage_blocked(i: int) -> bool:
+	for rh in rat_holes:
+		if rh.is_alive() and stage_at(rh.position.x) == i:
+			return true
+	return false
+
 func gate_check() -> void:
 	var i: int = stage_idx
+	if stage_blocked(i):
+		if hud != null and _block_hint_t <= 0.0:
+			hud.show_banner("ZNISZCZ NORĘ SZCZURÓW!", 2.0)
+		_block_hint_t = 3.0
+		return
 	if not quota_met(i):
 		start_reinforcements(i)
 		return
@@ -590,7 +628,7 @@ func on_actor_died(a: Actor) -> void:
 	if a.team == 1:
 		GameState.add_kill((a as Enemy).score_value)
 		var si: int = clampi(stage_idx, 0, maxi(0, stage_points.size() - 1))
-		if si < stage_points.size():
+		if si < stage_points.size() and not (a as Enemy).no_stage_points:
 			stage_points[si] += enemy_points((a as Enemy).type_id)
 		Sfx.play("enemy_die")
 		if a is Boss:
@@ -630,9 +668,12 @@ func on_hazard_hit(target: Actor, dmg: float) -> void:
 		hud.flash_damage()
 
 ## Pierwsza przeszkoda przed graczem w zasięgu max_dist (albo null) - dla podpowiedzi i bota testowego.
+## Pomija przeszkody, które już nie blokują (studnia, ugaszony wóz, rozbita barykada, gotowy most).
 func next_obstacle_ahead(x: float, max_dist: float) -> Obstacle:
 	var best: Obstacle = null
 	for o in obstacles:
+		if not o.blocks_passage():
+			continue
 		if o.x1() > x - 10.0 and o.x0() - x < max_dist:
 			if best == null or o.x0() < best.x0():
 				best = o
@@ -650,19 +691,115 @@ func on_barrel_broken(b: Barrel) -> void:
 	GameState.add_score(int(data.get("barrel_score", Balance.data.get("score", {}).get("barrel", 20))))
 	if fx != null:
 		fx.burst(b.position + Vector2(0, -30), 12, Color(0.45, 0.3, 0.15), 200.0, 1)
-	if stage_idx >= 3 and randf() < 0.38:
+	if b.contains == "brick":
+		drop_pickup(b.position, "brick")
+	elif stage_idx >= 3 and randf() < 0.38:
 		drop_pickup(b.position, "slime")             # w legowisku z beczek wylewa się spaczenie
 	elif randf() < float(Balance.world("barrel_potion_chance")):
 		drop_pickup(b.position)
 	barrels.erase(b)
 	b.queue_free()
 
-func drop_pickup(pos: Vector2, kind: String = "potion") -> void:
+func drop_pickup(pos: Vector2, kind: String = "potion") -> Pickup:
 	var p := Pickup.new()
 	var amount: float = float(Balance.world("potion_heal")) if kind == "potion" else float(Balance.world("slime_damage"))
 	p.setup(self, Vector2(pos.x, clampf(pos.y, lane_min(), lane_max())), amount, kind)
 	entities.add_child(p)
 	pickups.append(p)
+	return p
+
+# ------------------------------------------------------------------ przeszkody-zadania
+
+## Przycisk ataku obok przeszkody-zadania: wiadro na płonący wóz, cegły na most. Zwraca true, gdy przycisk
+## został "zużyty" (wtedy bohater nie atakuje). Z wiadrem w rękach nie da się atakować w ogóle.
+func try_interact(p: Player) -> bool:
+	if p.carry == "bucket":
+		for o in obstacles:
+			if o.type == "burning_cart" and o.state == "" and o.in_use_range(p.position.x):
+				p.facing = 1 if o.position.x >= p.position.x else -1
+				o.douse()
+				p.carry = ""
+				if fx != null:
+					fx.burst(p.position + Vector2(p.facing * 40.0, -70.0), 12, Color(0.5, 0.7, 0.92), 260.0, p.facing)
+				if hud != null and o.state == "out":
+					hud.show_banner("OGIEŃ UGASZONY!", 1.6)
+				return true
+		if burning_cart_near(p.position.x, 1500.0) == null:
+			p.carry = ""                                 # nie ma już czego gasić: wylewa wodę i znów może walczyć
+			on_bucket_dropped(p)
+			return true
+		if hud != null and _block_hint_t <= 0.0:
+			hud.show_banner("PODEJDŹ DO OGNIA, BY CHLUSNĄĆ WODĄ", 1.6)
+			_block_hint_t = 2.0
+		return true
+	if p.bricks > 0:
+		for o in obstacles:
+			if o.bricks_needed > 0 and o.state != "built" and o.in_use_range(p.position.x):
+				p.bricks -= o.add_bricks(p.bricks)
+				if hud != null:
+					hud.show_banner("MOST GOTOWY!" if o.state == "built" else "MOST: %d / %d" % [o.bricks_placed, o.bricks_needed], 1.4)
+				return true
+	return false
+
+## Najbliższy wciąż płonący wóz w odległości max_dist (albo null).
+func burning_cart_near(x: float, max_dist: float) -> Obstacle:
+	for o in obstacles:
+		if o.type == "burning_cart" and o.state == "" and absf(o.position.x - x) < max_dist:
+			return o
+	return null
+
+## Gracz upuścił wiadro (trafienie): woda się wylewa, przy studni pojawi się nowe.
+func on_bucket_dropped(p: Player) -> void:
+	if fx != null:
+		fx.burst(p.position + Vector2(0, -40), 10, Color(0.5, 0.7, 0.92), 180.0, -p.facing)
+	Sfx.play("slam", 1.8)
+
+## Cios bohatera wręcz (początek fazy ACTIVE) albo wybuch kuli ognia trafia w przeszkody (barykada).
+func strike_obstacles(attack_name: String, r: Rect2) -> void:
+	for o in obstacles:
+		o.strike(attack_name, r)
+
+## Barykada zatrzymuje pociski.
+func projectile_blocker(r: Rect2) -> Obstacle:
+	for o in obstacles:
+		if o.stops_projectile(r):
+			return o
+	return null
+
+func on_rat_hole_destroyed(rh: RatHole) -> void:
+	GameState.add_score(150)
+	shake = maxf(shake, 8.0)
+	if fx != null:
+		fx.burst(rh.position + Vector2(0, -20), 18, Color(0.4, 0.3, 0.2), 260.0, 1)
+	Sfx.play("slam")
+	if hud != null:
+		hud.show_banner("NORA ZNISZCZONA!", 1.6)
+
+const PUZZLE_HINTS := {
+	"burning_cart": "PŁONĄCY WÓZ: 2 WIADRA ZE STUDNI",
+	"barricade": "BARYKADA: ROZBIJ MOCNYM ATAKIEM",
+	"river_bridge": "ZBIERZ 5 CEGIEŁ I ZBUDUJ MOST",
+	"chasm_bridge": "ZBIERZ 5 CEGIEŁ I ZBUDUJ MOST",
+	"rat_hole": "NORA SZCZURÓW: ZNISZCZ JĄ (3 CIOSY)",
+}
+
+## Podpowiedź przy pierwszym zbliżeniu do każdego rodzaju przeszkody-zadania.
+func update_puzzle_hints(delta: float) -> void:
+	_block_hint_t = maxf(0.0, _block_hint_t - delta)
+	if hud == null or story_active or wave_active:
+		return
+	var px: float = player.position.x
+	for o in obstacles:
+		if o.is_puzzle() and not _hints_seen.has(o.type) and o.x0() - px < 700.0 and o.x0() > px:
+			_hints_seen[o.type] = true
+			_hints_seen[PUZZLE_HINTS[o.type]] = true
+			hud.show_banner(PUZZLE_HINTS[o.type], 3.0)
+			return
+	for rh in rat_holes:
+		if rh.is_alive() and not _hints_seen.has("rat_hole") and absf(rh.position.x - px) < 650.0:
+			_hints_seen["rat_hole"] = true
+			hud.show_banner(PUZZLE_HINTS["rat_hole"], 3.0)
+			return
 
 # ------------------------------------------------------------------ zakończenie
 

@@ -45,6 +45,27 @@ od razu do etapu 1; „Kontynuuj” i ponowna próba po porażce w ogóle pomija
   `assets/ui/story/portraits/borubar.png` (skrypt wypisuje geometrię sprite'a: otwór beczki = `CATCH_Y`, stopy = `BODY_DX`).
 - Zrzuty: `tests/shots_tavern.tscn` (wymaga xvfb), testy: `t_tavern` w `tests/test_runner.gd`.
 
+## Przeszkody-zadania
+Część przeszkód trzeba **rozwiązać**, a nie tylko przeskoczyć. Interakcja to zwykły przycisk ataku (`J`/`K`, na telefonie przyciski
+ataku) obok przeszkody. Przy pierwszym spotkaniu każdego rodzaju gra pokazuje podpowiedź.
+
+| przeszkoda | gdzie (level_1.json) | jak ją pokonać |
+|---|---|---|
+| **barykada** (`barricade`, wys. 150) | etap 1: x=2380, etap 3: x=11500 | każdy **mocny atak** (Ivo: `K`; Ursa: kula ognia) obniża ją o 40; przy ≤ 72 da się przeskoczyć, przy 0 znika. Lekkie ataki tylko odbijają się od pali, pociski się na niej zatrzymują |
+| **płonący wóz** (`burning_cart`, wys. 160 - ponad skokiem ~131) + **studnia** (`well`) | etap 2: studnia x=5800, wóz x=6100 | przy studni leży wiadro wody - wejdź na nie, podejdź do ognia i naciśnij atak. 2 wiadra gaszą wóz, zostaje niski wrak (przejście). Z wiadrem nie da się atakować, a trafienie przez wroga je wytrąca (po nowe wracasz do studni). Gdy nie ma już czego gasić, atak wylewa wodę |
+| **nora szczurów** (`rat_hole`) | etap 2: x=7120 | co 3,5 s wypuszcza szczura (najwyżej 3 naraz), gdy jesteś w pobliżu i nie trwa fala. 3 trafienia (dowolny atak, też pocisk) ją niszczą. Dopóki stoi, etap się nie kończy (licznik: „NORA!”), a jej szczury nie nabijają punktów etapu |
+| **most z cegieł** (`river_bridge`, `chasm_bridge`, szer. 330 - za szeroko na skok) | etap 3: rzeka x=10850, etap 4: przepaść x=15050 | zbierz **5 cegieł**: leżą na drodze (`bricks` w level_1.json) i wypadają z niektórych beczek (`{"x": ..., "contains": "brick"}`). Przy brzegu naciśnij atak - cegły układają się w most (można na raty, licznik nad brzegiem). Gotowy most przechodzi się pieszo |
+
+- Każde zadanie pojawia się pierwszy raz z dala od fal (test `t_puzzle_level`); nora jest jedyną, która sama wypuszcza wrogów.
+- HUD: ikona wiadra, gdy je niesiesz, i liczba cegieł.
+- Kod: `scripts/level/obstacle.gd` (typy i stany: `state`, `h`, `water_left`, `bricks_placed`), `scripts/level/rat_hole.gd`,
+  interakcja w `scripts/level/level.gd` (`try_interact`, `strike_obstacles`, `stage_blocked`), `scripts/actors/player.gd` (`carry`, `bricks`).
+- Grafika tymczasowa (pixel-art w palecie): `python3 tools/build_obstacles.py` -> `assets/stages/common/props/` (`obstacle_cart*.png`,
+  `obstacle_barricade_0..3.png` = 4 wysokości, `obstacle_well.png`, `obstacle_bridge.png`, `obstacle_chasm_wide*.png`, `rat_hole*.png`,
+  `bucket.png`, `brick.png`). Własne rysunki: podmień pliki o tych samych nazwach.
+- Testy: `t_puzzles`, `t_puzzle_level`; bot z `tests/bot.gd` przechodzi cały poziom obiema postaciami. Zrzuty: `tests/shots_puzzles.tscn`
+  (xvfb, katalog w `SHOTS_DIR`), przykłady w `docs/screenshots/40-43_*.png`.
+
 ## Bohaterowie
 „Nowa gra” otwiera **ekran wyboru bohatera** (karty: portret, imię, tytuł, opis). Wybór jest zapamiętywany (`SaveData.last_hero`)
 i zapisywany w checkpoincie, więc „Kontynuuj” gra tym samym bohaterem.

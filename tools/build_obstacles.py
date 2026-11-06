@@ -306,6 +306,7 @@ def log_img(seed=41):
 
 # ---------------------------------------------------------------- przepaść
 CH_W, CH_TOP, CH_BOT = 168, -2, 244
+HW_K = 1.0                                         # mnożnik szerokości rozpadliny (szeroka wersja pod most: 2.2)
 
 def chasm_img(seed=51):
     """Rozpadlina w poprzek drogi: postrzępione skalne krawędzie, oświetlona prawa ściana z warstwami,
@@ -321,7 +322,7 @@ def chasm_img(seed=51):
     lips = []
     for y in range(CH_TOP, CH_BOT):
         p = np.clip(y / 26, 0, 1) if y < 26 else 1.0     # zwężenie przy horyzoncie (perspektywa)
-        hw = (40 + 14 * p) + (R.persp(y) * 4)
+        hw = ((40 + 14 * p) + (R.persp(y) * 4)) * HW_K
         cx = cx0 + (y - 120) * 0.06
         xl = cx - hw + (jl[y + oy] - 0.5) * 12
         xr = cx + hw + (jr[y + oy] - 0.5) * 12
@@ -405,6 +406,291 @@ def chasm_glow(seed=52):
                     L.put(y - CH_TOP, x, CHAOS[4] if d < 0.3 else CHAOS[3])
     return to_img(L)
 
+
+# ---------------------------------------------------------------- przeszkody-zadania (etap 1 zadań): rysunek tymczasowy
+# Płonący wóz (gasić wodą ze studni), barykada (rąbać mocnym atakiem), studnia, most z cegieł, nora szczurów,
+# wiaderko i cegła (znajdźki). Proste bryły z obrysem w palecie gry - do podmiany na rysunki autora (te same nazwy plików).
+from PIL import ImageDraw
+from scipy import ndimage as _ndi
+
+WOOD = [(30, 20, 12), (52, 34, 20), (78, 52, 30), (104, 72, 42), (132, 96, 58), (160, 122, 78)]
+STRAW = [(74, 58, 24), (110, 88, 36), (150, 122, 52), (186, 156, 72), (214, 188, 100)]
+STONE = [(34, 32, 34), (52, 50, 52), (72, 70, 70), (96, 92, 88), (122, 118, 110), (150, 144, 134)]
+BRICK = [(58, 22, 16), (92, 36, 24), (126, 52, 32), (158, 74, 44), (186, 104, 66)]
+WATER = [(24, 44, 70), (40, 70, 104), (66, 108, 146), (120, 166, 196)]
+IRON = [(30, 30, 34), (58, 58, 64), (96, 96, 104)]
+DIRT = [(28, 20, 14), (46, 34, 22), (66, 50, 32), (88, 68, 44), (110, 88, 58)]
+
+def _canvas(w, h):
+    im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    return im, ImageDraw.Draw(im)
+
+def _outline(im):
+    """1 px obrys wokół nieprzezroczystych pikseli (jak w reszcie grafik)."""
+    a = np.array(im)
+    m = a[..., 3] > 0
+    e = _ndi.binary_dilation(m, structure=_ndi.generate_binary_structure(2, 1)) & ~m
+    a[e] = OUTLINE + (255,)
+    return Image.fromarray(a, "RGBA")
+
+def _noise_tint(im, seed, amt=10):
+    """Lekki szum jasności w obrębie kolorów (faktura drewna/kamienia), alfa bez zmian."""
+    rng = np.random.default_rng(seed)
+    a = np.array(im).astype(int)
+    n = rng.integers(-amt, amt + 1, a.shape[:2])
+    for c in range(3):
+        a[..., c] = np.clip(a[..., c] + n, 0, 255)
+    return Image.fromarray(a.astype(np.uint8), "RGBA")
+
+# płonący wóz: dyszel i skrzynia ustawione w poprzek drogi (oś = głębia), koła po bliższej (lewej) stronie,
+# na wozie sterta siana. Wiersze płótna: CART_TOP.. (px pod horyzontem).
+CART_W, CART_TOP, CART_BOT = 104, -60, 236
+
+def _cart(burnt):
+    H = CART_BOT - CART_TOP
+    im, d = _canvas(CART_W, H)
+    oy = -CART_TOP
+    ax = lambda y: CART_W / 2 + (y - 120) * 0.10
+    y0, y1 = 16, 222
+    side = 30 if not burnt else 16                         # wysokość burty
+    # cień
+    d.polygon([(ax(y0) - 26, y0 + oy + 4), (ax(y0) + 30, y0 + oy + 4), (ax(y1) + 34, y1 + oy + 6), (ax(y1) - 24, y1 + oy + 6)], fill=CHAR[1])
+    # bok skrzyni (lewy, widoczny) i wierzch
+    for y in range(y0, y1):
+        x = ax(y)
+        top = y + oy - side
+        col = WOOD[2] if not burnt else CHAR[2]
+        if (y // 9) % 2 == 0:
+            col = WOOD[3] if not burnt else CHAR[3]
+        d.line([(x - 22, top), (x - 22, y + oy)], fill=WOOD[1] if not burnt else CHAR[1])
+        d.line([(x - 21, top), (x + 21, top)], fill=col)
+        if burnt and (y * 7) % 11 < 3:
+            d.point((x + ((y * 13) % 30) - 15, top), fill=EMBER[1])
+    # deski wzdłuż burty
+    for k in range(3):
+        yy = lambda y: y + oy - side + 6 + k * (side // 3)
+        d.line([(ax(y0) - 22, yy(y0)), (ax(y1) - 22, yy(y1))], fill=WOOD[0])
+    # koła (z boku, widziane pod kątem: wąska elipsa) i oś
+    for wy in (52, 188):
+        x = ax(wy) - 24
+        r = 26 if not burnt else 18
+        d.ellipse([x - 6, wy + oy - r, x + 6, wy + oy + r // 3], outline=WOOD[0] if not burnt else CHAR[0], width=3, fill=None)
+        d.ellipse([x - 2, wy + oy - r // 3 - 3, x + 2, wy + oy - r // 3 + 3], fill=IRON[2])
+        for k in range(6):
+            yy = wy + oy - r // 3 + int(np.sin(k) * r * 0.6)
+            d.line([(x, wy + oy - r // 3), (x + int(np.cos(k * 1.05) * 4), yy)], fill=WOOD[1] if not burnt else CHAR[1])
+    # dyszel ku przodowi
+    d.line([(ax(y1) - 4, y1 + oy - 6), (ax(y1) + 6, y1 + oy + 12)], fill=WOOD[1] if not burnt else CHAR[1], width=3)
+    if not burnt:
+        # siano na wozie: kopiec po całej długości (żar na wierzchu)
+        for y in range(y0 + 6, y1 - 4):
+            x = ax(y)
+            hh = 18 + 10 * np.sin((y - y0) / (y1 - y0) * np.pi) + 4 * np.sin(y * 0.4)
+            top = y + oy - side - hh
+            for k in range(int(hh)):
+                t = k / max(hh, 1)
+                c = STRAW[min(4, int(t * 4 + ((y * 3 + k) % 5) * 0.2))]
+                if k > hh - 4:
+                    c = EMBER[(y + k) % 3]
+                d.point((x - 18 + ((y * 5 + k * 3) % 36), top + hh - k), fill=c)
+            d.line([(x - 18, top + hh), (x + 18, top + hh)], fill=STRAW[1])
+    else:
+        # zwęglone resztki: kilka sterczących belek, popiół, dym w grze
+        for k, y in enumerate((40, 84, 132, 176, 210)):
+            x = ax(y) + (k % 2) * 8 - 4
+            d.line([(x, y + oy - side), (x + 3, y + oy - side - 12 - k % 3 * 5)], fill=CHAR[2], width=3)
+            d.point((x + 3, y + oy - side - 12 - k % 3 * 5), fill=EMBER[0])
+    im = _noise_tint(im, 61 if not burnt else 62, 8)
+    return _outline(im)
+
+# barykada: palisada zaostrzonych pali i skrzyń w poprzek drogi; 4 stany wysokości (rąbanie mocnym atakiem)
+BAR_W, BAR_TOP, BAR_BOT = 120, -126, 238
+BAR_STATES = (150, 110, 70, 30)                           # wysokość w jednostkach świata (obstacle.gd: TYPES.barricade)
+
+def _barricade(h_world, seed=71):
+    """Kozły z zaostrzonych pali (skrzyżowane na krzyż) na grubej belce biegnącej w poprzek drogi."""
+    rng = np.random.default_rng(seed)
+    H = BAR_BOT - BAR_TOP
+    im, d = _canvas(BAR_W, H)
+    oy = -BAR_TOP
+    ax = lambda y: BAR_W / 2 + (y - 120) * 0.10
+    hp = h_world / (4.0 / 3.0)                              # px
+    chopped = h_world < 150
+    # cień na ziemi
+    d.polygon([(ax(8) - 30, 8 + oy), (ax(8) + 34, 8 + oy), (ax(230) + 38, 230 + oy), (ax(230) - 26, 230 + oy)], fill=CHAR[1])
+    # tylna belka (za kozłami)
+    def beam(hb, col, w):
+        d.line([(ax(6), 6 + oy - hb), (ax(230), 230 + oy - hb)], fill=WOOD[0], width=w + 2)
+        d.line([(ax(6), 6 + oy - hb), (ax(230), 230 + oy - hb)], fill=col, width=w)
+    if hp > 30:
+        beam(min(hp * 0.42, 40), WOOD[2], 6)
+    ys = list(range(14, 228, 26))
+    for y in ys:
+        x = ax(y) + rng.uniform(-2, 2)
+        t = 4 + int(R.persp(y) * 2)
+        for sgn in (-1, 1):
+            x0, y0 = x - sgn * 26, y + oy
+            x1, y1 = x + sgn * 22, y + oy - hp * rng.uniform(0.9, 1.04)
+            d.line([(x0, y0), (x1, y1)], fill=WOOD[0], width=t + 2)
+            d.line([(x0, y0), (x1, y1)], fill=WOOD[2] if sgn < 0 else WOOD[3], width=t)
+            d.line([(x0 - 1, y0), (x1 - 1, y1)], fill=WOOD[4], width=1)
+            if not chopped:
+                d.polygon([(x1 - 3, y1 + 2), (x1 + 3, y1 + 2), (x1 + sgn * 4, y1 - 8)], fill=WOOD[3])
+            else:
+                for j in range(-3, 4):
+                    d.point((x1 + j, y1 - abs(j * 5 + y) % 3), fill=WOODCUT[3] if j % 2 else WOODCUT[2])
+    # przednia belka spinająca kozły
+    if hp > 30:
+        beam(min(hp * 0.3, 28), WOOD[3], 5)
+    # wióry na ziemi po rąbaniu
+    if chopped:
+        for _ in range(int((150 - h_world) * 1.2)):
+            y = rng.integers(14, 230)
+            x = ax(y) + rng.uniform(-36, 36)
+            d.point((x, y + oy + 2), fill=WOODCUT[rng.integers(1, 4)])
+    im = _noise_tint(im, seed + int(h_world), 6)
+    return _outline(im)
+
+# studnia z daszkiem i korbą (stoi przy tylnej krawędzi drogi, nie blokuje)
+WELL_W, WELL_H = 72, 104
+
+def _well():
+    im, d = _canvas(WELL_W, WELL_H)
+    cx = WELL_W // 2
+    base = WELL_H - 4
+    # cembrowina: kamienny walec
+    d.ellipse([cx - 26, base - 14, cx + 26, base + 2], fill=STONE[2])
+    d.rectangle([cx - 26, base - 34, cx + 26, base - 6], fill=STONE[3])
+    for r in range(4):
+        for c in range(6):
+            x = cx - 26 + c * 9 + (4 if r % 2 else 0)
+            y = base - 34 + r * 7
+            d.rectangle([x, y, x + 7, y + 5], fill=STONE[3 + (r + c) % 3 - 1])
+            d.line([(x, y + 6), (x + 8, y + 6)], fill=STONE[1])
+    d.ellipse([cx - 26, base - 42, cx + 26, base - 26], fill=STONE[4])
+    d.ellipse([cx - 21, base - 39, cx + 21, base - 29], fill=WATER[0])
+    # słupy, daszek, korba
+    for sx in (-24, 22):
+        d.rectangle([cx + sx, base - 84, cx + sx + 3, base - 34], fill=WOOD[2])
+    d.polygon([(cx - 34, base - 78), (cx, base - 100), (cx + 34, base - 78)], fill=WOOD[1])
+    d.polygon([(cx - 30, base - 80), (cx, base - 96), (cx + 30, base - 80)], fill=STRAW[1])
+    d.line([(cx - 22, base - 66), (cx + 22, base - 66)], fill=WOOD[0], width=3)
+    d.line([(cx, base - 64), (cx, base - 46)], fill=STRAW[2])
+    d.rectangle([cx - 4, base - 48, cx + 4, base - 40], fill=WOOD[3])
+    im = _noise_tint(im, 81, 6)
+    return _outline(im)
+
+# most z cegieł: pokład na całą głębię drogi; gra odsłania go odcinkami (każda cegła = 1/5 szerokości)
+BRIDGE_W, BRIDGE_TOP, BRIDGE_BOT = 260, -2, 238
+
+def _bridge(seed=91):
+    """Pokład z cegieł (warstwy wzdłuż kierunku marszu) z niskimi murkami po tylnej i przedniej krawędzi."""
+    rng = np.random.default_rng(seed)
+    H = BRIDGE_BOT - BRIDGE_TOP
+    im, d = _canvas(BRIDGE_W, H)
+    oy = -BRIDGE_TOP
+    top, bot = 14, 222
+    y = top
+    row = 0
+    while y < bot:
+        bh = 5 + int(R.persp(y) * 4)                       # bliżej = grubsze warstwy (perspektywa)
+        bw = 14 + int(R.persp(y) * 8)
+        off = (row % 2) * (bw // 2)
+        for x in range(-off, BRIDGE_W, bw):
+            c = BRICK[rng.integers(1, 4)]
+            d.rectangle([x + 1, y + oy + 1, x + bw - 1, y + oy + bh - 1], fill=c)
+            d.line([(x + 1, y + oy + 1), (x + bw - 2, y + oy + 1)], fill=BRICK[4])
+        d.line([(0, y + oy), (BRIDGE_W - 1, y + oy)], fill=STONE[1])
+        y += bh
+        row += 1
+    # murki: tylny (widać przednią ścianę) i przedni (widać wierzch)
+    d.rectangle([0, top - 10 + oy, BRIDGE_W - 1, top + oy], fill=STONE[2])
+    d.line([(0, top - 10 + oy), (BRIDGE_W - 1, top - 10 + oy)], fill=STONE[4])
+    for x in range(0, BRIDGE_W, 12):
+        d.line([(x, top - 9 + oy), (x, top + oy)], fill=STONE[1])
+    d.rectangle([0, bot + oy, BRIDGE_W - 1, bot + 8 + oy], fill=STONE[4])
+    d.rectangle([0, bot + 9 + oy, BRIDGE_W - 1, bot + 15 + oy], fill=STONE[2])
+    for x in range(0, BRIDGE_W, 16):
+        d.line([(x, bot + 9 + oy), (x, bot + 15 + oy)], fill=STONE[1])
+    return _outline(im)
+
+# nora szczuroludzi: kopiec ziemi z czarną dziurą, deski, kości; wersja zawalona
+HOLE_W, HOLE_H = 76, 40
+
+def _rat_hole(broken, seed=101):
+    rng = np.random.default_rng(seed)
+    im, d = _canvas(HOLE_W, HOLE_H)
+    cx, cy = HOLE_W // 2, HOLE_H - 12
+    d.ellipse([cx - 36, cy - 14, cx + 36, cy + 10], fill=DIRT[2])
+    d.ellipse([cx - 30, cy - 18, cx + 30, cy + 4], fill=DIRT[3])
+    if not broken:
+        d.ellipse([cx - 16, cy - 12, cx + 16, cy + 2], fill=(8, 6, 6))
+        d.ellipse([cx - 13, cy - 11, cx + 13, cy - 2], fill=(4, 3, 3))
+        d.point((cx - 5, cy - 6), fill=(200, 40, 30)); d.point((cx - 2, cy - 6), fill=(200, 40, 30))   # oczy w ciemności
+        for k in range(3):                                                                         # podpory z desek
+            x = cx - 18 + k * 18
+            d.line([(x, cy - 16), (x + 3, cy + 2)], fill=WOOD[2], width=2)
+    else:
+        for _ in range(40):
+            x = cx + rng.uniform(-18, 18); y = cy + rng.uniform(-10, 2)
+            d.point((x, y), fill=STONE[rng.integers(1, 5)])
+        d.line([(cx - 20, cy - 2), (cx + 18, cy - 8)], fill=WOOD[1], width=2)
+    for _ in range(12):
+        x = cx + rng.uniform(-34, 34); y = cy + rng.uniform(-6, 8)
+        d.point((x, y), fill=DIRT[rng.integers(0, 2)])
+    d.line([(cx + 22, cy + 4), (cx + 30, cy + 2)], fill=(200, 190, 170))                            # kość
+    im = _noise_tint(im, seed + broken, 6)
+    return _outline(im)
+
+def _bucket():
+    im, d = _canvas(24, 26)
+    d.polygon([(3, 8), (20, 8), (18, 24), (5, 24)], fill=WOOD[3])
+    for x in (7, 11, 15):
+        d.line([(x, 9), (x, 23)], fill=WOOD[2])
+    d.line([(3, 12), (20, 12)], fill=IRON[1], width=2); d.line([(4, 20), (19, 20)], fill=IRON[1], width=2)
+    d.ellipse([3, 5, 20, 11], fill=WATER[2]); d.line([(7, 7), (12, 7)], fill=WATER[3])
+    d.arc([3, -2, 20, 14], 180, 360, fill=IRON[2], width=2)
+    return _outline(im)
+
+def _brick():
+    im, d = _canvas(26, 16)
+    d.polygon([(1, 6), (17, 1), (24, 4), (24, 11), (8, 15), (1, 12)], fill=BRICK[2])
+    d.polygon([(1, 6), (17, 1), (24, 4), (8, 9)], fill=BRICK[4])
+    d.line([(8, 9), (8, 15)], fill=BRICK[1])
+    d.point((13, 11), fill=BRICK[1]); d.point((18, 9), fill=BRICK[3])
+    return _outline(im)
+
+def puzzle_art(q):
+    """Zapisuje grafiki przeszkód-zadań, zwraca wpisy do obstacles.json."""
+    global CH_W, HW_K
+    out = {}
+    q(_cart(False)).save(os.path.join(OUT, "obstacle_cart.png"))
+    q(_cart(True)).save(os.path.join(OUT, "obstacle_cart_wreck.png"))
+    out["burning_cart"] = {"file": "obstacle_cart.png", "wreck": "obstacle_cart_wreck.png", "y": CART_TOP,
+                           "flames": "obstacle_fire_flames.png", "frames": FIRE_FRAMES, "fps": 12, "flames_y": FIRE_TOP - 40}
+    states = []
+    for i, hw in enumerate(BAR_STATES):
+        f = "obstacle_barricade_%d.png" % i
+        q(_barricade(hw)).save(os.path.join(OUT, f))
+        states.append({"h": hw, "file": f})
+    out["barricade"] = {"file": states[0]["file"], "y": BAR_TOP, "states": states}
+    q(_well()).save(os.path.join(OUT, "obstacle_well.png"))
+    out["well"] = {"file": "obstacle_well.png", "y": -WELL_H + 6}
+    q(_bridge()).save(os.path.join(OUT, "obstacle_bridge.png"))
+    out["bridge"] = {"file": "obstacle_bridge.png", "y": BRIDGE_TOP}
+    q(_rat_hole(False)).save(os.path.join(OUT, "rat_hole.png"))
+    q(_rat_hole(True)).save(os.path.join(OUT, "rat_hole_broken.png"))
+    q(_bucket()).save(os.path.join(OUT, "bucket.png"))
+    q(_brick()).save(os.path.join(OUT, "brick.png"))
+    # szeroka rozpadlina pod most (ten sam rysunek co przepaść, ~2.2x szerzej)
+    old = (CH_W, HW_K)
+    CH_W, HW_K = 360, 2.2
+    q(chasm_img(seed=53)).save(os.path.join(OUT, "obstacle_chasm_wide.png"))
+    q(chasm_glow(seed=54)).save(os.path.join(OUT, "obstacle_chasm_wide_glow.png"))
+    CH_W, HW_K = old
+    out["chasm_bridge"] = {"file": "obstacle_chasm_wide.png", "y": CH_TOP, "glow": "obstacle_chasm_wide_glow.png"}
+    return out
+
 # ---------------------------------------------------------------- zapis
 def main():
     ap = argparse.ArgumentParser()
@@ -425,6 +711,7 @@ def main():
     q(chasm_glow()).save(os.path.join(OUT, "obstacle_chasm_glow.png"))
     out["chasm"] = {"file": "obstacle_chasm.png", "y": CH_TOP, "glow": "obstacle_chasm_glow.png"}
     out["puddle"] = {"file": "obstacle_puddle.png", "center": True}
+    out.update(puzzle_art(q))
     man = {"note": "Grafika przeszkód (tools/build_obstacles.py, kałuża: tools/build_road.py). y = wiersz (px pod horyzontem) "
                    "górnej krawędzi PNG, x = środek przeszkody. Strefy kolizji: scripts/level/obstacle.gd (TYPES).",
            "obstacles": out}
@@ -434,9 +721,9 @@ def main():
         print(k, v)
     if a.preview:
         os.makedirs(a.preview, exist_ok=True)
-        sheet = Image.new("RGBA", (900, 340), (60, 50, 36, 255))
+        sheet = Image.new("RGBA", (1100, 380), (60, 50, 36, 255))
         x = 10
-        for f in ("obstacle_fire.png", "obstacle_log.png", "obstacle_chasm.png"):
+        for f in ("obstacle_fire.png", "obstacle_log.png", "obstacle_chasm.png", "obstacle_cart.png", "obstacle_barricade_0.png", "obstacle_well.png"):
             im = Image.open(os.path.join(OUT, f)).convert("RGBA")
             sheet.alpha_composite(im, (x, 10))
             if f == "obstacle_fire.png":

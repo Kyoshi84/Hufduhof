@@ -11,6 +11,8 @@ var cfg: Dictionary
 var hero_id: String = "ivo"
 var chain: Array = CHAIN
 var shots_fired: int = 0           # wystrzelone pociski (testy/statystyki)
+var carry: String = ""             # niesiony przedmiot: "bucket" = wiadro wody (blokuje ataki, trafienie je wytrąca)
+var bricks: int = 0                # zebrane cegły na most
 var combo_idx: int = 0
 var combo_timer: float = 0.0
 var dodge_cd: float = 0.0
@@ -129,12 +131,18 @@ func tick_free(delta: float) -> void:
 	if Controls.consume("dodge") and not is_airborne():
 		if try_dodge(mv):
 			return
+	# przycisk ataku obok przeszkody-zadania (wiadro na ogień, cegły na most) zamiast ataku;
+	# z wiadrem w rękach bohater nie atakuje wcale
 	if Controls.consume("heavy"):
+		if level.try_interact(self) or carry != "":
+			return
 		if cooldown_ready("heavy"):
 			assist_facing()
 			start_attack("heavy", attack_defs["heavy"])
 			return
 	if Controls.consume("light"):
+		if level.try_interact(self) or carry != "":
+			return
 		start_light()
 
 ## Kierunek widoku: według wektora ruchu; po zatrzymaniu wraca do profilu zgodnego z kierunkiem ataku.
@@ -196,6 +204,16 @@ func on_active_started() -> void:
 	if is_ranged_attack():
 		level.spawn_projectile(self, attack)
 		shots_fired += 1
+	else:
+		level.strike_obstacles(attack_name, hitbox_rect())       # np. mocny atak rąbie barykadę
+
+## Trafienie przez wroga wytrąca niesione wiadro (woda się wylewa).
+func receive_hit(attacker, defn: Dictionary) -> bool:
+	var r: bool = super.receive_hit(attacker, defn)
+	if r and carry != "":
+		carry = ""
+		level.on_bucket_dropped(self)
+	return r
 
 ## Anulowanie odnowienia ataku w kolejny element combo / unik / mocny atak.
 func try_cancel() -> void:

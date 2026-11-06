@@ -17,7 +17,7 @@ func _ready() -> void:
 	var tests := [
 		"t_balance", "t_hit_geometry", "t_single_hit_per_attack", "t_invulnerability", "t_light_timing",
 		"t_skaven_ai", "t_hound_charge", "t_beastman_poise", "t_boss_phases", "t_wave_flow", "t_pause_state",
-		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_story", "t_tavern", "t_jump_obstacles", "t_road_decals", "t_stage_quota", "t_music", "t_heroes", "t_hero_select", "t_projectiles", "t_ursa_art", "t_full_run_bot", "t_full_run_bot_ursa",
+		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_story", "t_tavern", "t_jump_obstacles", "t_road_decals", "t_stage_quota", "t_music", "t_heroes", "t_hero_select", "t_projectiles", "t_ursa_art", "t_puzzles", "t_puzzle_level", "t_full_run_bot", "t_full_run_bot_ursa",
 	]
 	for t in tests:
 		var t0 := Time.get_ticks_msec()
@@ -1090,6 +1090,8 @@ func t_stage_quota() -> void:
 	step(lvl2, 0.1)
 	lvl2.gate_open[0] = true
 	lvl2.stage_points[1] = quota
+	for rh in lvl2.rat_holes:
+		rh.alive = false                             # wieś ukończona = także nora szczurów zniszczona (t_puzzles)
 	var end1: float = lvl2.stage_end(1)
 	p2.position.x = end1 - lvl2.view_w * 0.45
 	lvl2.view_left = end1 - lvl2.view_w
@@ -1542,3 +1544,265 @@ func t_ursa_art() -> void:
 	ok(foreign == 0, "pozy Ursy w kolorach palety (spoza: %d)" % foreign)
 	ok(partial == 0, "pozy Ursy z alfą binarną (%d)" % partial)
 	ok(ResourceLoader.exists("res://assets/ui/heroes/ursa.png"), "portret Ursy na ekran wyboru")
+
+# ------------------------------------------------------------------ przeszkody-zadania (etap 1 zadań)
+
+func puzzle_level() -> Level:
+	var lvl := make_level()
+	lvl.waves = []
+	lvl.obstacles.clear()
+	for rh in lvl.rat_holes:
+		rh.alive = false
+	no_barrels(lvl)
+	for pk in lvl.pickups:
+		pk.taken = true
+	return lvl
+
+func add_obstacle(lvl: Level, type: String, x: float) -> Obstacle:
+	var o := Obstacle.new()
+	o.setup(lvl, type, x)
+	lvl.obstacle_layer.add_child(o)
+	lvl.obstacles.append(o)
+	return o
+
+func walk(lvl: Level, p: Player, dir: float, secs: float, jump: bool = false) -> void:
+	Controls.touch_move = Vector2(dir, 0)
+	if jump:
+		Controls.press("jump")
+	step(lvl, secs)
+	Controls.touch_move = Vector2.ZERO
+
+func place(lvl: Level, p: Player, x: float) -> void:
+	p.position = Vector2(x, 480.0)
+	p.z = 0.0
+	p.vz = 0.0
+	p.set_state(Actor.State.IDLE)
+	lvl.view_left = x - 500.0
+
+func t_puzzles() -> void:
+	# --- płonący wóz + studnia
+	var lvl := puzzle_level()
+	var p: Player = lvl.player
+	var cart := add_obstacle(lvl, "burning_cart", 2000.0)
+	var well := add_obstacle(lvl, "well", 1500.0)
+	ok(cart.h > 131.0 and not cart.jumpable(), "płonący wóz jest wyższy niż skok (%.0f)" % cart.h)
+	place(lvl, p, cart.x0() - 80.0)
+	walk(lvl, p, 1.0, 1.0, true)
+	ok(p.position.x < cart.x0(), "przez płonący wóz nie da się przeskoczyć (x=%.0f)" % p.position.x)
+	place(lvl, p, 1300.0)
+	step(lvl, 1.0)
+	var bucket: Pickup = well.bucket
+	ok(bucket != null and bucket.kind == "bucket", "przy studni leży wiadro")
+	p.position = bucket.position
+	step(lvl, 0.2)
+	ok(p.carry == "bucket", "wiadro podniesione")
+	step(lvl, 1.0)
+	ok(well.bucket == null, "studnia nie daje drugiego wiadra, gdy gracz niesie jedno")
+	Controls.press("light")
+	step(lvl, 0.1)
+	ok(p.carry == "bucket" and not p.is_attacking(), "z wiadrem nie ma ataku; daleko od ognia wiadro zostaje w rękach")
+	place(lvl, p, cart.x0() - 120.0)
+	Controls.press("light")
+	step(lvl, 0.1)
+	ok(cart.water_left == 1 and p.carry == "", "chluśnięcie wodą: ogień słabnie (zostało %d)" % cart.water_left)
+	ok(not cart.jumpable() and cart.blocks_passage(), "jedno wiadro to za mało")
+	# trafienie wytrąca wiadro
+	p.carry = "bucket"
+	var sk := spawn(lvl, "skaven", p.position + Vector2(60, 0))
+	sk.ai_cd = 99.0
+	p.invuln = 0.0
+	p.receive_hit(sk, sk.attack_defs.values()[0])
+	ok(p.carry == "", "trafienie przez wroga wytrąca wiadro")
+	sk.hp = 0.0
+	sk.die(1, {})
+	step(lvl, 1.5)
+	place(lvl, p, cart.x0() - 120.0)
+	p.carry = "bucket"
+	Controls.press("light")
+	step(lvl, 0.1)
+	ok(cart.state == "out" and not cart.blocks_passage(), "drugie wiadro gasi wóz")
+	place(lvl, p, cart.x0() - 60.0)
+	walk(lvl, p, 1.0, 1.2)
+	ok(p.position.x > cart.x1(), "przez wrak można przejść (x=%.0f)" % p.position.x)
+	step(lvl, 1.5)
+	ok(well.bucket == null, "po ugaszeniu ognia studnia nie daje już wiader")
+	p.carry = "bucket"
+	Controls.press("light")
+	step(lvl, 0.1)
+	ok(p.carry == "", "gdy nie ma czego gasić, przycisk ataku wylewa wodę")
+	free_level(lvl)
+	# --- barykada: mocny atak (Ivo)
+	var lvl2 := puzzle_level()
+	var p2: Player = lvl2.player
+	var bar := add_obstacle(lvl2, "barricade", 2000.0)
+	place(lvl2, p2, bar.x0() - 90.0)
+	walk(lvl2, p2, 1.0, 1.0, true)
+	ok(p2.position.x < bar.x0(), "wysokiej barykady nie da się przeskoczyć")
+	place(lvl2, p2, bar.x0() - 20.0)
+	p2.facing = 1
+	Controls.press("light")
+	step(lvl2, 0.7)
+	ok(is_equal_approx(bar.h, 150.0), "lekki atak nie rusza barykady")
+	var hs := []
+	for k in 4:
+		p2.cooldowns["heavy"] = 0.0
+		place(lvl2, p2, bar.x0() - 20.0)
+		p2.facing = 1
+		Controls.press("heavy")
+		step(lvl2, 1.2)
+		hs.append(bar.h)
+		if k == 1:
+			ok(bar.jumpable(), "po dwóch mocnych atakach (%.0f) barykadę da się przeskoczyć" % bar.h)
+			place(lvl2, p2, bar.x0() - 70.0)
+			walk(lvl2, p2, 1.0, 1.0, true)
+			ok(p2.position.x > bar.x1(), "skok nad obniżoną barykadą (x=%.0f)" % p2.position.x)
+			place(lvl2, p2, bar.x0() - 20.0)
+	ok(hs[0] == 110.0 and hs[1] == 70.0, "każdy mocny atak obniża barykadę o 40 (%s)" % str(hs))
+	ok(bar.state == "gone" and not bar.blocks_passage(), "przy 0 barykada znika")
+	free_level(lvl2)
+	# --- barykada: kula ognia Ursy ją obniża, pociski się na niej zatrzymują
+	GameState.hero_id = "ursa"
+	var lvl3 := puzzle_level()
+	var u: Player = lvl3.player
+	var bar3 := add_obstacle(lvl3, "barricade", 2000.0)
+	var behind := spawn(lvl3, "beastman", Vector2(bar3.x1() + 120.0, 480.0))
+	behind.ai_cd = 99.0
+	place(lvl3, u, bar3.x0() - 300.0)
+	u.facing = 1
+	u.start_attack("firebolt", u.attack_defs["firebolt"])
+	step(lvl3, 1.0)
+	ok(behind.hp == behind.max_hp and lvl3.projectiles.is_empty(), "ognisty pocisk zatrzymuje się na barykadzie")
+	u.start_attack("heavy", u.attack_defs["heavy"])
+	step(lvl3, 1.2)
+	ok(is_equal_approx(bar3.h, 110.0), "kula ognia obniża barykadę jak mocny atak (%.0f)" % bar3.h)
+	free_level(lvl3)
+	GameState.hero_id = "ivo"
+	# --- nora szczurów
+	var lvl4 := puzzle_level()
+	var p4: Player = lvl4.player
+	var hole := RatHole.new()
+	hole.setup(lvl4, Vector2(2000.0, 470.0))
+	lvl4.entities.add_child(hole)
+	lvl4.rat_holes.append(hole)
+	place(lvl4, p4, 1000.0)
+	step(lvl4, 5.0)
+	ok(hole.spawn_count == 0, "nora śpi, gdy gracz jest daleko")
+	GameState.god_mode = true
+	place(lvl4, p4, 1500.0)
+	step(lvl4, 12.0)
+	ok(hole.spawn_count >= 2 and hole.alive_spawned() <= RatHole.MAX_ALIVE, "nora wypuszcza szczury co kilka sekund (%d)" % hole.spawn_count)
+	var st_i: int = lvl4.stage_at(hole.position.x)
+	ok(lvl4.stage_blocked(st_i), "nora blokuje koniec etapu")
+	var pts0: int = int(lvl4.stage_points[st_i])
+	kill_all(lvl4)
+	ok(int(lvl4.stage_points[st_i]) == pts0, "szczury z nory nie nabijają licznika etapu")
+	for k in 3:
+		hole.invuln = 0.0
+		hole.receive_hit(p4, p4.attack_defs["light1"])
+	ok(not hole.is_alive() and not lvl4.stage_blocked(st_i), "3 trafienia niszczą norę")
+	var n_after: int = hole.spawn_count
+	step(lvl4, 8.0)
+	ok(hole.spawn_count == n_after, "zniszczona nora nie wypuszcza szczurów")
+	GameState.god_mode = false
+	free_level(lvl4)
+	# trafienie mieczem w prawdziwej walce (opponents_of zawiera norę)
+	var lvl5 := puzzle_level()
+	var p5: Player = lvl5.player
+	var hole5 := RatHole.new()
+	hole5.setup(lvl5, Vector2(1100.0, 480.0))
+	lvl5.entities.add_child(hole5)
+	lvl5.rat_holes.append(hole5)
+	place(lvl5, p5, 1000.0)
+	p5.facing = 1
+	p5.start_attack("light1", p5.attack_defs["light1"])
+	step(lvl5, 0.5)
+	ok(hole5.hits == 1, "cios mieczem trafia w norę")
+	free_level(lvl5)
+	# --- most z cegieł
+	var lvl6 := puzzle_level()
+	var p6: Player = lvl6.player
+	var riv := add_obstacle(lvl6, "river_bridge", 2000.0)
+	place(lvl6, p6, riv.x0() - 60.0)
+	var hp0: float = p6.hp
+	walk(lvl6, p6, 1.0, 1.4, true)
+	ok(p6.hp < hp0 and p6.position.x < riv.x0(), "szerokiej rzeki nie da się przeskoczyć (x=%.0f)" % p6.position.x)
+	p6.hp = hp0
+	lvl6.drop_pickup(Vector2(1500.0, 480.0), "brick")
+	place(lvl6, p6, 1500.0)
+	step(lvl6, 0.2)
+	ok(p6.bricks == 1, "cegła zebrana z drogi")
+	var b := Barrel.new()
+	b.setup(lvl6, Vector2(1400.0, 480.0))
+	b.contains = "brick"
+	lvl6.entities.add_child(b)
+	lvl6.barrels.append(b)
+	b.hp = 1.0
+	b.receive_hit(p6, p6.attack_defs["light1"])
+	var dropped := false
+	for pk in lvl6.pickups:
+		dropped = dropped or (pk.kind == "brick" and not pk.taken)
+	ok(dropped, "z beczki wypada cegła")
+	p6.bricks = 3
+	place(lvl6, p6, riv.x0() - 100.0)
+	Controls.press("light")
+	step(lvl6, 0.1)
+	ok(riv.bricks_placed == 3 and p6.bricks == 0 and riv.blocks_passage(), "3 cegły położone, most jeszcze niegotowy")
+	ok(not p6.is_attacking(), "przycisk ataku przy moście kładzie cegły zamiast ciąć")
+	p6.bricks = 4
+	Controls.press("light")
+	step(lvl6, 0.1)
+	ok(riv.state == "built" and p6.bricks == 2 and not riv.blocks_passage(), "5 cegieł buduje most, nadmiar zostaje")
+	p6.invuln = 0.0
+	place(lvl6, p6, riv.x0() - 30.0)
+	walk(lvl6, p6, 1.0, 2.0)
+	ok(p6.hp == hp0 and p6.position.x > riv.x1(), "po moście przechodzi się pieszo (x=%.0f)" % p6.position.x)
+	free_level(lvl6)
+	# Ivo bez zadań: przycisk ataku działa jak dawniej
+	var lvl7 := puzzle_level()
+	Controls.press("light")
+	step(lvl7, 0.05)
+	ok(lvl7.player.is_attacking() and lvl7.player.attack_name == "light1", "bez przeszkód-zadań atak bez zmian")
+	free_level(lvl7)
+
+func t_puzzle_level() -> void:
+	var d: Dictionary = Level.load_level_data("res://data/level_1.json")
+	var firsts := {}
+	for o in d["obstacles"]:
+		var ty: String = str(o["type"])
+		if not firsts.has(ty):
+			firsts[ty] = float(o["x"])
+	for ty in ["burning_cart", "well", "barricade", "rat_hole", "river_bridge", "chasm_bridge"]:
+		ok(firsts.has(ty), "poziom zawiera: %s" % ty)
+	ok(firsts.get("well", 1e9) < firsts.get("burning_cart", 0.0), "studnia stoi przed płonącym wozem")
+	# pierwsze wystąpienie każdego zadania: z dala od fal (ostatnia fala przed nim jest >= 400 wcześniej, następna dopiero za nim)
+	var triggers := []
+	for w in d["waves"]:
+		triggers.append(float(w["trigger"]))
+	for ty in ["burning_cart", "barricade", "rat_hole", "river_bridge"]:
+		var x: float = firsts[ty]
+		var half: float = float(Obstacle.TYPES[ty]["w"]) * 0.5 if Obstacle.TYPES.has(ty) else 40.0
+		var prev := -1e9
+		var nxt := 1e9
+		for tr in triggers:
+			if tr <= x:
+				prev = maxf(prev, tr)
+			else:
+				nxt = minf(nxt, tr)
+		ok(x - half - prev >= 400.0 and nxt > x + half, "%s (x=%.0f) pojawia się pierwszy raz bez wrogów (fale %.0f / %.0f)" % [ty, x, prev, nxt])
+	# cegieł wystarcza na każdy most (z drogi + z beczek przed mostem, w tym samym etapie)
+	var lvl := make_level()
+	for o in lvl.obstacles:
+		if o.bricks_needed > 0:
+			var si: int = lvl.stage_at(o.position.x)
+			var n := 0
+			for pk in lvl.pickups:
+				if pk.kind == "brick" and pk.position.x < o.x0() and lvl.stage_at(pk.position.x) == si:
+					n += 1
+			for b in lvl.barrels:
+				if b.contains == "brick" and b.position.x < o.x0() and lvl.stage_at(b.position.x) == si:
+					n += 1
+			ok(n >= o.bricks_needed, "%s x=%.0f: cegieł w etapie %d (potrzeba %d)" % [o.type, o.position.x, n, o.bricks_needed])
+	ok(Obstacle.art_for("burning_cart").has("wreck") and Obstacle.art_for("barricade").has("states"), "grafiki przeszkód-zadań wczytane")
+	for prop in ["bucket", "brick", "rat_hole", "rat_hole_broken"]:
+		ok(StageArt.common_prop(prop) != null, "grafika: %s" % prop)
+	free_level(lvl)

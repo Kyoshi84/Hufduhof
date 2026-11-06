@@ -22,6 +22,7 @@ var poise_max: float = 0.0
 var poise_regen: float = 8.0
 var target
 var remove_me: bool = false
+var no_stage_points: bool = false   # wróg z nory szczurów: nie nabija licznika etapu (nie da się "farmić" nory)
 
 func setup(lvl, type: String, pos: Vector2) -> void:
 	level = lvl

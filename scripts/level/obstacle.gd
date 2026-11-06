@@ -4,6 +4,13 @@ extends Node2D
 ##   slow  - kałuża/bagno: brodzenie spowalnia (x0.42), skok przelatuje nad nią,
 ##   wall  - powalone drzewo, płonący budynek: nie da się przejść po ziemi (ogień dodatkowo parzy),
 ##   pit   - rzeka, przepaść: spadasz (obrażenia) i wracasz na brzeg, z którego startowałeś.
+##   none  - nie blokuje (studnia, ugaszony wóz, rozbita barykada, gotowy most).
+## Przeszkody-zadania (trzeba je rozwiązać, nie tylko przeskoczyć; interakcja = przycisk ataku obok przeszkody):
+##   burning_cart - płonący wóz (160 wys., ponad skokiem ~131): 2 wiadra wody ze studni (well) gaszą go -> niski wrak, przejście,
+##   barricade    - barykada (150): każdy MOCNY atak obniża ją o 40; <= 72 da się przeskoczyć, przy 0 znika,
+##   river_bridge / chasm_bridge - szeroka rzeka/przepaść (330, za szeroka na skok): 5 cegieł buduje most,
+##   well         - studnia: zawsze leży przy niej wiadro wody (gdy gracz go nie niesie).
+## Nora szczurów (rat_hole) to osobny obiekt do zniszczenia: scripts/level/rat_hole.gd.
 ## Położenie x = środek przeszkody; wymiary w TYPES (w jednostkach świata). Wrogowie ignorują przeszkody.
 
 const TYPES := {
@@ -12,7 +19,14 @@ const TYPES := {
 	"log":    { "kind": "wall", "w": 70.0, "h": 72.0, "dmg": 0.0 },
 	"river":  { "kind": "pit", "w": 150.0, "h": 0.0, "dmg": 18.0 },
 	"chasm":  { "kind": "pit", "w": 150.0, "h": 0.0, "dmg": 22.0 },
+	"burning_cart": { "kind": "wall", "w": 110.0, "h": 160.0, "dmg": 8.0, "jump_h": 0.0, "water": 2 },
+	"barricade":    { "kind": "wall", "w": 80.0, "h": 150.0, "dmg": 0.0, "jump_h": 72.0, "chop": 40.0 },
+	"river_bridge": { "kind": "pit", "w": 330.0, "h": 0.0, "dmg": 18.0, "bricks": 5 },
+	"chasm_bridge": { "kind": "pit", "w": 330.0, "h": 0.0, "dmg": 22.0, "bricks": 5 },
+	"well":         { "kind": "none", "w": 70.0, "h": 0.0 },
 }
+const USE_RANGE := 220.0            # z jakiej odległości od krawędzi przeszkody działa przycisk ataku (wiadro, cegły)
+const BUCKET_RESPAWN := 0.6         # po ilu sekundach przy studni pojawia się nowe wiadro
 const FEET_HALF := 14.0             # połowa szerokości stóp Ivo przy zderzeniu ze ścianą
 const PIT_MARGIN := 8.0             # na krawędzi przepaści jest trochę "kopyta" (wybaczanie błędu)
 const LAND_Z := 6.0                 # poniżej tej wysokości stopy dotykają dna/wody
@@ -26,6 +40,15 @@ var dmg: float = 0.0
 var t: float = 0.0
 var ripple_t: float = 0.0
 var hit_count: int = 0              # ile razy gracz się o nią potknął (testy/statystyki)
+var jump_h: float = -1.0            # < 0: zwykła ściana (skok ponad h - 8); >= 0: da się przeskoczyć dopiero, gdy h <= jump_h
+var state: String = ""              # "" = aktywna; "out" = ugaszona, "gone" = rozbita, "built" = most gotowy
+var water_left: int = 0             # płonący wóz: ile wiader jeszcze potrzeba
+var chop: float = 0.0               # barykada: o ile obniża ją jeden mocny atak
+var bricks_needed: int = 0          # most: ile cegieł trzeba w sumie
+var bricks_placed: int = 0
+var bucket = null                   # studnia: wiadro leżące obok (Pickup) albo null
+var bucket_t: float = 0.0
+var flash_t: float = 0.0            # krótki błysk po uderzeniu/ugaszeniu (efekt)
 
 const ART_DIR := "res://assets/stages/common/props"
 const WPT := 4.0 / 3.0
@@ -52,6 +75,15 @@ static func art_for(p_type: String) -> Dictionary:
 						a["fps"] = float(spec.get("fps", 10.0))
 					if spec.has("glow"):
 						a["glow"] = CharacterSheet.load_tex(ART_DIR + "/" + str(spec["glow"]))
+					if spec.has("wreck"):
+						a["wreck"] = CharacterSheet.load_tex(ART_DIR + "/" + str(spec["wreck"]))
+					if spec.has("flames_y"):
+						a["flames_y"] = float(spec["flames_y"])
+					if spec.has("states"):
+						var sts: Array = []
+						for st in spec["states"]:
+							sts.append({ "h": float(st["h"]), "tex": CharacterSheet.load_tex(ART_DIR + "/" + str(st["file"])) })
+						a["states"] = sts
 					_art[k] = a
 	return _art.get(p_type, {})
 
@@ -74,6 +106,10 @@ func setup(lvl, p_type: String, x: float) -> void:
 	half_w = float(d["w"]) * 0.5
 	h = float(d["h"])
 	dmg = float(d.get("dmg", 0.0))
+	jump_h = float(d.get("jump_h", -1.0))
+	water_left = int(d.get("water", 0))
+	chop = float(d.get("chop", 0.0))
+	bricks_needed = int(d.get("bricks", 0))
 	position = Vector2(x, 0.0)
 	z_index = 0
 
@@ -87,10 +123,111 @@ func x1() -> float:
 func overlaps_x(px: float, pad: float = 0.0) -> bool:
 	return px > x0() - pad and px < x1() + pad
 
+# ------------------------------------------------------------------ zadania
+
+## Przeszkoda wymaga rozwiązania (a nie tylko skoku) i jeszcze nie jest rozwiązana.
+func is_puzzle() -> bool:
+	return type in ["burning_cart", "barricade", "river_bridge", "chasm_bridge"] and kind != "none"
+
+## Czy da się ją teraz przeskoczyć (barykada po obniżeniu; zwykłe przeszkody zawsze).
+func jumpable() -> bool:
+	if kind == "none":
+		return false
+	if kind == "pit":
+		return bricks_needed == 0
+	return jump_h < 0.0 or h <= jump_h
+
+func blocks_passage() -> bool:
+	return kind != "none"
+
+## Gracz stoi dość blisko krawędzi przeszkody, żeby przycisk ataku zadziałał (z obu stron).
+func in_use_range(px: float) -> bool:
+	return (px > x0() - USE_RANGE and px <= x0() + 4.0) or (px < x1() + USE_RANGE and px >= x1() - 4.0)
+
+## Wiadro wody na płonący wóz. Zwraca true, gdy woda trafiła w ogień.
+func douse() -> bool:
+	if type != "burning_cart" or state != "":
+		return false
+	water_left -= 1
+	flash_t = 0.5
+	if level.fx != null:
+		for i in 3:
+			level.fx.burst(Vector2(position.x, level.lane_min() + 60.0 + i * 70.0), 10, Color(0.55, 0.72, 0.9), 220.0, -1)
+			level.fx.burst(Vector2(position.x, level.lane_min() + 20.0 + i * 70.0), 8, Color(0.82, 0.84, 0.86), 160.0, 1)     # para
+	Sfx.play("slam", 1.6)
+	if water_left <= 0:
+		state = "out"
+		kind = "none"
+		h = 0.0
+		GameState.add_score(100)
+	return true
+
+## Cegły z ekwipunku gracza na most. Zwraca liczbę położonych cegieł.
+func add_bricks(n: int) -> int:
+	if bricks_needed <= 0 or state == "built" or n <= 0:
+		return 0
+	var k: int = mini(n, bricks_needed - bricks_placed)
+	bricks_placed += k
+	flash_t = 0.4
+	Sfx.play("pickup", 0.7)
+	if bricks_placed >= bricks_needed:
+		state = "built"
+		kind = "none"
+		GameState.add_score(100)
+		if level.fx != null:
+			level.fx.burst(Vector2(position.x, (level.lane_min() + level.lane_max()) * 0.5), 14, Color(0.7, 0.35, 0.2), 200.0, 1)
+	return k
+
+## Cios w przeszkodę (atak wręcz w fazie ACTIVE albo wybuch kuli ognia). Barykada: tylko mocny atak ją obniża.
+func strike(attack_name: String, r: Rect2) -> bool:
+	if type != "barricade" or kind == "none":
+		return false
+	if r.end.x < x0() - 6.0 or r.position.x > x1() + 6.0:
+		return false
+	if level.fx != null:
+		level.fx.burst(Vector2(position.x, r.get_center().y - 60.0), 6 if attack_name != "heavy" else 14, Color(0.62, 0.46, 0.26), 200.0, 1)
+	if attack_name != "heavy":
+		Sfx.play("barrel_break", 0.8)         # lekkie cięcie tylko odbija się od pali
+		return false
+	h = maxf(0.0, h - chop)
+	flash_t = 0.35
+	Sfx.play("barrel_break", 0.6)
+	if level != null:
+		level.shake = maxf(level.shake, 6.0)
+	if h <= 0.0:
+		state = "gone"
+		kind = "none"
+		GameState.add_score(50)
+	return true
+
+## Pocisk zatrzymuje się na barykadzie (ognisty pocisk gaśnie, kula ognia wybucha).
+func stops_projectile(r: Rect2) -> bool:
+	return type == "barricade" and kind != "none" and r.end.x > x0() and r.position.x < x1()
+
+## Studnia pilnuje, żeby przy niej leżało wiadro, gdy gracz żadnego nie niesie.
+func _tick_well(p: Player, delta: float) -> void:
+	if bucket != null and (not is_instance_valid(bucket) or bucket.taken):
+		bucket = null
+	if bucket != null and level.burning_cart_near(position.x, 1500.0) == null:
+		bucket.taken = true                          # ogień ugaszony: wiadro przy studni znika
+		bucket = null
+	if bucket != null or p.carry == "bucket" or level.burning_cart_near(position.x, 1500.0) == null:
+		bucket_t = BUCKET_RESPAWN
+		return
+	bucket_t -= delta
+	if bucket_t <= 0.0:
+		bucket = level.drop_pickup(Vector2(position.x + 50.0, well_bucket_y()), "bucket")
+
+func well_bucket_y() -> float:
+	return level.lane_min() + 22.0
+
 ## Rozwiązuje kontakt gracza z przeszkodą. prev_x = pozycja z początku klatki (skąd gracz przyszedł).
 func resolve(p: Player, prev_x: float, delta: float) -> void:
 	if p == null or not p.is_alive():
 		return
+	flash_t = maxf(0.0, flash_t - delta)
+	if type == "well":
+		_tick_well(p, delta)
 	match kind:
 		"slow":
 			if p.z < LAND_Z and overlaps_x(p.position.x):
@@ -101,7 +238,8 @@ func resolve(p: Player, prev_x: float, delta: float) -> void:
 					level.fx.burst(p.position + Vector2(0, -4), 3, Color(0.45, 0.55, 0.65), 90.0, p.facing)
 		"wall":
 			var reach: float = half_w + FEET_HALF
-			if p.z < h - 8.0 and absf(p.position.x - position.x) < reach:
+			var too_high: bool = jump_h >= 0.0 and h > jump_h        # np. płonący wóz, wysoka barykada: skok nie pomoże
+			if (p.z < h - 8.0 or too_high) and absf(p.position.x - position.x) < reach:
 				var from_left: bool = prev_x <= position.x
 				p.position.x = position.x - reach if from_left else position.x + reach
 				p.kb_vx = 0.0
@@ -147,6 +285,111 @@ func _draw() -> void:
 		"log": _draw_log()
 		"river": _draw_water(Color(0.15, 0.28, 0.40), Color(0.36, 0.55, 0.68), true)
 		"chasm": _draw_chasm()
+		"burning_cart": _draw_cart()
+		"barricade": _draw_barricade()
+		"well": _draw_well()
+		"river_bridge":
+			_draw_water(Color(0.15, 0.28, 0.40), Color(0.36, 0.55, 0.68), true)
+			_draw_bridge()
+		"chasm_bridge":
+			_draw_chasm_wide()
+			_draw_bridge()
+
+# ------------------------------------------------------------------ rysowanie przeszkód-zadań
+
+func _flash_mod() -> Color:
+	return Color(1.6, 1.6, 1.6) if flash_t > 0.0 and int(flash_t * 20.0) % 2 == 0 else Color.WHITE
+
+func _draw_cart() -> void:
+	var art: Dictionary = art_for("burning_cart")
+	if art.is_empty():
+		_poly([Vector2(-half_w, _lane_top()), Vector2(half_w, _lane_top()), Vector2(half_w, _lane_bot()), Vector2(-half_w, _lane_bot())], Color(0.3, 0.18, 0.1))
+		return
+	if state == "out":
+		var wr: Texture2D = art.get("wreck")
+		if wr != null:
+			_draw_art_tex(wr, art["y"])
+		for i in 6:                                                     # dym znad wraku
+			var u: float = fmod(t * 0.35 + i * 0.17, 1.0)
+			var c := Color(0.42, 0.42, 0.44, 0.45 * (1.0 - u))
+			draw_circle(Vector2(floorf((sin(i * 2.7) * 20.0 + u * 30.0) / WPT) * WPT, floorf((lerpf(_lane_top() + 40.0, _lane_bot() - 40.0, fmod(i * 0.41, 1.0)) - 30.0 - u * 140.0) / WPT) * WPT), 6.0 + u * 10.0, c)
+		return
+	_draw_art_tex(art["tex"], art["y"], _flash_mod())
+	var fl: Texture2D = art.get("flames")
+	if fl != null:
+		var total: float = float(TYPES["burning_cart"]["water"])
+		var k: float = clampf(float(water_left) / total, 0.25, 1.0)
+		var n: int = maxi(1, int(art["frames"]))
+		var fw: float = fl.get_width() / float(n)
+		var f: int = int(t * float(art["fps"])) % n
+		var full_h: float = fl.get_height() * WPT
+		var top: float = LevelBackground.HORIZON + float(art.get("flames_y", art["y"])) * WPT
+		var dst := Rect2(floorf(-fw * WPT * 0.5), top + full_h * (1.0 - k), fw * WPT, full_h * k)
+		draw_texture_rect_region(fl, dst, Rect2(f * fw, 0, fw, fl.get_height()))
+
+func _draw_barricade() -> void:
+	var art: Dictionary = art_for("barricade")
+	if kind == "none":
+		return
+	if art.is_empty() or not art.has("states"):
+		var top: float = _lane_top()
+		_poly([Vector2(-half_w, top), Vector2(half_w, top), Vector2(half_w, _lane_bot()), Vector2(-half_w, _lane_bot())], Color(0.36, 0.24, 0.13))
+		return
+	var best: Dictionary = {}
+	for st in art["states"]:
+		if best.is_empty() or absf(float(st["h"]) - h) < absf(float(best["h"]) - h):
+			best = st
+	if best.get("tex") != null:
+		_draw_art_tex(best["tex"], art["y"], _flash_mod())
+
+func _draw_well() -> void:
+	var art: Dictionary = art_for("well")
+	var base_y: float = level.lane_min() - 6.0
+	if art.is_empty():
+		_ellipse(Vector2(0, base_y), 30.0, 12.0, Color(0.4, 0.38, 0.36))
+		return
+	var tex: Texture2D = art["tex"]
+	var w: float = tex.get_width() * WPT
+	var hh: float = tex.get_height() * WPT
+	draw_texture_rect(tex, Rect2(floorf(-w * 0.5), floorf(base_y - hh), w, hh), false)
+
+func _draw_chasm_wide() -> void:
+	var art: Dictionary = art_for("chasm_bridge")
+	if art.is_empty():
+		_draw_chasm()
+		return
+	_draw_art_tex(art["tex"], art["y"])
+	var gl: Texture2D = art.get("glow")
+	if gl != null:
+		_draw_art_tex(gl, art["y"], Color(1, 1, 1, 0.35 + 0.3 * sin(t * 1.8)))
+
+## Most z cegieł: odsłaniany od lewego brzegu, każda cegła = 1/5 długości; nad brzegiem licznik cegieł.
+func _draw_bridge() -> void:
+	var frac: float = clampf(float(bricks_placed) / float(maxi(1, bricks_needed)), 0.0, 1.0)
+	var art: Dictionary = art_for("bridge")
+	var y0: float = _lane_top()
+	var y1: float = _lane_bot()
+	var w: float = half_w * 2.0 + 16.0
+	if frac > 0.0:
+		if not art.is_empty():
+			var tex: Texture2D = art["tex"]
+			var tw: float = tex.get_width()
+			var src := Rect2(0, 0, tw * frac, tex.get_height())
+			var dst := Rect2(-w * 0.5, LevelBackground.HORIZON + float(art["y"]) * WPT, w * frac, tex.get_height() * WPT)
+			draw_texture_rect_region(tex, dst, src, _flash_mod())
+		else:
+			_poly([Vector2(-w * 0.5, y0), Vector2(-w * 0.5 + w * frac, y0), Vector2(-w * 0.5 + w * frac, y1), Vector2(-w * 0.5, y1)], Color(0.55, 0.25, 0.15))
+	if state != "built":
+		# plan mostu: przerywane krawędzie, żeby było widać, że coś tu trzeba zbudować
+		for i in 12:
+			var xx: float = -w * 0.5 + w * (float(i) + 0.5) / 12.0
+			if xx > -w * 0.5 + w * frac:
+				draw_rect(Rect2(floorf(xx / WPT) * WPT, y0 + 2.0, 12.0, 4.0), Color(0.85, 0.6, 0.3, 0.75))
+				draw_rect(Rect2(floorf(xx / WPT) * WPT, y1 - 6.0, 12.0, 4.0), Color(0.85, 0.6, 0.3, 0.75))
+		var font := ThemeDB.fallback_font
+		var label := "MOST: %d / %d CEGIEŁ" % [bricks_placed, bricks_needed]
+		draw_string_outline(font, Vector2(-half_w - 150.0, y0 - 14.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, 6, Color(0, 0, 0))
+		draw_string(font, Vector2(-half_w - 150.0, y0 - 14.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(0.95, 0.75, 0.4))
 
 func _poly(pts: Array, col: Color) -> void:
 	draw_colored_polygon(PackedVector2Array(pts), col)

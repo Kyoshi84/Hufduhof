@@ -72,6 +72,9 @@ func _process(delta: float) -> void:
 		var q: int = level.stage_quota()
 		quota_label.text = "Etap %d: %d / %d pkt" % [si + 1, mini(pts, q), q]
 		quota_label.add_theme_color_override("font_color", Color(0.55, 0.85, 0.45) if pts >= q else Color(0.9, 0.78, 0.45))
+		if level.stage_blocked(si):
+			quota_label.text += "   NORA!"
+			quota_label.add_theme_color_override("font_color", Color(0.95, 0.35, 0.25))
 	if banner_t > 0.0:
 		banner_t -= delta
 		banner_label.modulate.a = clampf(banner_t / 0.5, 0.0, 1.0)
@@ -99,6 +102,14 @@ func _draw_hud() -> void:
 		var f: float = clampf(float(level.stage_points[si]) / float(level.stage_quota()), 0.0, 1.0)
 		canvas.draw_rect(Rect2(bx - 3, by + 35, bw + 6, 10), Color(0.05, 0.03, 0.03, 0.85))
 		canvas.draw_rect(Rect2(bx, by + 37, bw * f, 6), Color(0.55, 0.85, 0.45) if f >= 1.0 else Color(0.85, 0.66, 0.25))
+	# niesione przedmioty: wiadro wody, cegły na most
+	var ix := bx
+	var iy := by + 86.0
+	if p.carry == "bucket":
+		_icon("bucket", Vector2(ix, iy), "WIADRO")
+		ix += 150.0
+	if p.bricks > 0:
+		_icon("brick", Vector2(ix, iy), "x %d" % p.bricks)
 	# pasek bossa
 	var b = level.boss
 	if b != null and is_instance_valid(b) and b.is_alive():
@@ -124,3 +135,12 @@ func _draw_hud() -> void:
 	# błysk po otrzymaniu obrażeń
 	if damage_flash > 0.0:
 		canvas.draw_rect(Rect2(0, 0, size_v.x, size_v.y), Color(0.7, 0.0, 0.0, damage_flash * 0.5))
+
+## Ikona przedmiotu (grafika znajdźki 2x) z podpisem.
+func _icon(prop: String, pos: Vector2, text: String) -> void:
+	canvas.draw_rect(Rect2(pos.x - 4, pos.y - 4, 140, 44), Color(0.05, 0.03, 0.03, 0.75))
+	var tex: Texture2D = StageArt.common_prop(prop)
+	if tex != null:
+		var k: float = 36.0 / float(maxi(tex.get_width(), tex.get_height()))
+		canvas.draw_texture_rect(tex, Rect2(pos.x, pos.y, tex.get_width() * k, tex.get_height() * k), false)
+	canvas.draw_string(ThemeDB.fallback_font, Vector2(pos.x + 44, pos.y + 27), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(0.95, 0.85, 0.6))
