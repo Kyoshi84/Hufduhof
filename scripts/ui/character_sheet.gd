@@ -13,16 +13,16 @@ static func build(h: HeroState, on_close: Callable, on_change: Callable) -> Cont
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
 	panel.add_child(vb)
-	var redraw := func(): pass
 	var holder := VBoxContainer.new()
 	vb.add_child(holder)
-	redraw = func():
+	var ctx := {}
+	ctx["redraw"] = func():
 		for c in holder.get_children():
 			c.queue_free()
 		_fill(holder, h, func():
 			on_change.call()
-			redraw.call())
-	redraw.call()
+			ctx["redraw"].call())
+	ctx["redraw"].call()
 	var close := UiKit.button("Zamknij", on_close, 240)
 	close.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vb.add_child(close)

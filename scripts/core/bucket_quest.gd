@@ -70,7 +70,7 @@ func complete() -> void:
 func log_lines() -> Array:
 	match state:
 		State.NOT_STARTED:
-			return ["Porozmawiaj z Borubarem na placu"]
+			return ["Porozmawiaj z Borubarem przed karczmą"]
 		State.ACTIVE:
 			var lines := ["Zgaś płonącą barykadę przy bramie",
 				"Wiadra: %d/%d" % [found.size(), total],

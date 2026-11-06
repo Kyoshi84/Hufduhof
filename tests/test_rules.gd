@@ -55,7 +55,7 @@ func test_hp_is_zyw_times_multiplier():
 
 func test_mana_only_with_magic():
 	assert_eq(Rules.max_mana(46, 0), 0)
-	assert_eq(Rules.max_mana(46, 2), 46)
+	assert_eq(Rules.max_mana(46, 2), 66, "Int + Mag x 10")
 
 func test_sw_regen_and_poison_resistance():
 	assert_almost_eq(Rules.mana_regen(40), 0.8, 0.0001)

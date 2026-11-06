@@ -39,6 +39,17 @@ def icons():
     d.ellipse([17, 1, 27, 11], fill=R("warp", 5))
     save(outline(im), OUT + "warpstaff.png")
     im, d = new()
+    d.line([(8, 29), (22, 5)], fill=R("wood", 2), width=3)
+    d.polygon([(22, 0), (28, 6), (24, 12), (18, 8)], fill=R("fire", 3))
+    d.polygon([(22, 3), (25, 6), (22, 9), (20, 6)], fill=R("fire", 6))
+    save(outline(im), OUT + "firestaff.png")
+    im, d = new()
+    d.arc([2, 2, 30, 30], 300, 150, fill=R("wood", 4), width=3)
+    d.line([(26, 8), (8, 26)], fill=R("bone", 4), width=1)
+    d.line([(12, 20), (27, 5)], fill=R("wood", 2), width=1)
+    d.polygon([(27, 5), (23, 6), (26, 9)], fill=R("steel", 5))
+    save(outline(im), OUT + "bow.png")
+    im, d = new()
     d.line([(5, 29), (25, 5)], fill=R("wood", 3), width=2)
     d.polygon([(25, 2), (29, 6), (23, 9)], fill=R("steel", 5))
     save(outline(im), OUT + "spear.png")
@@ -52,7 +63,7 @@ def icons():
     d.polygon([(18, 3), (28, 6), (27, 16), (19, 11)], fill=R("steel", 4))
     save(outline(im), OUT + "axe.png")
     for name, col, col2 in (("jerkin", R("blood", 3), R("blood", 1)), ("fur", R("straw", 4), R("straw", 2)),
-                            ("robe", R("sky", 3), R("sky", 1)), ("mail", R("steel", 3), R("steel", 1)),
+                            ("robe", R("sky", 3), R("sky", 1)), ("robe_red", R("blood", 5), R("blood", 3)), ("mail", R("steel", 3), R("steel", 1)),
                             ("plate", R("steel", 5), R("steel", 3))):
         im, d = new()
         d.polygon([(8, 5), (24, 5), (29, 12), (25, 14), (25, 29), (7, 29), (7, 14), (3, 12)], fill=col)
@@ -112,6 +123,16 @@ def icons():
     save(outline(im), OUT + "gold.png")
 
 
+def arrow():
+    im = Image.new("RGBA", (30, 7), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.line([(3, 3), (24, 3)], fill=R("wood", 4), width=1)
+    d.polygon([(24, 1), (29, 3), (24, 5)], fill=R("steel", 5))
+    d.line([(1, 1), (5, 3)], fill=R("bone", 4))
+    d.line([(1, 5), (5, 3)], fill=R("bone", 4))
+    save(outline(im), "assets/levels/common/fx/arrow.png")
+
+
 def walls():
     for axis in ("x", "y"):
         for window in (False, True):
@@ -142,5 +163,6 @@ def walls():
 
 if __name__ == "__main__":
     icons()
+    arrow()
     walls()
     print("ikony i ściany gotowe")

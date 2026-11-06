@@ -103,10 +103,10 @@ func _draw() -> void:
 			draw_string_outline(f, b["pos"] + Vector2(-w / 2.0, 6 + (i - (lines.size() - 1) / 2.0) * 18), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 3, Color(0, 0, 0))
 			draw_string(f, b["pos"] + Vector2(-w / 2.0, 6 + (i - (lines.size() - 1) / 2.0) * 18), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1, 0.95, 0.85, 0.4 if dim else 1.0))
 	if interact_label != "":
-		var b: Dictionary = buttons[2]
-		var w := f.get_string_size(interact_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
-		draw_string_outline(f, b["pos"] + Vector2(-w / 2.0, -b["r"] - 10), interact_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, 3, Color(0, 0, 0))
-		draw_string(f, b["pos"] + Vector2(-w / 2.0, -b["r"] - 10), interact_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(1, 0.95, 0.7))
+		var ib: Dictionary = buttons[2]
+		var iw := f.get_string_size(interact_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
+		draw_string_outline(f, ib["pos"] + Vector2(-iw / 2.0, -ib["r"] - 10), interact_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, 3, Color(0, 0, 0))
+		draw_string(f, ib["pos"] + Vector2(-iw / 2.0, -ib["r"] - 10), interact_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(1, 0.95, 0.7))
 
 func _process(_d: float) -> void:
 	if visible:

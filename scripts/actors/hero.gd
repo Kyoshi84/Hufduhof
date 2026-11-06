@@ -10,6 +10,7 @@ var hdef: Dictionary
 var atk: Dictionary
 var skill: Dictionary
 var action: String = ""            # "atak" / "umiejetnosc"
+var atk_mode: String = "wrecz"     # atak mieszany: "wrecz" (z bliska) albo "pocisk" (z dystansu)
 var phases: Array = [0.5, 0.1, 0.6]
 var hit_done: bool = false
 var skill_cd: float = 0.0
@@ -23,12 +24,14 @@ var use_mouse_aim: bool = false
 var near_interactable: Node = null
 var walk_t: float = 0.0
 var input_locked: bool = false     # dialogi, przerywniki
+var ui_cooldown: float = 0.0       # chwila po zamknięciu okna: ten sam klawisz nie otwiera go ponownie
+var can_fight: bool = true         # w karczmie gramy Borubarem, który nie walczy
 var mana_acc: float = 0.0
 var _marker: Fx = null
 var _reveal_t: float = 0.0
 
-func setup(state: HeroState) -> void:
-	hs = state
+func setup(hero_state: HeroState) -> void:
+	hs = hero_state
 	stats = hs.stats
 	hdef = Data.hero(hs.id)
 	atk = hdef.get("atak", {})
@@ -40,6 +43,14 @@ func setup(state: HeroState) -> void:
 	gfx.setup(str(hdef.get("grafika", "res://assets/characters/ivo")))
 	hp = hs.hp
 	add_to_group("heroes")
+
+## Podmiana grafiki (w karczmie gramy najpierw Borubarem).
+func set_look(path: String) -> void:
+	if gfx:
+		gfx.queue_free()
+	gfx = DirSprite.new()
+	add_child(gfx)
+	gfx.setup(path)
 
 func get_max_hp() -> int:
 	return hs.max_hp()
@@ -61,6 +72,7 @@ func _physics_process(delta: float) -> void:
 		return
 	skill_cd = maxf(0.0, skill_cd - delta)
 	potion_cd = maxf(0.0, potion_cd - delta)
+	ui_cooldown = maxf(0.0, ui_cooldown - delta)
 	if hs.max_mana() > 0:
 		hs.mana = minf(hs.max_mana(), hs.mana + Rules.mana_regen(stats.val("SW")) * delta)
 	if state in [St.WINDUP, St.STRIKE, St.RECOVER]:
@@ -89,7 +101,11 @@ func _process_free(_delta: float) -> void:
 	else:
 		velocity = Vector2.ZERO
 		state = St.IDLE
-	if input_locked:
+	if input_locked or ui_cooldown > 0.0:
+		return
+	if Input.is_action_just_pressed("interakcja"):
+		interact()
+	if not can_fight:
 		return
 	if Input.is_action_pressed("atak") or mouse_atk:
 		start_attack()
@@ -100,8 +116,6 @@ func _process_free(_delta: float) -> void:
 		use_belt("mikstura_zycia")
 	if Input.is_action_just_pressed("mikstura_many"):
 		use_belt("mikstura_many")
-	if Input.is_action_just_pressed("interakcja"):
-		interact()
 
 # ---------------------------------------------------------------- atak podstawowy
 func _aim_dir(reach: float) -> Vector2:
@@ -135,8 +149,28 @@ func start_attack() -> void:
 	if state in [St.WINDUP, St.STRIKE, St.RECOVER, St.DEAD]:
 		return
 	action = "atak"
+	atk_mode = str(atk.get("typ", "wrecz"))
+	var reach := float(atk.get("zasieg", 80))
+	if atk_mode == "mieszany":
+		# z bliska broń wręcz (kostur / nóż), dalej pocisk (ognisty pocisk / strzała)
+		var close: Dictionary = atk.get("wrecz", {})
+		var near := nearest_enemy(float(close.get("zasieg", 60)) + 12.0)
+		var shot: Dictionary = atk.get("pocisk", {})
+		var cost := float(shot.get("koszt_many", 0))
+		if near:
+			atk_mode = "wrecz"
+			reach = float(close.get("zasieg", 60))
+		elif cost > 0.0 and hs.mana < cost:
+			if Input.is_action_just_pressed("atak") or mouse_atk:
+				Game.notify("Brak many na %s!" % str(shot.get("nazwa", "pocisk")).to_lower(), Color(0.5, 0.7, 1.0))
+			mouse_atk = false
+			return
+		else:
+			atk_mode = "pocisk"
+			reach = float(shot.get("zasieg", 360))
+			hs.mana -= cost
 	phases = Rules.attack_phases(stats.val("A"), stats.val("Zr"))
-	aim = _aim_dir(float(atk.get("zasieg", 80)))
+	aim = _aim_dir(reach)
 	facing = aim
 	hit_done = false
 	velocity = Vector2.ZERO
@@ -200,6 +234,17 @@ func _do_strike() -> void:
 		skill_cd = float(skill.get("odnowienie", 3.0))
 		_do_skill()
 		return
+	if str(atk.get("typ", "")) == "mieszany":
+		if atk_mode == "wrecz":
+			var close: Dictionary = atk.get("wrecz", {})
+			Audio.play(str(close.get("dzwiek", "swing")))
+			if level:
+				Fx.slash(level.fx_parent(), position + Vector2(0, -34), aim, float(close.get("zasieg", 60)), float(close.get("luk_stopni", 90)), Color(0.85, 0.85, 0.9))
+			var dmg_override := int(close.get("obrazenia", -1))
+			_melee_hits(float(close.get("zasieg", 60)), float(close.get("luk_stopni", 90)), int(close.get("max_celow", 1)), 1.0, 0, "fiz", dmg_override)
+		else:
+			_shoot(atk.get("pocisk", {}), aim)
+		return
 	match str(atk.get("typ", "wrecz")):
 		"wrecz":
 			var reach := float(atk.get("zasieg", 80))
@@ -214,7 +259,20 @@ func _do_strike() -> void:
 				var dmg := weapon_dmg() + int(atk.get("obrazenia_bazowe", 0)) + int(floor(Rules.spell_power(stats.val("Int"), stats.val("Mag")) / 2.0))
 				level.spawn_projectile(str(atk.get("pocisk", "magic_bolt")), self, position, aim, float(atk.get("predkosc", 340)), float(atk.get("zasieg", 360)), dmg)
 
-func _melee_hits(reach: float, arc: float, max_targets: int, mult: float, bonus: int, kind: String) -> Array:
+## Pocisk bohatera: strzała (rzut na US przy trafieniu, obrażenia łuku + S - Wt) albo ognisty pocisk (czar, zawsze trafia).
+func _shoot(shot: Dictionary, dir: Vector2, extra: Dictionary = {}) -> void:
+	if level == null:
+		return
+	Audio.play(str(shot.get("dzwiek", "bolt")))
+	var kind := str(shot.get("rodzaj", "arrow"))
+	var opts := {"rzut": bool(shot.get("rzut", kind == "arrow"))}
+	var dmg := weapon_dmg()
+	if not opts["rzut"]:
+		dmg = int(shot.get("obrazenia_bazowe", 0)) + int(floor(Rules.spell_power(stats.val("Int"), stats.val("Mag")) / 2.0)) + int(floor(weapon_dmg() / 2.0))
+	opts.merge(extra, true)
+	level.spawn_projectile(kind, self, position, dir, float(shot.get("predkosc", 340)), float(shot.get("zasieg", 360)), dmg, opts)
+
+func _melee_hits(reach: float, arc: float, max_targets: int, mult: float, bonus: int, kind: String, dmg_override: int = -1) -> Array:
 	var hits: Array = []
 	if level == null:
 		return hits
@@ -224,7 +282,7 @@ func _melee_hits(reach: float, arc: float, max_targets: int, mult: float, bonus:
 			cands.append(e)
 	cands.sort_custom(func(a, b): return Iso.dist(position, a.position) < Iso.dist(position, b.position))
 	for e in cands.slice(0, max_targets):
-		var res := Rules.resolve_melee(stats, weapon_dmg(), e.stats, e.armor(), rng, mult, bonus)
+		var res := Rules.resolve_melee(stats, weapon_dmg() if dmg_override < 0 else dmg_override, e.stats, e.armor(), rng, mult, bonus)
 		res["kind"] = kind
 		e.receive_hit(res, self)
 		if res["hit"]:
@@ -237,6 +295,19 @@ func _melee_hits(reach: float, arc: float, max_targets: int, mult: float, bonus:
 func _do_skill() -> void:
 	var typ := str(skill.get("typ", ""))
 	match typ:
+		"kula_ognia":
+			_shoot({"rodzaj": "fireball", "predkosc": skill.get("predkosc", 300), "zasieg": skill.get("zasieg", 380), "rzut": false,
+				"dzwiek": "fire", "obrazenia_bazowe": 0}, aim,
+				{"czar_bazowe": int(skill.get("obrazenia_bazowe", 10)), "wybuch": float(skill.get("promien", 72)),
+				 "podpalenie": [float(skill.get("podpalenie_na_sekunde", 3)), float(skill.get("podpalenie_czas", 3.0))], "skala": 1.8})
+		"salwa":
+			var n := int(skill.get("strzaly", 5))
+			var spread := deg_to_rad(float(skill.get("rozrzut_stopni", 44)))
+			var g := Iso.ground(aim).normalized()
+			for i in n:
+				var a := -spread / 2.0 + spread * i / maxf(1.0, n - 1)
+				_shoot({"rodzaj": "arrow", "predkosc": skill.get("predkosc", 430), "zasieg": skill.get("zasieg", 420), "rzut": true, "dzwiek": "bolt"},
+					Iso.screen(g.rotated(a)).normalized())
 		"zamach":
 			Audio.play("swing_heavy", 0.8)
 			if level:

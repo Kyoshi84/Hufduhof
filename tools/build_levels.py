@@ -157,7 +157,7 @@ def village():
     for bid, x, y in buckets:
         objs.append({"typ": "wiadro", "id": bid, "komorka": [x, y]})
         clear(x, y)
-    objs.append({"typ": "npc", "id": "borubar", "komorka": [36, 34]})
+    objs.append({"typ": "npc", "id": "borubar", "komorka": [10, 52]})   # przed karczmą
     objs.append({"typ": "start", "komorka": [8, 50]})
     clear(8, 50, 2)
     # skrzynie
@@ -243,7 +243,7 @@ def tavern():
         {"typ": "dekoracja", "grafika": "barrel", "komorka": [12, 1], "blokuje": True, "zestaw": "level1"},
         {"typ": "goscie", "komorki": [[3, 9], [5, 9], [11, 6], [11, 9], [9, 4], [3, 7]]},
         {"typ": "karczmarz", "komorka": [3, 2]},
-        {"typ": "npc", "id": "borubar_karczma", "komorka": [9, 7]},
+        {"typ": "bohater_gosc", "komorka": [9, 7]},
     ]
     return {
         "_opis": "Minigra: impreza w karczmie. Faza 1: łapanie kufli (stań w cieniu, zanim kufel spadnie). Faza 2: skaveny "

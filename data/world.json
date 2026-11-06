@@ -40,7 +40,7 @@
       "Na Sigmara, ratunku! Szczuroludzie! Wyleźli z kanałów i z pól, wszędzie ich pełno!",
       "Podpalili barykadę przy bramie, a tylko tamtędy da się wyjść z wioski. Ogień nie gaśnie!",
       "Potrzeba wody. Wiadra... były wiadra! W kuźni, w stodole, gdzieś przy młynie... Szczury je pewnie porozwlekały.",
-      "Znajdź trzy wiadra, napełnij je przy studni na placu i zalej ogień. Błagam, ja się tu schowam przy beczce...",
+      "Znajdź trzy wiadra, napełnij je przy studni na placu i zalej ogień. Błagam! Ja tu poczekam przed karczmą, przy beczce...",
       "A jak będziesz czegoś potrzebować - mam piwo. Najlepsze w Hufduhofie! Leczy rany i rozjaśnia umysł."
     ],
     "borubar_w_trakcie": [
@@ -54,14 +54,6 @@
     ],
     "borubar_potem": [
       "Brama otwarta. Idź, zanim szczury wrócą! A piwo zawsze się znajdzie."
-    ],
-    "borubar_karczma": [
-      "Hej, hej! Pij, póki leją! Karczmarz dziś rzuca kuflami jak z procy!",
-      "Złap kufel, zanim się rozbije - szkoda dobrego piwa!"
-    ],
-    "borubar_karczma_po": [
-      "Szczury... w karczmie! Słyszysz? Krzyki z wioski!",
-      "Uciekam do domu przy studni. Spotkamy się na placu - tam będę się chował!"
     ]
   }
 }

@@ -178,38 +178,132 @@ func _swap_hero(id: String) -> void:
 	await _clear_enemies()
 	lvl.hero.blessed = 100.0
 
-func test_modraszka_bolt_and_lightning():
+func test_modraszka_shoots_arrows_and_stabs_close():
 	await _swap_hero("modraszka")
-	var e := lvl.spawn_enemy("skaven_spear", lvl.hero.position + Vector2(200, 0), "", "")
+	assert_eq(Game.hero.max_mana(), 0)
+	var e := lvl.spawn_enemy("skaven_spear", lvl.hero.position + Vector2(220, 0), "", "")
 	e.stats.set_base("Zr", 0)
 	lvl.hero.use_mouse_aim = false
-	lvl.hero.mouse_atk = true
+	lvl.hero.start_attack()
+	assert_eq(lvl.hero.atk_mode, "pocisk", "z dystansu strzela z łuku")
 	var t := 0.0
+	lvl.hero.mouse_atk = true
 	while e.hp >= e.get_max_hp() and t < 8.0:
 		await wait_frames(6)
 		t += 0.1
 	lvl.hero.mouse_atk = false
-	assert_true(e.hp < e.get_max_hp(), "niebieski pocisk trafia z dystansu")
-	var mana0 := Game.hero.mana
-	await wait_seconds(1.6)
-	lvl.hero.start_skill()
-	assert_almost_eq(Game.hero.mana, mana0 + 0.0 - 14.0, 2.0, "czar zużywa manę")
-	await wait_seconds(1.0)
-	assert_true(e.is_dead() or e.hp < e.get_max_hp() * 0.5, "piorun rani")
+	assert_true(e.hp < e.get_max_hp(), "strzała trafia")
+	await wait_seconds(1.5)
+	var e2 := lvl.spawn_enemy("skaven_spear", lvl.hero.position + Vector2(40, 0), "", "")
+	await wait_frames(2)
+	lvl.hero.start_attack()
+	assert_eq(lvl.hero.atk_mode, "wrecz", "z bliska dźga nożem")
+	assert_not_null(e2)
 
-func test_ursa_fire_strike_costs_mana_and_burns():
-	await _swap_hero("ursa")
-	var e := lvl.spawn_enemy("skaven_spear", lvl.hero.position + Vector2(45, 0), "", "")
-	e.stats.set_base("Zr", 0)
-	e.stats.set_base("WW", 0)
-	var mana0 := Game.hero.mana
+func test_modraszka_volley_fires_five_arrows():
+	await _swap_hero("modraszka")
+	var e := lvl.spawn_enemy("skaven_spear", lvl.hero.position + Vector2(200, 0), "", "")
 	lvl.hero.use_mouse_aim = false
 	lvl.hero.start_skill()
-	assert_almost_eq(Game.hero.mana, mana0 - 10.0, 0.5)
-	await wait_seconds(1.0)
-	assert_true(e.is_dead() or e.hp < e.get_max_hp(), "płomienne ostrze rani")
+	await wait_seconds(0.7)
+	var arrows := lvl.map.world.get_children().filter(func(n): return n is Projectile and n.kind == "arrow")
+	assert_eq(arrows.size(), 5)
+	assert_not_null(e)
+
+func test_ursa_fire_bolt_uses_mana_and_fireball_explodes():
+	await _swap_hero("ursa")
+	var e1 := lvl.spawn_enemy("skaven_spear", lvl.hero.position + Vector2(200, 0), "", "")
+	var e2 := lvl.spawn_enemy("skaven_spear", lvl.hero.position + Vector2(215, 12), "", "")
+	var mana0 := Game.hero.mana
+	lvl.hero.use_mouse_aim = false
+	lvl.hero.start_attack()
+	assert_eq(lvl.hero.atk_mode, "pocisk", "ognisty pocisk z dystansu")
+	assert_almost_eq(Game.hero.mana, mana0 - 2.0, 0.5)
+	await wait_seconds(2.0)
+	mana0 = Game.hero.mana
+	lvl.hero.start_skill()
+	assert_almost_eq(Game.hero.mana, mana0 - 12.0, 0.5, "kula ognia: 12 many")
+	await wait_seconds(1.6)
+	assert_true(e1.hp < e1.get_max_hp() and e2.hp < e2.get_max_hp(), "wybuch rani obu skavenów")
+
+func test_ursa_hits_with_staff_up_close():
+	await _swap_hero("ursa")
+	lvl.spawn_enemy("skaven_spear", lvl.hero.position + Vector2(45, 0), "", "")
+	await wait_frames(2)
+	var mana0 := Game.hero.mana
+	lvl.hero.use_mouse_aim = false
+	lvl.hero.start_attack()
+	assert_eq(lvl.hero.atk_mode, "wrecz", "kostur z bliska")
+	assert_eq(Game.hero.mana, mana0, "cios kosturem nie zużywa many")
+
+func test_dialog_advances_and_closes_with_e_key():
+	await _clear_enemies()
+	lvl.talk_to_npc("borubar")
+	var keys: OverlayKeys = null
+	for c in lvl.ui.get_children():
+		if c is OverlayKeys:
+			keys = c
+	assert_not_null(keys)
+	var steps := 0
+	while lvl.overlay != null and steps < 20:
+		var btn: Button = null
+		for b in lvl.overlay.find_children("*", "Button", true, false):
+			if not b.is_queued_for_deletion() and (b.text == "Dalej" or b.text == "Do widzenia"):
+				btn = b
+		assert_not_null(btn, "jest przycisk Dalej / Do widzenia")
+		if btn == null:
+			break
+		btn.grab_focus()
+		var ev := InputEventKey.new()
+		ev.physical_keycode = KEY_E
+		ev.pressed = true
+		keys._input(ev)
+		steps += 1
+	assert_null(lvl.overlay, "dialog zamknięty klawiszem E")
+	assert_false(get_tree().paused)
+	assert_eq(Game.quest.state, BucketQuest.State.ACTIVE, "rozmowa rozpoczęła zadanie")
+	assert_eq(steps, Data.dialog("borubar_start").size(), "każde E = jedna kwestia")
+
+func test_dialog_closes_with_escape():
+	lvl.talk_to_npc("borubar")
+	var keys: OverlayKeys = lvl.ui.get_children().filter(func(c): return c is OverlayKeys)[0]
+	var ev := InputEventKey.new()
+	ev.physical_keycode = KEY_ESCAPE
+	ev.pressed = true
+	keys._input(ev)
+	assert_null(lvl.overlay)
+	assert_false(get_tree().paused)
+
+func test_borubar_waits_in_front_of_tavern():
+	var npc = get_tree().get_nodes_in_group("interactable").filter(func(n): return n is Obj.Npc)[0]
+	assert_true(Iso.dist(npc.position, lvl.start_cell()) < 260.0, "Borubar stoi przed karczmą, blisko startu")
 
 func test_ivo_cannot_drink_mana_potion():
 	Game.hero.inv.belt["mikstura_many"] = 1
 	Game.hero.inv.belt["piwo"] = 0
 	assert_false(lvl.hero.use_belt("mikstura_many"))
+
+func test_tavern_play_borubar_then_hero():
+	lvl.queue_free()
+	await wait_frames(2)
+	Game.new_game("ivo")
+	var tv := Tavern.new()
+	add_child(tv)
+	await wait_frames(3)
+	assert_eq(tv.controlled_name(), "Borubar", "w imprezie gramy Borubarem")
+	assert_false(tv.hero.can_fight, "Borubar nie walczy")
+	assert_true(tv.hero.gfx.base_path.ends_with("borubar"))
+	assert_not_null(tv.guest, "bohater siedzi wśród gości")
+	tv.caught = int(tv.cfg.get("kufle_cel", 6))
+	tv._break_in()
+	await wait_seconds(1.6)
+	assert_eq(tv.controlled_name(), "Ivo Eggert", "po wtargnięciu szczurów sterujemy bohaterem")
+	assert_true(tv.hero.can_fight)
+	assert_true(tv.hero.gfx.base_path.ends_with("ivo"))
+	assert_almost_eq(tv.hero.position.x, tv.guest_pos.x, 1.0, "bohater wstaje z miejsca gościa")
+	await wait_seconds(2.0)
+	assert_true(tv.alive_enemies() >= 2, "wpadły skaveny")
+	tv.queue_free()
+	lvl = Level.new("wioska")
+	add_child(lvl)
+	await wait_frames(2)

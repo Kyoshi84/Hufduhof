@@ -3,19 +3,23 @@
 Ten plik zbiera rzeczy, które ustaliłem sam, bo nie było ich w opisie albo opisy się różniły.
 Wszystko, co dotyczy liczb, zmienisz w plikach `data/*.json` — bez dotykania kodu.
 
-## 1. Postacie — co znalazłem w repozytorium i co przyjąłem
+## 1. Postacie (poprawione wg uwag autora)
 
-| Postać | Co było w repozytorium (stara wersja) | Co przyjąłem w nowej grze |
+| Postać | Klasa | Walka |
 |---|---|---|
-| **Ivo Eggert** | Gwardzista Szkarłatnej Gwardii, dwuręczny miecz | **Wojownik** z dwuręcznym mieczem (Szkarłatna Gwardia z Carroburga). Bez magii (Mag 0). Umiejętność: *Cios Gwardzisty* (szeroki zamach dookoła, bez many, odnowienie 7 s). |
-| **Ursa** | Opisana jako **„czarodziejka ognia”** (ognisty pocisk, kula ognia). Na Twoim obrazie: wilcza skóra, **miecz w ręku**, szaty w płomienie. | **Wojowniczka walcząca wręcz mieczem** (tak jak w Twoim poleceniu), ale z **jednym zaklęciem ognia** (*Płomienne ostrze*, Mag 1, zużywa manę). To pogodzenie opisu z repozytorium z Twoim założeniem i z obrazem. |
-| **Modraszka** | Tylko puste miejsce „Wkrótce” — brak opisu i grafiki | **Magini** (Kolegium Niebios — stąd niebieski kolor). Atak podstawowy: niebieski pocisk z dystansu. Czar: *Gniew Niebios* (piorun, obszar, zużywa manę). Mag 2. |
+| **Ivo Eggert** | Wojownik, Szkarłatna Gwardia z Carroburga | Dwuręczny miecz, szerokie cięcia (do 3 wrogów). Bez magii. Umiejętność *Cios Gwardzisty*: zamach dookoła, bez many, odnowienie 7 s. |
+| **Ursa** | **Czarodziejka ognia** (Mag 2) | Z dystansu **ognisty pocisk** (2 many), z bliska **cios kosturem** (bez many). Czar *Kula ognia*: wybuch w promieniu, podpala (12 many). Dużo many (67), mniej zdrowia (60). |
+| **Modraszka** | **Łuczniczka**, czarne włosy (Mag 0, bez many) | Z dystansu **strzały z łuku** (rzut na US, obrażenia łuku + S − Wt), z bliska **krótki nóż**. Umiejętność *Grad strzał*: 5 strzał w wachlarzu, odnowienie 6 s. |
 
-**Do decyzji:** jeśli Ursa ma być czystą czarodziejką ognia (jak w starej wersji), wystarczy w `data/heroes.json`
-zmienić jej `atak.typ` na `"pocisk"` i podnieść `Int`/`Mag`.
+Atak „mieszany” (Ursa, Modraszka): jeśli wróg stoi tuż obok — cios wręcz, w przeciwnym razie pocisk. Gdy Ursie zabraknie many,
+z dystansu nie strzela (z bliska nadal bije kosturem).
 
-Modraszka ma na razie **grafikę tymczasową** (prosta postać w niebieskiej szacie, wygenerowana skryptem). Gdy narysujesz
-własną, wrzuć ją do `assets/characters/modraszka/idle/<kierunek>/0.png` i `assets/characters/modraszka/portrait.png`.
+**Grafika:** Ursa ma na Twoim obrazie miecz (`source/ursa_source.webp`) — w grze używam tych póz bez zmian, więc na sprite'ach
+wciąż widać miecz. Dorysuj wersję z kosturem i podmień `assets/characters/ursa/idle/<kierunek>/0.png` (oraz `portrait.png`).
+Modraszka ma nową grafikę tymczasową: czarne włosy, skórzana kurta, zielony płaszcz, łuk, nóż u pasa.
+
+**Prędkość:** bohaterowie mają Sz 5 (Modraszka 6), skaveny Sz 4 — każdy bohater jest szybszy od każdego szczura
+(130–148 px/s wobec 112 px/s; test `test_heroes_faster_than_all_rats`).
 
 ## 2. Profile startowe (styl Warhammera)
 
@@ -23,9 +27,9 @@ Cechy główne 0–100 (człowiek ~25–45), drugorzędne 0–10. `S` = K/10, `W
 
 | | WW | US | K | Odp | Zr | Int | SW | Ogd | A | Żyw | S | Wt | Sz | Mag | PO | PP |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Ivo | 41 | 30 | 38 | 36 | 31 | 28 | 32 | 29 | 6 | 9 | 3 | 3 | 4 | 0 | 0 | 2 |
-| Ursa | 39 | 28 | 41 | 34 | 36 | 31 | 33 | 27 | 7 | 8 | 4 | 3 | 4 | 1 | 0 | 2 |
-| Modraszka | 26 | 37 | 26 | 28 | 34 | 46 | 44 | 36 | 6 | 6 | 2 | 2 | 4 | 2 | 0 | 3 |
+| Ivo | 41 | 30 | 38 | 36 | 31 | 28 | 32 | 29 | 6 | 9 | 3 | 3 | 5 | 0 | 0 | 2 |
+| Ursa | 28 | 34 | 28 | 30 | 33 | 47 | 42 | 30 | 6 | 6 | 2 | 3 | 5 | 2 | 0 | 2 |
+| Modraszka | 31 | 46 | 29 | 30 | 43 | 30 | 31 | 36 | 7 | 7 | 2 | 3 | 6 | 0 | 0 | 3 |
 | Skaven z dzidą | 30 | 20 | 30 | 30 | 34 | 20 | 18 | 10 | 5 | 2 | 3 | 3 | 4 | 0 | 0 | 0 |
 | Skaven procarz | 24 | 34 | 24 | 26 | 38 | 22 | 18 | 10 | 4 | 2 | 2 | 2 | 4 | 0 | 0 | 0 |
 | Czarownik skaveński | 22 | 30 | 22 | 28 | 30 | 40 | 35 | 15 | 3 | 3 | 2 | 2 | 4 | 1 | 0 | 0 |
@@ -45,7 +49,7 @@ Pliki: `data/heroes.json` (bohaterowie), `data/enemies.json` (wrogowie).
   inna (A 6 = atak co ok. 1,5 s). Każdy atak ma **zamach (42% czasu)** → uderzenie → powrót.
 - **Żyw** — życie = Żyw × 10 (mnożnik `zycie_mnoznik`).
 - **Obrażenia** = obrażenia broni + S − Wt celu (min. 1). Czary: bazowe + siła czarów (Int/10 + Mag×3) − Wt/2.
-- **Int** — mana = Int (tylko gdy Mag > 0). **SW** — regeneracja many = SW × 0,02/s i odporność na truciznę = SW/2 % (maks. 75%).
+- **Int** — mana = Int + Mag × 10 (tylko gdy Mag > 0). **SW** — regeneracja many = SW × 0,02/s i odporność na truciznę = SW/2 % (maks. 75%).
 - **Ogd** — kupno: cena × (1,5 − Ogd × 0,01, min. 0,8); sprzedaż: cena × (0,15 + Ogd × 0,005, maks. 0,6).
 - **Sz** — prędkość = 40 + Sz × 18 px/s (odległość na podłodze; ruch w pionie ekranu jest o połowę wolniejszy — tak działa rzut izometryczny).
 - **Mag** — 0 = brak czarów i many. **PO** — tylko wyświetlane. **PP** — przy śmierci −1 PP i odrodzenie z połową życia; bez PP: ekran śmierci i wczytanie ostatniego zapisu.
@@ -81,8 +85,11 @@ Pliki: `data/heroes.json` (bohaterowie), `data/enemies.json` (wrogowie).
 - **Menu**: wygląd i klimat bez zmian (portret Ivo, herb Carroburga, czerwono-złote przyciski, autorzy). Zmieniłem tylko napis:
   „HUFDUHOF / Szczury w wiosce” zamiast „IVO EGGERT / Obrona Hufduhofu”, bo teraz są trzy postacie. Zmiana w `scripts/main.gd`.
 - **Muzyka**: trzy utwory z poprzedniej wersji (menu, wioska, walka w karczmie) — `data/music.json`.
-- **Minigra**: zamiast łapania kufli Borubarem z boku — łapanie kufli bohaterem w widoku izometrycznym (cień = miejsce upadku),
-  potem dwie fale skavenów (samouczek walki). Można ją pominąć przyciskiem „Pomiń minigrę”.
+- **Minigra (prolog)**: gramy **Borubarem**, który łapie kufle do beczki nad głową (cień na podłodze = miejsce upadku kufla).
+  Wybrany bohater siedzi wśród gości. Gdy skaveny wyważają drzwi, Borubar w panice wybiega z karczmy, a sterowanie przejmuje bohater
+  (dwie fale skavenów jako samouczek walki). W wiosce Borubar czeka **przed karczmą**. Minigrę można pominąć przyciskiem „Pomiń minigrę”.
+- **Okna (dialog, pauza, postać, plecak)**: Esc zamyka okno (w rozmowie = „Do widzenia”), E / Enter / Spacja naciska podświetlony
+  przycisk (np. „Dalej”). Działa też myszą i dotykiem.
 
 ## 7. Znane ograniczenia (uczciwie)
 

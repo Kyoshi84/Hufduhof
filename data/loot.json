@@ -2,41 +2,160 @@
   "_opis": "Tabele łupów. Każde losowanie (losowania) wybiera jedną pozycję wg wag (waga / suma wag = szansa). typ: nic, korony (min-max), mikstura_zycia, mikstura_many, piwo, przedmiot (z puli). magiczny_szansa = % szansy, że przedmiot dostanie afiks (np. 'Miecz Siły').",
   "magiczny_szansa": 20,
   "pule": {
-    "pospolite": ["tasak_skavenow", "dzida_skavenow", "kurta_skorzana", "kaptur", "zab_szczura", "miecz"],
-    "skrzynia": ["topor", "kolczuga", "kapalin", "amulet_sigmara", "talizman_ulryka", "kostur_spaczony", "miecz", "kurta_skorzana"],
-    "rzadkie": ["miecz_carroburski", "napiersnik", "helm_gwardii", "amulet_rhyi", "oko_spaczenia"]
+    "pospolite": [
+      "tasak_skavenow",
+      "dzida_skavenow",
+      "kurta_skorzana",
+      "kaptur",
+      "zab_szczura",
+      "miecz",
+      "luk_mysliwski"
+    ],
+    "skrzynia": [
+      "topor",
+      "kolczuga",
+      "kapalin",
+      "amulet_sigmara",
+      "talizman_ulryka",
+      "kostur_spaczony",
+      "miecz",
+      "kurta_skorzana",
+      "luk_dlugi"
+    ],
+    "rzadkie": [
+      "miecz_carroburski",
+      "napiersnik",
+      "helm_gwardii",
+      "amulet_rhyi",
+      "oko_spaczenia"
+    ]
   },
   "tabele": {
-    "skaven_spear": { "losowania": 1, "pozycje": [
-      { "typ": "nic", "waga": 46 },
-      { "typ": "korony", "waga": 30, "min": 2, "max": 7 },
-      { "typ": "mikstura_zycia", "waga": 13 },
-      { "typ": "mikstura_many", "waga": 4 },
-      { "typ": "przedmiot", "pula": "pospolite", "waga": 7 }
-    ]},
-    "skaven_slinger": { "losowania": 1, "pozycje": [
-      { "typ": "nic", "waga": 44 },
-      { "typ": "korony", "waga": 32, "min": 3, "max": 8 },
-      { "typ": "mikstura_zycia", "waga": 12 },
-      { "typ": "mikstura_many", "waga": 5 },
-      { "typ": "przedmiot", "pula": "pospolite", "waga": 7 }
-    ]},
-    "skaven_warlock": { "losowania": 2, "pozycje": [
-      { "typ": "nic", "waga": 20 },
-      { "typ": "korony", "waga": 30, "min": 8, "max": 20 },
-      { "typ": "mikstura_many", "waga": 25 },
-      { "typ": "mikstura_zycia", "waga": 10 },
-      { "typ": "przedmiot", "pula": "skrzynia", "waga": 12 },
-      { "typ": "przedmiot", "pula": "rzadkie", "waga": 3 }
-    ]},
-    "skrzynia": { "losowania": 3, "pozycje": [
-      { "typ": "nic", "waga": 8 },
-      { "typ": "korony", "waga": 34, "min": 10, "max": 30 },
-      { "typ": "mikstura_zycia", "waga": 20 },
-      { "typ": "mikstura_many", "waga": 12 },
-      { "typ": "piwo", "waga": 6 },
-      { "typ": "przedmiot", "pula": "skrzynia", "waga": 16 },
-      { "typ": "przedmiot", "pula": "rzadkie", "waga": 4 }
-    ]}
+    "skaven_spear": {
+      "losowania": 1,
+      "pozycje": [
+        {
+          "typ": "nic",
+          "waga": 46
+        },
+        {
+          "typ": "korony",
+          "waga": 30,
+          "min": 2,
+          "max": 7
+        },
+        {
+          "typ": "mikstura_zycia",
+          "waga": 13
+        },
+        {
+          "typ": "mikstura_many",
+          "waga": 4
+        },
+        {
+          "typ": "przedmiot",
+          "pula": "pospolite",
+          "waga": 7
+        }
+      ]
+    },
+    "skaven_slinger": {
+      "losowania": 1,
+      "pozycje": [
+        {
+          "typ": "nic",
+          "waga": 44
+        },
+        {
+          "typ": "korony",
+          "waga": 32,
+          "min": 3,
+          "max": 8
+        },
+        {
+          "typ": "mikstura_zycia",
+          "waga": 12
+        },
+        {
+          "typ": "mikstura_many",
+          "waga": 5
+        },
+        {
+          "typ": "przedmiot",
+          "pula": "pospolite",
+          "waga": 7
+        }
+      ]
+    },
+    "skaven_warlock": {
+      "losowania": 2,
+      "pozycje": [
+        {
+          "typ": "nic",
+          "waga": 20
+        },
+        {
+          "typ": "korony",
+          "waga": 30,
+          "min": 8,
+          "max": 20
+        },
+        {
+          "typ": "mikstura_many",
+          "waga": 25
+        },
+        {
+          "typ": "mikstura_zycia",
+          "waga": 10
+        },
+        {
+          "typ": "przedmiot",
+          "pula": "skrzynia",
+          "waga": 12
+        },
+        {
+          "typ": "przedmiot",
+          "pula": "rzadkie",
+          "waga": 3
+        }
+      ]
+    },
+    "skrzynia": {
+      "losowania": 3,
+      "pozycje": [
+        {
+          "typ": "nic",
+          "waga": 8
+        },
+        {
+          "typ": "korony",
+          "waga": 34,
+          "min": 10,
+          "max": 30
+        },
+        {
+          "typ": "mikstura_zycia",
+          "waga": 20
+        },
+        {
+          "typ": "mikstura_many",
+          "waga": 12
+        },
+        {
+          "typ": "piwo",
+          "waga": 6
+        },
+        {
+          "typ": "przedmiot",
+          "pula": "skrzynia",
+          "waga": 16
+        },
+        {
+          "typ": "przedmiot",
+          "pula": "rzadkie",
+          "waga": 4
+        }
+      ]
+    }
   }
 }

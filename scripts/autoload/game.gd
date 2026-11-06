@@ -4,6 +4,7 @@ extends Node
 
 signal hero_changed
 signal message(text: String, color: Color)
+@warning_ignore("unused_signal")
 signal quest_changed
 
 var hero: HeroState = null
@@ -41,7 +42,7 @@ func notify(text: String, col: Color = Color(0.95, 0.88, 0.7)) -> void:
 	message.emit(text, col)
 
 ## XP za zabicie / zadanie, z komunikatem o nowym punkcie rozwoju.
-func give_xp(amount: int, reason: String = "") -> void:
+func give_xp(amount: int, _reason: String = "") -> void:
 	if hero == null or amount <= 0:
 		return
 	var gained := hero.add_xp(amount)
@@ -75,5 +76,7 @@ func load_from_dict(d: Dictionary) -> bool:
 	explored = d.get("explored", {})
 	borubar_rewarded = bool(d.get("borubar_rewarded", false))
 	var p: Array = d.get("pos", [])
-	spawn_pos = Vector2(float(p[0]), float(p[1])) if p.size() == 2 else null
+	spawn_pos = null
+	if p.size() == 2:
+		spawn_pos = Vector2(float(p[0]), float(p[1]))
 	return true

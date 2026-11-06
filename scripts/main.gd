@@ -40,12 +40,12 @@ func show_menu() -> void:
 	hb.add_theme_constant_override("separation", 40)
 	root.add_child(hb)
 	if ResourceLoader.exists(MENU_PORTRAIT):
-		var tr := TextureRect.new()
-		tr.texture = load(MENU_PORTRAIT)
-		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		tr.custom_minimum_size = Vector2(420, 560)
-		hb.add_child(tr)
+		var trect := TextureRect.new()
+		trect.texture = load(MENU_PORTRAIT)
+		trect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		trect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		trect.custom_minimum_size = Vector2(420, 560)
+		hb.add_child(trect)
 	var vb := VBoxContainer.new()
 	vb.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.add_theme_constant_override("separation", 12)

@@ -22,7 +22,7 @@ func reload() -> void:
 	world = load_json("res://data/world.json")
 	music = load_json("res://data/music.json")
 
-static func load_json(path: String) -> Dictionary:
+func load_json(path: String) -> Dictionary:
 	if not FileAccess.file_exists(path):
 		push_error("Brak pliku danych: " + path)
 		return {}

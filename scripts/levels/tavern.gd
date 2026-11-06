@@ -22,6 +22,9 @@ var door_cell := Vector2i(7, 0)
 var keeper: Sprite2D
 var keeper_pos := Vector2.ZERO
 var t: float = 0.0
+var guest: DirSprite
+var guest_pos := Vector2.ZERO
+var playing_borubar: bool = true
 var mug_tex: Texture2D
 var splash_tex: Texture2D
 
@@ -43,6 +46,14 @@ func spawn_custom_object(o: Dictionary, p: Vector2) -> void:
 					sp.flip_h = i % 2 == 0
 				map.blocked[Vector2i(int(c[0]), int(c[1]))] = true
 				i += 1
+		"bohater_gosc":
+			# wybrany bohater siedzi wśród gości, dopóki nie wpadną skaveny
+			guest_pos = p
+			guest = DirSprite.new()
+			guest.position = p
+			map.world.add_child(guest)
+			guest.setup(str(Data.hero(Game.hero.id).get("grafika", "res://assets/characters/ivo")))
+			guest.play("idle", "south-west")
 		"karczmarz":
 			keeper_pos = p
 			keeper = map.add_prop(map.prop_tex("innkeeper"), Iso.to_cell(p))
@@ -55,8 +66,12 @@ func after_ready() -> void:
 	for y in map.size.y:
 		for x in map.size.x:
 			map.reveal(Iso.cell_center(Vector2i(x, y)), 0.5)
+	hero.set_look("res://assets/characters/borubar")
+	hero.can_fight = false
+	hero.facing = Vector2(0, 1)
 	var ctrl := "Ruch: joystick po lewej" if Save.touch_enabled() else "Ruch: WASD"
-	hud.show_banner("Impreza w karczmie!\n%s. Karczmarz rzuca kufle - stań w cieniu, zanim kufel spadnie." % ctrl, 7.0)
+	hud.show_banner("Grasz Borubarem! Łap kufle do beczki: stań w cieniu, zanim kufel spadnie.\n%s. %s siedzi wśród gości." % [ctrl, Game.hero.display_name()], 7.0)
+	hud.refresh()
 	hud.refresh_quest()
 
 func quest_lines() -> Array:
@@ -141,9 +156,13 @@ func _update_mugs(delta: float) -> void:
 				tw.tween_interval(0.8)
 				tw.tween_callback(spr.queue_free)
 
+func controlled_name() -> String:
+	return "Borubar" if playing_borubar else Game.hero.display_name()
+
 func _break_in() -> void:
 	ph = Ph.BREAKIN
-	wave_t = 1.6
+	wave_t = 3.0
+	hero.input_locked = true
 	hud.show_banner("Borubar: \"Na Sigmara! Coś drapie w drzwi...\"", 3.0)
 	await get_tree().create_timer(1.2).timeout
 	if door:
@@ -151,7 +170,33 @@ func _break_in() -> void:
 	Audio.play("door")
 	shake(9.0)
 	Audio.play_track("walka")
+	_borubar_flees()
+	# sterowanie przejmuje wybrany bohater - wstaje od stołu
+	playing_borubar = false
+	hero.set_look(str(Data.hero(Game.hero.id).get("grafika", "res://assets/characters/ivo")))
+	hero.position = guest_pos
+	hero.can_fight = true
+	hero.input_locked = false
+	if guest:
+		guest.queue_free()
+		guest = null
+	cam.reset_smoothing()
+	hud.show_banner("Szczury! Borubar ucieka z karczmy.\nTeraz walczy %s!" % Game.hero.display_name(), 3.0)
+	hud.refresh()
 	hud.refresh_quest()
+
+## Borubar w panice wybiega wyważonymi drzwiami (w wiosce czeka przed karczmą).
+func _borubar_flees() -> void:
+	var b := DirSprite.new()
+	b.position = hero.position
+	map.world.add_child(b)
+	b.setup("res://assets/characters/borubar")
+	Audio.play("skaven_alert", 0.6)
+	var exit := Iso.cell_center(door_cell) + Vector2(0, 10)
+	var tw := b.create_tween()
+	tw.tween_property(b, "position", exit, maxf(0.4, Iso.dist(b.position, exit) / 260.0))
+	tw.tween_property(b, "modulate:a", 0.0, 0.3)
+	tw.tween_callback(b.queue_free)
 
 func _start_wave(i: int) -> void:
 	wave = i
@@ -161,7 +206,7 @@ func _start_wave(i: int) -> void:
 	hud.show_banner(str(w.get("podpowiedz", "")), 7.0)
 	var list: Array = w.get("wrogowie", [])
 	for j in list.size():
-		var cell := door_cell + Vector2i(j - list.size() / 2, 1)
+		var cell := door_cell + Vector2i(j - int(list.size() / 2.0), 1)
 		if not map.is_walkable(cell):
 			cell = door_cell + Vector2i(0, 1)
 		var e := spawn_enemy(str(list[j]), Iso.cell_center(cell) + Vector2(rng.randf_range(-10, 10), 0), "fala_%d" % i, "")
@@ -184,12 +229,6 @@ func _clear() -> void:
 	Audio.play_track("karczma")
 	hud.show_banner("Karczma obroniona! Ale z wioski dobiegają krzyki...\nPodejdź do wyważonych drzwi i użyj INTERAKCJI (PC: E).", 8.0)
 	hud.refresh_quest()
-
-func talk_to_npc(_id: String) -> void:
-	var lines: Array = Data.dialog("borubar_karczma")
-	if ph == Ph.CLEAR:
-		lines = Data.dialog("borubar_karczma_po")
-	open_overlay(DialogBox.build("Borubar", "res://assets/characters/borubar/portrait.png", lines, [["Do widzenia", close_overlay]]))
 
 func leave_tavern() -> void:
 	Game.level_id = "wioska"

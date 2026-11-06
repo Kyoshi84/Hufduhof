@@ -115,11 +115,11 @@ static func overlay(title: String, subtitle: String, buttons: Array) -> Control:
 	return root
 
 static func icon(path: String, size: float = 40.0) -> TextureRect:
-	var tr := TextureRect.new()
+	var trect := TextureRect.new()
 	if path != "" and ResourceLoader.exists(path):
-		tr.texture = load(path)
-	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	tr.custom_minimum_size = Vector2(size, size)
-	tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	return tr
+		trect.texture = load(path)
+	trect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	trect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	trect.custom_minimum_size = Vector2(size, size)
+	trect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	return trect

@@ -8,7 +8,7 @@ extends RefCounted
 ##  K   - S  = K / 10   (dziesiątki, w dół)
 ##  Odp - Wt = Odp / 10
 ##  Zr  - szansa uniku = Zr / dzielnik (max %), przyspieszenie ataku = Zr * zr_przyspieszenie (max)
-##  Int - maks. mana = Int * mnożnik (tylko gdy Mag > 0), siła czarów = Int / dzielnik + Mag * mnożnik
+##  Int - maks. mana = Int * mnożnik + Mag * na_poziom_mag (tylko gdy Mag > 0), siła czarów = Int / dzielnik + Mag * mnożnik
 ##  SW  - regeneracja many = SW * mnożnik / s,  odporność na truciznę/spaczenie = SW / dzielnik % (max)
 ##  Ogd - cena kupna  = cena * (bazowe - Ogd * na_ogd), min;  cena sprzedaży = cena * (bazowe + Ogd * na_ogd), max
 ##  A   - ataki na 10 sekund: odstęp między atakami = 10 / A (skrócony przez Zr)
@@ -66,7 +66,7 @@ static func max_hp(zyw: int) -> int:
 static func max_mana(intel: int, mag: int) -> int:
 	if mag <= 0:
 		return 0
-	return int(round(intel * float(_b("mana/int_mnoznik", 1.0))))
+	return int(round(intel * float(_b("mana/int_mnoznik", 1.0)))) + mag * int(_b("mana/na_poziom_mag", 10))
 
 static func mana_regen(sw: int) -> float:
 	return sw * float(_b("mana/regen_sw_mnoznik", 0.02))

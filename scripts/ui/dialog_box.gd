@@ -28,16 +28,16 @@ static func build(speaker: String, portrait: String, lines: Array, choices: Arra
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	vb.add_child(row)
-	var idx := {"i": 0}
-	var show := func(): pass
-	show = func():
+	# słownik jako "pudełko": lambda w GDScript kopiuje zmienne lokalne, więc rekurencja przez zmienną nie działa
+	var ctx := {"i": 0}
+	ctx["show"] = func():
 		for c in row.get_children():
 			c.queue_free()
-		text.text = str(lines[idx["i"]]) if not lines.is_empty() else ""
-		if idx["i"] < lines.size() - 1:
+		text.text = str(lines[ctx["i"]]) if not lines.is_empty() else ""
+		if ctx["i"] < lines.size() - 1:
 			var nb := UiKit.button("Dalej", func():
-				idx["i"] += 1
-				show.call(), 180, 48)
+				ctx["i"] += 1
+				ctx["show"].call(), 180, 48)
 			row.add_child(nb)
 			nb.call_deferred("grab_focus")
 		else:
@@ -48,5 +48,6 @@ static func build(speaker: String, portrait: String, lines: Array, choices: Arra
 				if first:
 					b.call_deferred("grab_focus")
 					first = false
-	show.call()
+	ctx["show"].call()
+	root.set_meta("closable", true)
 	return root

@@ -47,16 +47,16 @@ func _ready() -> void:
 	_points.visible = false
 	tl.add_child(_points)
 	# prawy górny róg: przyciski i dziennik zadań
-	var tr := VBoxContainer.new()
-	_anchor(tr, 1.0, 0.0, Vector2(-16, 10), Vector2(-16, 10))
-	tr.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	tr.add_theme_constant_override("separation", 6)
-	tr.alignment = BoxContainer.ALIGNMENT_END
-	add_child(tr)
+	var trect := VBoxContainer.new()
+	_anchor(trect, 1.0, 0.0, Vector2(-16, 10), Vector2(-16, 10))
+	trect.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	trect.add_theme_constant_override("separation", 6)
+	trect.alignment = BoxContainer.ALIGNMENT_END
+	add_child(trect)
 	var btns := HBoxContainer.new()
 	btns.add_theme_constant_override("separation", 6)
 	btns.alignment = BoxContainer.ALIGNMENT_END
-	tr.add_child(btns)
+	trect.add_child(btns)
 	for b in [["Mapa", func(): level.toggle_map()], ["Postać", func(): level.open_character()],
 			["Plecak", func(): level.open_inventory()], ["II", func(): level.open_pause()]]:
 		var btn := UiKit.button(b[0], b[1], 0, 46)
@@ -67,7 +67,7 @@ func _ready() -> void:
 	_quest_panel.add_theme_stylebox_override("panel", UiKit.panel_style(0.72))
 	_quest_panel.size_flags_horizontal = Control.SIZE_SHRINK_END
 	_quest_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	tr.add_child(_quest_panel)
+	trect.add_child(_quest_panel)
 	_quest_box = VBoxContainer.new()
 	_quest_box.add_theme_constant_override("separation", 0)
 	_quest_panel.add_child(_quest_box)
@@ -145,7 +145,7 @@ func refresh() -> void:
 	var h: HeroState = Game.hero
 	if h == null:
 		return
-	_name.text = "%s   PP: %d" % [h.display_name(), h.stats.val("PP")]
+	_name.text = "%s   PP: %d" % [level.controlled_name() if level else h.display_name(), h.stats.val("PP")]
 	_gold.text = "Korony: %d" % h.inv.gold
 	var pa := h.points_available()
 	_points.visible = pa > 0

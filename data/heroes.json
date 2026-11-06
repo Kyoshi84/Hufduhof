@@ -1,6 +1,10 @@
 {
   "_opis": "Bohaterowie. profil = cechy startowe (główne 0-100, drugorzędne 0-10; S i Wt liczone z K i Odp). atak = atak podstawowy, umiejetnosc = przycisk Umiejętność/Czar. Czasy w sekundach, odległości w px podłoża. Założenia o postaciach: docs/DECYZJE.md.",
-  "kolejnosc": ["ivo", "ursa", "modraszka"],
+  "kolejnosc": [
+    "ivo",
+    "ursa",
+    "modraszka"
+  ],
   "bohaterowie": {
     "ivo": {
       "imie": "Ivo Eggert",
@@ -8,47 +12,185 @@
       "opis": "Weteran z dwuręcznym mieczem. Ciężkie, szerokie cięcia trafiają kilku wrogów naraz. Bez magii, ale najtwardszy z trójki.",
       "portret": "res://assets/ui/ivo_portrait.png",
       "grafika": "res://assets/characters/ivo",
-      "profil": { "WW": 41, "US": 30, "K": 38, "Odp": 36, "Zr": 31, "Int": 28, "SW": 32, "Ogd": 29,
-                  "A": 6, "Zyw": 9, "Sz": 4, "Mag": 0, "PO": 0, "PP": 2 },
-      "atak": { "typ": "wrecz", "zasieg": 82, "luk_stopni": 120, "max_celow": 3, "dzwiek": "swing_heavy" },
-      "umiejetnosc": { "nazwa": "Cios Gwardzisty", "typ": "zamach", "koszt_many": 0, "odnowienie": 7.0, "zamach": 0.65,
-                       "zasieg": 95, "luk_stopni": 220, "max_celow": 6, "mnoznik_obrazen": 1.8, "odrzut": 40,
-                       "opis": "Szeroki zamach dookoła. Brak kosztu many, odnowienie 7 s." },
-      "ekwipunek": { "bron": "miecz_dwureczny", "zbroja": "kaftan_gwardii", "helm": "beret_gwardii" },
-      "pas": { "mikstura_zycia": 2, "mikstura_many": 0, "piwo": 1 },
+      "profil": {
+        "WW": 41,
+        "US": 30,
+        "K": 38,
+        "Odp": 36,
+        "Zr": 31,
+        "Int": 28,
+        "SW": 32,
+        "Ogd": 29,
+        "A": 6,
+        "Zyw": 9,
+        "Sz": 5,
+        "Mag": 0,
+        "PO": 0,
+        "PP": 2
+      },
+      "atak": {
+        "typ": "wrecz",
+        "zasieg": 82,
+        "luk_stopni": 120,
+        "max_celow": 3,
+        "dzwiek": "swing_heavy"
+      },
+      "umiejetnosc": {
+        "nazwa": "Cios Gwardzisty",
+        "typ": "zamach",
+        "koszt_many": 0,
+        "odnowienie": 7.0,
+        "zamach": 0.65,
+        "zasieg": 95,
+        "luk_stopni": 220,
+        "max_celow": 6,
+        "mnoznik_obrazen": 1.8,
+        "odrzut": 40,
+        "opis": "Szeroki zamach dookoła. Brak kosztu many, odnowienie 7 s."
+      },
+      "ekwipunek": {
+        "bron": "miecz_dwureczny",
+        "zbroja": "kaftan_gwardii",
+        "helm": "beret_gwardii"
+      },
+      "pas": {
+        "mikstura_zycia": 2,
+        "mikstura_many": 0,
+        "piwo": 1
+      },
       "korony": 10
     },
     "ursa": {
       "imie": "Ursa",
-      "tytul": "Wojowniczka z wilczą skórą",
-      "opis": "Silna wojowniczka walcząca wręcz mieczem. Szybsza od Ivo, zna jedno zaklęcie ognia: Płomienne ostrze (zużywa manę).",
+      "tytul": "Czarodziejka ognia",
+      "opis": "Magini Kolegium Płomienia. Ciska ogniste pociski, a z bliska uderza kosturem. Dużo many, mniej zdrowia. Czar: Kula ognia.",
       "portret": "res://assets/characters/ursa/portrait.png",
       "grafika": "res://assets/characters/ursa",
-      "profil": { "WW": 39, "US": 28, "K": 41, "Odp": 34, "Zr": 36, "Int": 31, "SW": 33, "Ogd": 27,
-                  "A": 7, "Zyw": 8, "Sz": 4, "Mag": 1, "PO": 0, "PP": 2 },
-      "atak": { "typ": "wrecz", "zasieg": 72, "luk_stopni": 90, "max_celow": 2, "dzwiek": "swing" },
-      "umiejetnosc": { "nazwa": "Płomienne ostrze", "typ": "ogien", "koszt_many": 10, "odnowienie": 2.5, "zamach": 0.5,
-                       "zasieg": 90, "luk_stopni": 150, "max_celow": 4, "obrazenia_bazowe": 6,
-                       "podpalenie_na_sekunde": 3, "podpalenie_czas": 3.0,
-                       "opis": "Cięcie płonącym ostrzem w szerokim łuku, podpala wrogów. 10 many." },
-      "ekwipunek": { "bron": "miecz", "zbroja": "skora_wilka" },
-      "pas": { "mikstura_zycia": 2, "mikstura_many": 1, "piwo": 1 },
+      "profil": {
+        "WW": 28,
+        "US": 34,
+        "K": 28,
+        "Odp": 30,
+        "Zr": 33,
+        "Int": 47,
+        "SW": 42,
+        "Ogd": 30,
+        "A": 6,
+        "Zyw": 6,
+        "Sz": 5,
+        "Mag": 2,
+        "PO": 0,
+        "PP": 2
+      },
+      "atak": {
+        "typ": "mieszany",
+        "wrecz": {
+          "nazwa": "Kostur",
+          "zasieg": 70,
+          "luk_stopni": 90,
+          "max_celow": 1,
+          "dzwiek": "swing"
+        },
+        "pocisk": {
+          "nazwa": "Ognisty pocisk",
+          "rodzaj": "fireball",
+          "zasieg": 360,
+          "predkosc": 320,
+          "obrazenia_bazowe": 3,
+          "koszt_many": 2,
+          "rzut": false,
+          "dzwiek": "fire"
+        }
+      },
+      "umiejetnosc": {
+        "nazwa": "Kula ognia",
+        "typ": "kula_ognia",
+        "koszt_many": 12,
+        "odnowienie": 2.5,
+        "zamach": 0.6,
+        "zasieg": 380,
+        "predkosc": 300,
+        "promien": 72,
+        "obrazenia_bazowe": 10,
+        "podpalenie_na_sekunde": 3,
+        "podpalenie_czas": 3.0,
+        "opis": "Kula ognia wybucha na pierwszym wrogu i rani wszystkich w promieniu, podpalając ich. 12 many."
+      },
+      "ekwipunek": {
+        "bron": "kostur_ognia",
+        "zbroja": "szata_ognia"
+      },
+      "pas": {
+        "mikstura_zycia": 2,
+        "mikstura_many": 3,
+        "piwo": 1
+      },
       "korony": 10
     },
     "modraszka": {
       "imie": "Modraszka",
-      "tytul": "Magini Niebios",
-      "opis": "Magini z Kolegium Niebios. Z dystansu ciska niebieskie pociski, a czar Gniew Niebios razi piorunem grupę wrogów. Krucha w zwarciu.",
+      "tytul": "Łuczniczka",
+      "opis": "Zwinna łuczniczka o czarnych włosach. Strzela z łuku, a gdy wróg podejdzie blisko - dźga krótkim nożem. Bez magii. Umiejętność: Grad strzał.",
       "portret": "res://assets/characters/modraszka/portrait.png",
       "grafika": "res://assets/characters/modraszka",
-      "profil": { "WW": 26, "US": 37, "K": 26, "Odp": 28, "Zr": 34, "Int": 46, "SW": 44, "Ogd": 36,
-                  "A": 6, "Zyw": 6, "Sz": 4, "Mag": 2, "PO": 0, "PP": 3 },
-      "atak": { "typ": "pocisk", "zasieg": 360, "predkosc": 340, "obrazenia_bazowe": 2, "pocisk": "magic_bolt", "dzwiek": "bolt" },
-      "umiejetnosc": { "nazwa": "Gniew Niebios", "typ": "piorun", "koszt_many": 14, "odnowienie": 3.0, "zamach": 0.7,
-                       "zasieg": 340, "promien": 70, "obrazenia_bazowe": 12,
-                       "opis": "Piorun spada na najbliższego wroga i rani wszystkich wokół. 14 many." },
-      "ekwipunek": { "bron": "kostur_niebios", "zbroja": "szata_niebios" },
-      "pas": { "mikstura_zycia": 2, "mikstura_many": 2, "piwo": 1 },
+      "profil": {
+        "WW": 31,
+        "US": 46,
+        "K": 29,
+        "Odp": 30,
+        "Zr": 43,
+        "Int": 30,
+        "SW": 31,
+        "Ogd": 36,
+        "A": 7,
+        "Zyw": 7,
+        "Sz": 6,
+        "Mag": 0,
+        "PO": 0,
+        "PP": 3
+      },
+      "atak": {
+        "typ": "mieszany",
+        "wrecz": {
+          "nazwa": "Krótki nóż",
+          "zasieg": 60,
+          "luk_stopni": 80,
+          "max_celow": 1,
+          "obrazenia": 4,
+          "dzwiek": "swing"
+        },
+        "pocisk": {
+          "nazwa": "Strzała",
+          "rodzaj": "arrow",
+          "zasieg": 420,
+          "predkosc": 430,
+          "koszt_many": 0,
+          "rzut": true,
+          "dzwiek": "bolt"
+        }
+      },
+      "umiejetnosc": {
+        "nazwa": "Grad strzał",
+        "typ": "salwa",
+        "koszt_many": 0,
+        "odnowienie": 6.0,
+        "zamach": 0.55,
+        "strzaly": 5,
+        "rozrzut_stopni": 44,
+        "zasieg": 420,
+        "predkosc": 430,
+        "opis": "Pięć strzał naraz w szerokim wachlarzu. Bez many, odnowienie 6 s."
+      },
+      "ekwipunek": {
+        "bron": "luk_mysliwski",
+        "zbroja": "kurta_skorzana",
+        "helm": "kaptur"
+      },
+      "pas": {
+        "mikstura_zycia": 3,
+        "mikstura_many": 0,
+        "piwo": 1
+      },
       "korony": 15
     }
   }

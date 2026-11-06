@@ -294,56 +294,68 @@ HW_, HH_, HPX, HPY = 96, 128, 48, 126
 
 
 def modraszka(view):
+    """Łuczniczka: czarne włosy, skórzana kurta, zielony płaszcz z kapturem, łuk, krótki nóż u pasa."""
     im = Image.new("RGBA", (HW_, HH_), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     cx = HPX
-    robe, robe_d, robe_l = R("sky", 3), R("sky", 1), R("sky", 5)
-    hair = R("straw", 5)
+    hair, hair_l = R("ink", 1), R("night", 2)
     skin = R("skin", 5)
+    leather, leather_d = R("wood", 5), R("wood", 3)
+    cloak, cloak_d = R("grass", 2), R("grass", 0)
+    trousers = R("mud", 2)
     side = view in ("side", "side_back")
-    # szata
-    if side:
-        d.polygon([(cx - 10, 52), (cx + 8, 52), (cx + 16, HPY - 2), (cx - 18, HPY - 2)], fill=robe)
-        d.polygon([(cx - 10, 52), (cx - 3, 52), (cx - 6, HPY - 2), (cx - 18, HPY - 2)], fill=robe_d)
-    else:
-        d.polygon([(cx - 13, 50), (cx + 13, 50), (cx + 22, HPY - 2), (cx - 22, HPY - 2)], fill=robe)
-        d.polygon([(cx + 3, 50), (cx + 13, 50), (cx + 22, HPY - 2), (cx + 8, HPY - 2)], fill=robe_d)
-        if view == "front":
-            d.polygon([(cx - 4, 60), (cx + 4, 60), (cx + 8, HPY - 2), (cx - 8, HPY - 2)], fill=robe_l)
-    for i in range(14):
-        x = cx - 18 + (i * 37) % 36
-        y = 62 + (i * 23) % 60
-        if im.getpixel((x, y))[3]:
-            d.point((x, y), fill=R("gold", 4))
-    d.line([(cx - 13, 70), (cx + 13, 70)], fill=R("gold", 2), width=2)
-    # buty
-    d.rectangle([cx - 10, HPY - 4, cx - 3, HPY], fill=R("wood", 1))
-    d.rectangle([cx + 3, HPY - 4, cx + 10, HPY], fill=R("wood", 1))
-    # ręce i kostur
-    staff_x = cx + 20 if not side else cx + 14
-    d.line([(staff_x, HPY - 1), (staff_x + 2, 20)], fill=R("wood", 3), width=3)
-    d.polygon([(staff_x + 2, 10), (staff_x + 6, 18), (staff_x + 2, 26), (staff_x - 2, 18)], fill=R("gold", 4))
-    d.point((staff_x + 2, 18), fill=R("white", 2))
-    d.line([(cx + 10, 56), (staff_x, 66)], fill=robe, width=5)
-    d.ellipse([staff_x - 3, 63, staff_x + 2, 68], fill=skin)
+    back = view == "back"
+    # płaszcz za plecami
     if not side:
-        d.line([(cx - 12, 56), (cx - 16, 80)], fill=robe, width=5)
-        d.ellipse([cx - 19, 78, cx - 13, 84], fill=skin)
-    # głowa, włosy, kaptur
-    d.ellipse([cx - 9, 28, cx + 9, 48], fill=skin if view != "back" else hair)
-    d.polygon([(cx - 12, 34), (cx - 10, 22), (cx, 16), (cx + 10, 22), (cx + 12, 34), (cx + 10, 50),
-               (cx + 14, 64), (cx - 14, 64), (cx - 10, 50)], fill=robe_d)
-    if view == "back":
-        d.polygon([(cx - 8, 30), (cx + 8, 30), (cx + 10, 64), (cx - 10, 64)], fill=robe)
+        d.polygon([(cx - 15, 48), (cx + 15, 48), (cx + 19, 104), (cx - 19, 104)], fill=cloak_d if not back else cloak)
+    else:
+        d.polygon([(cx - 6, 48), (cx + 2, 48), (cx - 8, 104), (cx - 20, 100)], fill=cloak_d)
+    # nogi i buty
+    for lx in ((cx - 7, cx - 1) if not side else (cx - 4, cx + 3)):
+        d.rectangle([lx - 3, 84, lx + 3, HPY - 6], fill=trousers)
+        d.rectangle([lx - 4, HPY - 14, lx + 4, HPY], fill=R("wood", 1))
+    # kurta
+    w = 12 if not side else 9
+    d.polygon([(cx - w, 50), (cx + w, 50), (cx + w + 2, 88), (cx - w - 2, 88)], fill=leather)
+    d.polygon([(cx + 2, 50), (cx + w, 50), (cx + w + 2, 88), (cx + 4, 88)], fill=leather_d)
+    d.line([(cx - w - 1, 74), (cx + w + 1, 74)], fill=R("wood", 1), width=3)
+    d.rectangle([cx - 2, 72, cx + 2, 76], fill=R("gold", 3))
+    # krótki nóż u pasa
+    d.line([(cx - w + 2, 75), (cx - w - 2, 86)], fill=R("steel", 5), width=2)
+    d.line([(cx - w + 3, 73), (cx - w + 1, 77)], fill=R("wood", 2), width=2)
+    # kołczan na plecach
+    if back or side:
+        qx = cx + 6 if back else cx - 8
+        d.polygon([(qx - 3, 44), (qx + 4, 46), (qx + 2, 76), (qx - 5, 74)], fill=R("wood", 2))
+        for k in range(3):
+            d.line([(qx - 1 + k * 2, 44), (qx - 3 + k * 2, 36)], fill=R("bone", 4))
+    # ręce i łuk
+    bow_x = cx + 19 if not side else cx + 16
+    d.arc([bow_x - 9, 30, bow_x + 7, 96], 290, 70, fill=R("wood", 4), width=3)
+    d.line([(bow_x - 3, 33), (bow_x - 3, 93)], fill=R("bone", 4))
+    d.line([(cx + 10, 54), (bow_x + 2, 62)], fill=leather, width=5)
+    d.ellipse([bow_x - 1, 59, bow_x + 4, 65], fill=skin)
+    if not side:
+        d.line([(cx - 12, 54), (cx - 15, 78)], fill=leather, width=5)
+        d.ellipse([cx - 18, 76, cx - 12, 82], fill=skin)
+    # głowa: czarne włosy, kaptur zsunięty na ramiona
+    d.polygon([(cx - 13, 48), (cx + 13, 48), (cx + 9, 42), (cx - 9, 42)], fill=cloak)
+    if back:
+        d.ellipse([cx - 9, 26, cx + 9, 46], fill=hair)
+        d.polygon([(cx - 9, 36), (cx + 9, 36), (cx + 7, 62), (cx - 7, 62)], fill=hair)
+        d.line([(cx - 3, 30), (cx - 4, 58)], fill=hair_l)
     else:
         d.ellipse([cx - 8, 28, cx + 8, 46] if not side else [cx - 4, 28, cx + 10, 46], fill=skin)
-        d.polygon([(cx - 8, 30), (cx - 2, 26), (cx + 8, 30), (cx + 8, 34), (cx - 8, 34)], fill=hair)
-        ex = [cx - 4, cx + 3] if not side else [cx + 5]
-        for x in ex:
-            d.rectangle([x, 37, x + 1, 38], fill=R("sky", 2))
-        d.line([(cx - 9, 34), (cx - 10, 58)], fill=hair, width=3)
+        d.polygon([(cx - 9, 34), (cx - 8, 26), (cx, 23), (cx + 8, 26), (cx + 9, 32), (cx + 2, 29), (cx - 4, 31)], fill=hair)
+        d.line([(cx - 9, 32), (cx - 10, 60)], fill=hair, width=4)
         if not side:
-            d.line([(cx + 9, 34), (cx + 10, 58)], fill=hair, width=3)
+            d.line([(cx + 9, 32), (cx + 10, 60)], fill=hair, width=4)
+            for x in (cx - 4, cx + 3):
+                d.rectangle([x, 37, x + 1, 38], fill=R("ink", 0))
+        else:
+            d.line([(cx - 5, 30), (cx - 9, 62)], fill=hair, width=5)
+            d.rectangle([cx + 5, 37, cx + 6, 38], fill=R("ink", 0))
+        d.line([(cx - 2, 43), (cx + 2, 43)] if not side else [(cx + 4, 43), (cx + 7, 43)], fill=R("blood", 4))
     return outline(im)
 
 
@@ -370,8 +382,10 @@ def write_borubar():
 
 
 def main():
-    for kind in KINDS:
-        write_enemy(kind)
+    import sys
+    if 'modraszka' not in sys.argv:
+        for kind in KINDS:
+            write_enemy(kind)
     write_modraszka()
     write_borubar()
     print("postacie gotowe")

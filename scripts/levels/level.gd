@@ -134,7 +134,7 @@ func start_cell() -> Vector2:
 	for o in data.get("obiekty", []):
 		if str(o.get("typ", "")) == "start":
 			return cell_pos(o)
-	return Iso.cell_center(map.size / 2)
+	return Iso.cell_center(Vector2i(Vector2(map.size) * 0.5))
 
 func _spawn_hero() -> void:
 	hero = Hero.new()
@@ -181,6 +181,9 @@ func _setup_ui() -> void:
 	touch.level = self
 	touch.visible = Save.touch_enabled()
 	ui.add_child(touch)
+	var keys := OverlayKeys.new()
+	keys.level = self
+	ui.add_child(keys)
 	minimap = Minimap.new()
 	minimap.level = self
 	minimap.visible = false
@@ -261,10 +264,10 @@ func reveal_around(p: Vector2) -> void:
 	if map.reveal(p, float(Data.bal("mgla/promien_komorek", 6.5))):
 		Game.explored[key] = map.explored_b64()
 
-func spawn_projectile(kind: String, from: Actor, pos: Vector2, d: Vector2, spd: float, dist: float, dmg: int) -> void:
+func spawn_projectile(kind: String, from: Actor, pos: Vector2, d: Vector2, spd: float, dist: float, dmg: int, opts: Dictionary = {}) -> void:
 	var pr := Projectile.new()
 	map.world.add_child(pr)
-	pr.setup(self, kind, from, pos, d, spd, dist, dmg)
+	pr.setup(self, kind, from, pos, d, spd, dist, dmg, opts)
 
 func spawn_warp_orb(from: Actor, a: Vector2, b: Vector2, edef: Dictionary) -> void:
 	var o := WarpOrb.new()
@@ -272,7 +275,6 @@ func spawn_warp_orb(from: Actor, a: Vector2, b: Vector2, edef: Dictionary) -> vo
 	o.setup(self, from, a, b, edef)
 
 func drop_loot(pos: Vector2, drops: Array) -> void:
-	var i := 0
 	for d in drops:
 		var ang := rng.randf() * TAU
 		var dest := pos + Iso.screen(Vector2.RIGHT.rotated(ang) * rng.randf_range(30, 60))
@@ -281,7 +283,6 @@ func drop_loot(pos: Vector2, drops: Array) -> void:
 		var pk := Pickup.new()
 		map.world.add_child(pk)
 		pk.setup(d, pos, dest)
-		i += 1
 
 func alert_group(group: String) -> void:
 	if group == "":
@@ -341,13 +342,14 @@ func on_hero_died() -> void:
 	else:
 		btns.append(["Spróbuj ponownie", func(): request.emit("karczma_od_nowa")])
 	btns.append(["Menu główne", func(): request.emit("menu")])
-	open_overlay(UiKit.overlay("ŚMIERĆ", "Nie masz już Punktów Przeznaczenia.", btns), true)
+	open_overlay(UiKit.overlay("ŚMIERĆ", "Nie masz już Punktów Przeznaczenia.", btns), true, false)
 	_dying = false
 
 # ---------------------------------------------------------------- nakładki (pauza, postać, plecak, handel, dialog)
-func open_overlay(c: Control, pause: bool = true) -> void:
+func open_overlay(c: Control, pause: bool = true, closable: bool = true) -> void:
 	close_overlay()
 	overlay = c
+	c.set_meta("closable", closable)
 	c.process_mode = Node.PROCESS_MODE_ALWAYS
 	ui.add_child(c)
 	get_tree().paused = pause
@@ -361,6 +363,8 @@ func close_overlay() -> void:
 		overlay.queue_free()
 	overlay = null
 	get_tree().paused = false
+	if hero:
+		hero.ui_cooldown = 0.3
 	touch.visible = Save.touch_enabled()
 	Controls.reset()
 
@@ -423,12 +427,14 @@ func talk_to_npc(id: String) -> void:
 		lines = Data.dialog("borubar_potem")
 	else:
 		lines = Data.dialog("borubar_w_trakcie")
+	var bye := func():
+		after.call()
+		close_overlay()
 	var dlg := DialogBox.build("Borubar", "res://assets/characters/borubar/portrait.png", lines,
 		[["Handel", func():
 			after.call()
-			open_inventory("borubar")], ["Do widzenia", func():
-			after.call()
-			close_overlay()]])
+			open_inventory("borubar")], ["Do widzenia", bye]])
+	dlg.set_meta("on_cancel", bye)
 	open_overlay(dlg)
 
 func on_barricade_part_out() -> void:
@@ -453,6 +459,9 @@ func on_exit_reached() -> void:
 	Game.level_id = "poziom2"
 	Game.explored[key] = map.explored_b64()
 	request.emit("poziom2")
+
+func controlled_name() -> String:
+	return Game.hero.display_name()
 
 func quest_lines() -> Array:
 	return Game.quest.log_lines()

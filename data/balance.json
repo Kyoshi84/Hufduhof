@@ -1,30 +1,137 @@
 {
   "_opis": "Balans ogólny. Wszystkie wzory są w scripts/core/rules.gd; tu tylko liczby. Odległości w pikselach podłoża (oś pionowa ekranu liczona x2 - rzut izometryczny).",
   "zycie_mnoznik": 10,
-  "trafienie_wrecz": { "bazowe": 40, "obrona_dzielnik_ww": 4, "min": 10, "max": 95 },
-  "trafienie_dystans": { "bazowe": 40, "unik_dzielnik_zr": 4, "min": 10, "max": 95, "rozrzut_pudla_stopni": 16 },
-  "unik": { "dzielnik_zr": 5, "max": 30 },
-  "atak": { "okno_sekund": 10.0, "zr_przyspieszenie": 0.0025, "zr_przyspieszenie_max": 0.25, "zamach_udzial": 0.42, "uderzenie_udzial": 0.08, "min_odstep": 0.6 },
-  "mana": { "int_mnoznik": 1.0, "regen_sw_mnoznik": 0.02 },
-  "trucizna": { "odpornosc_sw_dzielnik": 2, "odpornosc_max": 75 },
-  "ceny": { "kupno_bazowe": 1.5, "kupno_na_ogd": 0.01, "kupno_min": 0.8, "sprzedaz_bazowe": 0.15, "sprzedaz_na_ogd": 0.005, "sprzedaz_max": 0.6 },
-  "ruch": { "bazowa": 40.0, "na_punkt_sz": 18.0 },
-  "czary": { "int_dzielnik": 10, "mag_mnoznik": 3 },
-  "pp": { "odrodzenie_zycie": 0.5, "niezniszczalnosc_po_odrodzeniu": 2.5 },
+  "trafienie_wrecz": {
+    "bazowe": 40,
+    "obrona_dzielnik_ww": 4,
+    "min": 10,
+    "max": 95
+  },
+  "trafienie_dystans": {
+    "bazowe": 40,
+    "unik_dzielnik_zr": 4,
+    "min": 10,
+    "max": 95,
+    "rozrzut_pudla_stopni": 16
+  },
+  "unik": {
+    "dzielnik_zr": 5,
+    "max": 30
+  },
+  "atak": {
+    "okno_sekund": 10.0,
+    "zr_przyspieszenie": 0.0025,
+    "zr_przyspieszenie_max": 0.25,
+    "zamach_udzial": 0.42,
+    "uderzenie_udzial": 0.08,
+    "min_odstep": 0.6
+  },
+  "mana": {
+    "int_mnoznik": 1.0,
+    "regen_sw_mnoznik": 0.02,
+    "na_poziom_mag": 10
+  },
+  "trucizna": {
+    "odpornosc_sw_dzielnik": 2,
+    "odpornosc_max": 75
+  },
+  "ceny": {
+    "kupno_bazowe": 1.5,
+    "kupno_na_ogd": 0.01,
+    "kupno_min": 0.8,
+    "sprzedaz_bazowe": 0.15,
+    "sprzedaz_na_ogd": 0.005,
+    "sprzedaz_max": 0.6
+  },
+  "ruch": {
+    "bazowa": 40.0,
+    "na_punkt_sz": 18.0
+  },
+  "czary": {
+    "int_dzielnik": 10,
+    "mag_mnoznik": 3
+  },
+  "pp": {
+    "odrodzenie_zycie": 0.5,
+    "niezniszczalnosc_po_odrodzeniu": 2.5
+  },
   "rozwoj": {
-    "progi_xp": [60, 150, 260, 390, 540, 720, 930, 1170, 1440, 1740],
+    "progi_xp": [
+      60,
+      150,
+      260,
+      390,
+      540,
+      720,
+      930,
+      1170,
+      1440,
+      1740
+    ],
     "plus_glowna": 5,
     "plus_drugorzedna": 1,
     "limit_glowne": 70,
-    "limity_drugorzedne": { "A": 10, "Zyw": 10, "Sz": 7, "Mag": 4, "PP": 5 },
-    "drugorzedne_do_rozwoju": ["A", "Zyw", "Sz", "Mag", "PP"]
+    "limity_drugorzedne": {
+      "A": 10,
+      "Zyw": 10,
+      "Sz": 7,
+      "Mag": 4,
+      "PP": 5
+    },
+    "drugorzedne_do_rozwoju": [
+      "A",
+      "Zyw",
+      "Sz",
+      "Mag",
+      "PP"
+    ]
   },
-  "xp_zadania": { "karczma_obroniona": 20, "rozmowa_borubar": 10, "wiadro_znalezione": 15, "barykada_czesc": 15, "barykada_ugaszona": 40, "nagroda_borubara": 40 },
+  "xp_zadania": {
+    "karczma_obroniona": 20,
+    "rozmowa_borubar": 10,
+    "wiadro_znalezione": 15,
+    "barykada_czesc": 15,
+    "barykada_ugaszona": 40,
+    "nagroda_borubara": 40
+  },
   "nagroda_borubara_korony": 60,
-  "mikstury": { "mikstura_zycia": { "zycie": 45 }, "mikstura_many": { "mana": 35 }, "piwo": { "zycie": 30, "mana": 25 }, "odstep_sekund": 1.0 },
-  "kamera": { "zoom": 1.15, "zoom_min": 0.85, "zoom_max": 1.6, "wygladzanie": 6.0 },
-  "mgla": { "promien_komorek": 6.5 },
-  "walka": { "zachwianie_prog": 0.12, "zachwianie_czas": 0.3, "zatrzymanie_trafienia": 0.05, "niezniszczalnosc_po_trafieniu": 0.25, "auto_cel_zasieg": 60, "podnoszenie_zasieg": 30 },
-  "barykada": { "obrazenia": 6, "co_ile_sekund": 0.6, "zasieg_dotyku": 18 },
-  "plecak": { "szerokosc": 8, "wysokosc": 4 }
+  "mikstury": {
+    "mikstura_zycia": {
+      "zycie": 45
+    },
+    "mikstura_many": {
+      "mana": 35
+    },
+    "piwo": {
+      "zycie": 30,
+      "mana": 25
+    },
+    "odstep_sekund": 1.0
+  },
+  "kamera": {
+    "zoom": 1.15,
+    "zoom_min": 0.85,
+    "zoom_max": 1.6,
+    "wygladzanie": 6.0
+  },
+  "mgla": {
+    "promien_komorek": 6.5
+  },
+  "walka": {
+    "zachwianie_prog": 0.12,
+    "zachwianie_czas": 0.3,
+    "zatrzymanie_trafienia": 0.05,
+    "niezniszczalnosc_po_trafieniu": 0.25,
+    "auto_cel_zasieg": 60,
+    "podnoszenie_zasieg": 30
+  },
+  "barykada": {
+    "obrazenia": 6,
+    "co_ile_sekund": 0.6,
+    "zasieg_dotyku": 18
+  },
+  "plecak": {
+    "szerokosc": 8,
+    "wysokosc": 4
+  }
 }

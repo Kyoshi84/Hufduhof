@@ -67,7 +67,17 @@ func test_starting_profiles_valid():
 			assert_between(h.stats.base_val(k), 0, 10, id + " " + k)
 		assert_true(h.max_hp() > 0)
 	assert_eq(HeroState.create("ivo").max_mana(), 0, "Ivo bez magii")
-	assert_true(HeroState.create("modraszka").max_mana() > HeroState.create("ursa").max_mana())
+	assert_eq(HeroState.create("modraszka").max_mana(), 0, "łuczniczka bez magii")
+	var ursa := HeroState.create("ursa")
+	assert_true(ursa.max_mana() >= 60, "Ursa: dużo many")
+	assert_true(ursa.max_hp() < HeroState.create("ivo").max_hp(), "Ursa: mniej zdrowia niż Ivo")
+
+func test_heroes_faster_than_all_rats():
+	for hid in Data.hero_ids():
+		var hs := Stats.from_profile(Data.hero(hid)["profil"])
+		for eid in Data.enemies["wrogowie"]:
+			var es := Stats.from_profile(Data.enemy(eid)["profil"])
+			assert_true(hs.move_speed() > es.move_speed(), "%s szybszy niż %s" % [hid, eid])
 	for eid in Data.enemies["wrogowie"]:
 		var s := Stats.from_profile(Data.enemy(eid)["profil"])
 		assert_true(s.max_hp() > 0, eid)

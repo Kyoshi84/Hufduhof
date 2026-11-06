@@ -18,8 +18,9 @@ static func build(h: HeroState, on_close: Callable, shop_id: String = "") -> Con
 	body.add_theme_constant_override("separation", 18)
 	outer.add_child(body)
 	var state := {"sel": -1, "slot": ""}
-	var rebuild := func(): pass
-	rebuild = func():
+	var ctx := {}
+	var rebuild := func(): ctx["rebuild"].call()
+	ctx["rebuild"] = func():
 		for c in body.get_children():
 			c.queue_free()
 		if shop_id != "":

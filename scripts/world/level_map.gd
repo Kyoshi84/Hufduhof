@@ -138,11 +138,11 @@ func add_prop(texture: Texture2D, cell: Vector2i, footprint: Vector2i = Vector2i
 	(parent if parent else world).add_child(s)
 	return s
 
-func prop_tex(name: String, set_dir: String = "") -> Texture2D:
+func prop_tex(prop_name: String, set_dir: String = "") -> Texture2D:
 	var dirs := [set_dir] if set_dir != "" else []
 	dirs.append_array([prop_dir, "res://assets/levels/level1/props/", "res://assets/levels/common/props/", "res://assets/levels/tavern/props/"])
 	for d in dirs:
-		var t := tex(d + name + ".png")
+		var t := tex(d + prop_name + ".png")
 		if t:
 			return t
 	return null
