@@ -3,6 +3,8 @@
 2D side-scrolling arcade beat 'em up (Warhammer Fantasy, grimdark) na Androida. Godot 4.3 + GDScript.
 Jeden poziom: 4 etapy, 10 fal, boss w 3 fazach. Oprawa: pixel-art w **jednej palecie 256 kolorów**.
 
+**Autorzy:** Janek M. i Franek W. (napis na dole menu głównego i w „Informacje o grze”; stała `AUTHORS` w `scripts/main.gd`).
+
 ## Uruchomienie na komputerze
 1. Godot 4.3 (standard, nie .NET): https://godotengine.org/download
 2. Otwórz `project.godot`, naciśnij **F5** (pierwsze otwarcie sam importuje zasoby).
@@ -38,8 +40,8 @@ od razu do etapu 1; „Kontynuuj” i ponowna próba po porażce w ogóle pomija
   przełączanie w `scripts/main.gd` (`start_game`, `show_prologue`, `show_tavern`).
 - Teksty: wpisy z `"phase": "pre"` / `"post"` w `data/story.json`.
 - Grafiki: `assets/minigame/*.png`, generator `tools/build_tavern_art.py` (w razie potrzeby podmień pliki własnymi o tych samych nazwach).
-- Borubar (z beczką nad głową, w beczkę łapie kufle) i jego portret na planszy przy studni powstają z obrazu autora
-  `assets/characters/borubar/source/borubar_painting.jpg`: `python3 tools/build_borubar.py` -> `assets/minigame/borubar*.png`,
+- Borubar (z beczką nad głową, w beczkę łapie kufle) i jego portret (zbliżenie twarzy) na planszy rozmowy przy studni po etapie wsi
+  powstają z pixel-artu autora `assets/characters/borubar/source/borubar_pixelart.webp`: `python3 tools/build_borubar.py` -> `assets/minigame/borubar*.png`,
   `assets/ui/story/portraits/borubar.png` (skrypt wypisuje geometrię sprite'a: otwór beczki = `CATCH_Y`, stopy = `BODY_DX`).
 - Zrzuty: `tests/shots_tavern.tscn` (wymaga xvfb), testy: `t_tavern` w `tests/test_runner.gd`.
 

@@ -3,6 +3,7 @@ extends Node
 
 var current: Node = null
 const PORTRAIT := "res://assets/ui/ivo_portrait.png"
+const AUTHORS := "Janek M. i Franek W."   # autorzy gry (menu główne i "Informacje o grze")
 
 func _ready() -> void:
 	add_child(PaletteFilter.new())
@@ -64,7 +65,21 @@ func show_menu() -> void:
 	vb.add_child(UI.make_button("Informacje o grze", show_about))
 	if SaveData.best_score > 0:
 		vb.add_child(UI.make_label("Najlepszy wynik: %d" % SaveData.best_score, 24, Color(0.8, 0.75, 0.62)))
+	root.add_child(_credits_label())
 	_swap(root)
+
+## Autorzy gry na dole menu głównego.
+func _credits_label() -> Label:
+	var l := UI.make_label("Autorzy: " + AUTHORS, 22, Color(0.8, 0.72, 0.55))
+	l.name = "Credits"
+	l.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	l.offset_top = -48.0
+	l.offset_bottom = -12.0
+	l.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	l.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	l.add_theme_constant_override("outline_size", 4)
+	return l
 
 ## Nowa gra zaczyna się prologiem (opis -> karczma z kuflami -> szczury -> opis); Kontynuuj i ponowna próba po porażce go pomijają.
 func start_game(continue_save: bool, skip_prologue: bool = false) -> void:
@@ -182,7 +197,7 @@ func _slider_row(title: String, value: float, cb: Callable) -> Control:
 	return hb
 
 func show_about() -> void:
-	var text := "Ivo Eggert: Obrona Hufduhofu\n\nGwardzista Szkarłatnej Gwardii z Carroburga przedziera się\nprzez Hufduhof i okolice, by stawić czoła czempionowi Chaosu.\n\nSTEROWANIE (PC):  WASD / strzałki - ruch,  J - cięcie,\nK - mocny atak,  Spacja - skok,  L / C - unik,  Esc - pauza\nCombo: cięcie, cięcie, szeroki zamach obszarowy.\nTelefon: joystick po lewej, przyciski po prawej."
+	var text := "Ivo Eggert: Obrona Hufduhofu\n\nGwardzista Szkarłatnej Gwardii z Carroburga przedziera się\nprzez Hufduhof i okolice, by stawić czoła czempionowi Chaosu.\n\nSTEROWANIE (PC):  WASD / strzałki - ruch,  J - cięcie,\nK - mocny atak,  Spacja - skok,  L / C - unik,  Esc - pauza\nCombo: cięcie, cięcie, szeroki zamach obszarowy.\nTelefon: joystick po lewej, przyciski po prawej.\n\nAUTORZY: " + AUTHORS
 	var box := UI.make_overlay("INFORMACJE", text, [["Wróć", show_menu]])
 	box.theme = UI.theme()
 	_swap(box)

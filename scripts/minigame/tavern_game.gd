@@ -16,13 +16,13 @@ const ART := "res://assets/minigame/"
 const GOAL := 50
 const GOLD_VALUE := 3                   # złoty kufel Bugmana liczy się za 3
 const FLOOR_Y := 660.0                  # stopy Borubara / podłoga, o którą rozbijają się kufle
-const CATCH_Y := 482.0                  # otwór beczki nad głową Borubara (tools/build_borubar.py wypisuje geometrię)
-const BODY_DX := 26.7                   # boru_x = środek otworu beczki; stopy (pivot sprite'a) są o tyle w prawo
-const BODY_PIVOT_PX := 44.0             # pivot (stopy) w pikselach sprite'a borubar.png, od lewej
+const CATCH_Y := 483.0                  # otwór beczki nad głową Borubara (tools/build_borubar.py wypisuje geometrię)
+const BODY_DX := 32.4                   # boru_x = środek otworu beczki; stopy (pivot sprite'a) są o tyle w prawo
+const BODY_PIVOT_PX := 46.0             # pivot (stopy) w pikselach sprite'a borubar.png, od lewej
 const STARS_DY := -112.0                # gwiazdki ogłuszenia nad czapką (względem podłogi)
 const CATCH_HALF := 54.0
 const BORU_MIN := 90.0
-const BORU_MAX := 1190.0
+const BORU_MAX := 1180.0
 const BORU_SPEED := 640.0
 const BORU_ACCEL := 4200.0
 const STUN_TIME := 0.75

@@ -1,10 +1,12 @@
 """Borubar z obrazu autora -> pixel-art do gry (kwantyzowany do wspólnej palety 256 kolorów).
 
-Źródło: assets/characters/borubar/source/borubar_painting.jpg (Borubar z beczką nad głową, jasne tło).
+Źródło: assets/characters/borubar/source/borubar_pixelart.webp (pixel-art autora: Borubar z beczką nad głową,
+na namalowanej "przezroczystej" szachownicy). Starszy obraz borubar_painting.jpg zostaje tylko jako archiwum.
 Wynik:
   assets/minigame/borubar.png          sprite do minigry w karczmie (beczka = "koszyk" na kufle)
   assets/minigame/borubar_dizzy.png    to samo, oczy "X", otwarte usta (ogłuszony po rozbitym kuflu)
-  assets/ui/story/portraits/borubar.png  portret do czarnego okna na planszy "las" (254x144 => 2x = 508x288)
+  assets/ui/story/portraits/borubar.png  portret (sama twarz, zbliżenie) do okna rozmowy na planszy "las"
+                                         po etapie wsi (254x144 => 2x = 508x288)
 Uruchom: python3 tools/build_borubar.py [--preview katalog]
 
 Geometria sprite'a (stałe w scripts/minigame/tavern_game.gd: BORU_PIVOT, CATCH_DX, CATCH_Y, STARS_Y) jest wypisywana na końcu.
@@ -16,7 +18,7 @@ from scipy import ndimage
 import importlib.util
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(HERE, "assets/characters/borubar/source/borubar_painting.jpg")
+SRC = os.path.join(HERE, "assets/characters/borubar/source/borubar_pixelart.webp")
 spec = importlib.util.spec_from_file_location("mp", os.path.join(HERE, "tools/make_palette.py"))
 mp = importlib.util.module_from_spec(spec); spec.loader.exec_module(mp)
 
@@ -24,39 +26,41 @@ OUTLINE = (14, 9, 8)
 S_WORLD = 4.0 / 3.0                 # jednostek świata na piksel grafiki (jak w reszcie gry)
 SPRITE_H = 142                      # wysokość postaci w pikselach (bez konturu)
 # punkty charakterystyczne na obrazie źródłowym (px oryginału)
-PIVOT_X = 730                       # środek ciała nad stopami
-FEET_Y = 1350                       # spód buta
-MOUTH = (548, 135)                  # środek otworu beczki
-HAT_TOP = 600                       # czubek czapki
-EYES = ((670, 666), (722, 659))
-MOUTH_FACE = (712, 712)
+PIVOT_X = 660                       # środek ciała nad stopami (szeroki rozkrok)
+FEET_Y = 1345                       # spód buta
+MOUTH = (430, 88)                   # środek otworu beczki
+HAT_TOP = 505                       # czubek czapki
+EYES = ((550, 587), (613, 568))     # zaciśnięte oczy
+MOUTH_FACE = (607, 637)             # otwarte usta (krzyk)
+FACE = (590, 615)                   # środek twarzy - środek kadru portretu
+FACE_H = 300                        # wysokość kadru portretu w px oryginału (czapka..broda)
 
 
 def load_cutout():
-    """RGB + maska postaci: tło jest jasnoszare i neutralne, cień i podpis pod stopami są szare."""
+    """RGB + maska postaci. Tło to namalowana szachownica (biel / jasna szarość, bez nasycenia): wszystko, co jasne
+    i neutralne, połączone z krawędzią obrazka, plus duże zamknięte prześwity (między rękami a głową; blaski na obręczach i sprzączce są mniejsze)."""
     a = np.asarray(Image.open(SRC).convert("RGB")).astype(int)
-    h, w = a.shape[:2]
     sat = a.max(-1) - a.min(-1)
     lum = a.mean(-1)
-    lab, n = ndimage.label((sat < 20) & (lum > 200))
-    sizes = ndimage.sum(np.ones_like(lab), lab, range(1, n + 1))
-    bg = np.isin(lab, [i + 1 for i in range(n) if sizes[i] > 300])   # tło, także prześwity między rękami a głową
-    yy = np.mgrid[0:h, 0:w][0]
-    bg |= (yy > 1250) & (sat < 22)                  # cień na podłodze i podpis
+    cand = (sat < 18) & (lum > 195)
+    lab, n = ndimage.label(cand)
+    sizes = ndimage.sum(cand, lab, range(1, n + 1))
+    border = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
+    bg = np.isin(lab, [i + 1 for i in range(n) if (i + 1) in border or sizes[i] > 1500])
     fg = ndimage.binary_opening(~bg, iterations=2)
     lab, n = ndimage.label(fg)
     sizes = ndimage.sum(fg, lab, range(1, n + 1))
     fg = lab == (int(np.argmax(sizes)) + 1)
-    fg = ndimage.binary_erosion(fg, iterations=3)                    # bez jasnej obwódki z tła
+    fg = ndimage.binary_erosion(fg, iterations=2)                    # bez szarej, wygładzonej obwódki z szachownicy
     return a.astype(np.uint8), fg
 
 
 def grade(rgb):
     """Lekko mocniejszy kontrast i nasycenie + wyostrzenie: po zmniejszeniu detale nie rozmywają się w błoto."""
     im = Image.fromarray(rgb)
-    im = im.filter(ImageFilter.UnsharpMask(radius=4, percent=90, threshold=2))
-    im = ImageEnhance.Contrast(im).enhance(1.12)
-    im = ImageEnhance.Color(im).enhance(1.12)
+    im = im.filter(ImageFilter.UnsharpMask(radius=2, percent=60, threshold=2))
+    im = ImageEnhance.Contrast(im).enhance(1.05)
+    im = ImageEnhance.Color(im).enhance(1.0)
     return np.asarray(im)
 
 
@@ -143,12 +147,13 @@ def dizzy(img, geo):
 
 
 def portrait(rgb, mask, pal):
-    """Popiersie Borubara (z dnem beczki nad głową) na tle dogasającej wsi przy ścianie lasu, 254x144."""
+    """Zbliżenie twarzy Borubara (czapka z piórkiem, broda, rękawy po bokach) na tle dogasającej wsi przy ścianie lasu,
+    254x144 - ilustracja rozmowy przy studni po etapie wsi."""
     W, H = 254, 144
-    box_h = 400                                     # od dłoni do brzucha
-    x_c, y_top = 700, 510
-    box_w = int(box_h * W / H)
-    box = (x_c - box_w // 2, y_top, x_c + box_w // 2, y_top + box_h)
+    box_h = FACE_H
+    box_w = int(round(box_h * W / H))
+    x_c, y_c = FACE
+    box = (x_c - box_w // 2, y_c - box_h // 2, x_c - box_w // 2 + box_w, y_c - box_h // 2 + box_h)
     col, al = downscale(rgb, mask, box, (W, H))
     # tło: zmierzch, łuna pożaru nisko, czarna ściana lasu
     yy, xx = np.mgrid[0:H, 0:W].astype(float)
