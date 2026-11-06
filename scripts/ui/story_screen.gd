@@ -58,6 +58,13 @@ static func entry_for_phase(phase: String, entries: Array = []) -> Dictionary:
 	return {}
 
 ## Zamienia akapity strony na BBCode (dialogi złote, tekst z escapowanymi nawiasami).
+## Strony dla wybranego bohatera: "pages_<id>" (np. pages_ursa), a gdy ich brak - wspólne "pages" (historia Ivo).
+static func pages_for(p_entry: Dictionary, hero_id: String) -> Array:
+	var key: String = "pages_" + hero_id
+	if p_entry.has(key) and typeof(p_entry[key]) == TYPE_ARRAY and not p_entry[key].is_empty():
+		return p_entry[key]
+	return p_entry.get("pages", [])
+
 static func page_to_bbcode(paragraphs: Array) -> String:
 	var out: PackedStringArray = []
 	for p in paragraphs:
@@ -70,7 +77,7 @@ static func page_to_bbcode(paragraphs: Array) -> String:
 
 func setup(p_entry: Dictionary) -> void:
 	entry = p_entry
-	pages = entry.get("pages", [])
+	pages = pages_for(entry, GameState.hero_id)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS

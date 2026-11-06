@@ -326,8 +326,10 @@ func _build_scene() -> void:
 		var spr := _sprite("guest_%d" % int(p[2]), Vector2(p[0], p[1]), i % 2 == 1)
 		guests.append({ "spr": spr, "x": float(p[0]), "y": float(p[1]), "away": 0.0, "ph": float(i) * 1.7 })
 		i += 1
+	# wybrany bohater (Ivo albo Ursa) siedzi wśród gości i na końcu rusza do walki
+	var hero: String = GameState.hero_id if IvoView.available(GameState.hero_id) else "ivo"
 	for d in ["south", "west", "south-west"]:
-		ivo_tex[d] = load("res://assets/characters/ivo/poses/ivo_%s.png" % d)
+		ivo_tex[d] = load("res://assets/characters/%s/poses/%s_%s.png" % [hero, hero, d])
 	ivo = Sprite2D.new()
 	ivo.texture = ivo_tex["south"]
 	ivo.centered = false

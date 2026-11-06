@@ -6,7 +6,8 @@ var music_volume: float = 0.7
 var sfx_volume: float = 0.9
 var touch_mode: int = 0          # 0 = auto, 1 = włączone, 2 = wyłączone
 var best_score: int = 0
-var checkpoint: Dictionary = {}  # { wave, score, kills }
+var checkpoint: Dictionary = {}  # { wave, score, kills, hero }
+var last_hero: String = "ivo"    # ostatnio wybrany bohater (zaznaczony na ekranie wyboru)
 
 func _ready() -> void:
 	load_all()
@@ -19,6 +20,7 @@ func load_all() -> void:
 	sfx_volume = float(cfg.get_value("settings", "sfx_volume", sfx_volume))
 	touch_mode = int(cfg.get_value("settings", "touch_mode", touch_mode))
 	best_score = int(cfg.get_value("progress", "best_score", 0))
+	last_hero = str(cfg.get_value("progress", "last_hero", last_hero))
 	var cp = cfg.get_value("progress", "checkpoint", {})
 	checkpoint = cp if typeof(cp) == TYPE_DICTIONARY else {}
 
@@ -28,6 +30,7 @@ func save_all() -> void:
 	cfg.set_value("settings", "sfx_volume", sfx_volume)
 	cfg.set_value("settings", "touch_mode", touch_mode)
 	cfg.set_value("progress", "best_score", best_score)
+	cfg.set_value("progress", "last_hero", last_hero)
 	cfg.set_value("progress", "checkpoint", checkpoint)
 	cfg.save(path)
 
@@ -35,7 +38,7 @@ func has_checkpoint() -> bool:
 	return checkpoint.has("wave") and int(checkpoint["wave"]) > 0
 
 func set_checkpoint(wave: int, score: int, kills: int) -> void:
-	checkpoint = { "wave": wave, "score": score, "kills": kills }
+	checkpoint = { "wave": wave, "score": score, "kills": kills, "hero": GameState.hero_id }
 	save_all()
 
 func clear_checkpoint() -> void:

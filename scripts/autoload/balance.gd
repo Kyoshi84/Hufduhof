@@ -31,6 +31,18 @@ func world(key: String):
 func player() -> Dictionary:
 	return data["player"]
 
+## Konfiguracja bohatera: Ivo = sekcja player; inni (sekcja heroes) = player nadpisany polami bohatera
+## (attacks zastępowane w całości). Nieznany bohater = Ivo.
+func hero(hero_id: String) -> Dictionary:
+	var heroes: Dictionary = data.get("heroes", {})
+	if not heroes.has(hero_id) or typeof(heroes[hero_id]) != TYPE_DICTIONARY:
+		return player()
+	var cfg: Dictionary = player().duplicate(true)
+	var over: Dictionary = heroes[hero_id]
+	for k in over.keys():
+		cfg[k] = over[k]
+	return cfg
+
 func enemy(type_id: String) -> Dictionary:
 	return data["enemies"][type_id]
 
@@ -56,4 +68,14 @@ func validate() -> Array:
 			for req in ["max_hp", "speed", "attacks", "behavior"]:
 				if not e.has(req):
 					errors.append("%s: brak pola '%s'" % [id, req])
+		var heroes: Dictionary = data.get("heroes", {})
+		for hid in heroes.keys():
+			if typeof(heroes[hid]) != TYPE_DICTIONARY:
+				continue
+			var hc: Dictionary = hero(hid)
+			for c in hc.get("chain", []):
+				if not hc["attacks"].has(c):
+					errors.append("bohater %s: atak '%s' z chain nie istnieje" % [hid, c])
+			if not hc["attacks"].has("heavy"):
+				errors.append("bohater %s: brak ataku 'heavy'" % hid)
 	return errors

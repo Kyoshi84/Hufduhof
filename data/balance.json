@@ -94,6 +94,66 @@
       "depth": 64
     }
   },
+  "heroes": {
+    "_opis": "Bohaterowie inni niż Ivo: pola nadpisują wartości z sekcji player (attacks zastępowane w całości). chain = kolejność lekkich ataków. projectile = atak dystansowy (scripts/combat/projectile.gd): speed/range w jednostkach świata, depth = połowa pasa głębi, pierce = przebija wszystkich na linii, explode_radius/explode_depth = wybuch.",
+    "ursa": {
+      "max_hp": 110,
+      "move_speed": 255,
+      "chain": [
+        "firebolt"
+      ],
+      "attacks": {
+        "firebolt": {
+          "windup": 0.12,
+          "active": 0.05,
+          "recover": 0.24,
+          "damage": 12,
+          "knockback": 120,
+          "stun": 0.24,
+          "sfx": "swing",
+          "hit_sfx": "hit",
+          "projectile": {
+            "kind": "bolt",
+            "speed": 950,
+            "range": 640,
+            "depth": 30,
+            "half_len": 24,
+            "pierce": true,
+            "spawn_dx": 44,
+            "height": 80
+          }
+        },
+        "heavy": {
+          "windup": 0.4,
+          "active": 0.05,
+          "recover": 0.45,
+          "damage": 34,
+          "knockback": 460,
+          "stun": 0.6,
+          "cooldown": 1.4,
+          "breaks_poise": true,
+          "sfx": "swing_heavy",
+          "hit_sfx": "hit_heavy",
+          "projectile": {
+            "kind": "fireball",
+            "speed": 640,
+            "range": 520,
+            "depth": 30,
+            "half_len": 26,
+            "pierce": false,
+            "explode_radius": 150,
+            "explode_depth": 70,
+            "spawn_dx": 44,
+            "height": 84
+          }
+        }
+      },
+      "facing_assist": {
+        "range": 640,
+        "depth": 64
+      }
+    }
+  },
   "enemies": {
     "skaven": {
       "behavior": "swarm",

@@ -1,10 +1,16 @@
 class_name Player
 extends Actor
-## Ivo Eggert. Kombinacja: light1 -> light2 -> sweep (szeroki zamach obszarowy). Heavy osobno.
+## Grywalny bohater (wybór: GameState.hero_id, dane: Balance.hero / data/heroes.json).
+## Ivo Eggert: kombinacja light1 -> light2 -> sweep (szeroki zamach obszarowy), heavy osobno.
+## Ursa: ognisty pocisk (przebija wszystkich w linii), heavy = kula ognia z wybuchem. Ataki z polem "projectile"
+## nie mają hitboxa wręcz - w fazie ACTIVE wystrzeliwują pocisk (scripts/combat/projectile.gd).
 
 const CHAIN := ["light1", "light2", "sweep"]
 
 var cfg: Dictionary
+var hero_id: String = "ivo"
+var chain: Array = CHAIN
+var shots_fired: int = 0           # wystrzelone pociski (testy/statystyki)
 var combo_idx: int = 0
 var combo_timer: float = 0.0
 var dodge_cd: float = 0.0
@@ -22,10 +28,14 @@ var vz: float = 0.0
 var speed_mult: float = 1.0        # np. brodzenie w kałuży
 var jumps_done: int = 0
 
-func setup(lvl) -> void:
+func setup(lvl, p_hero: String = "") -> void:
 	level = lvl
-	cfg = Balance.player()
-	id = "ivo"
+	hero_id = p_hero if p_hero != "" else GameState.hero_id
+	cfg = Balance.hero(hero_id)
+	id = hero_id
+	chain = cfg.get("chain", CHAIN)
+	if chain.is_empty():
+		chain = CHAIN
 	team = 0
 	max_hp = float(cfg["max_hp"])
 	hp = max_hp
@@ -165,11 +175,27 @@ func assist_facing() -> void:
 
 func start_light() -> void:
 	assist_facing()
-	var name: String = CHAIN[combo_idx % CHAIN.size()]
+	var name: String = chain[combo_idx % chain.size()]
 	start_attack(name, attack_defs[name])
 	combo_idx += 1
-	if combo_idx >= CHAIN.size():
+	if combo_idx >= chain.size():
 		combo_idx = 0
+
+## Ostatni element kombinacji (u Ivo "sweep"): po nim combo zaczyna się od nowa i nie można go przerwać lekkim atakiem.
+func chain_end() -> String:
+	return str(chain[chain.size() - 1])
+
+func is_ranged_attack() -> bool:
+	return attack.has("projectile")
+
+## Atak dystansowy nie ma hitboxa wręcz: trafia pocisk.
+func hitbox_active() -> bool:
+	return state == State.ACTIVE and not is_ranged_attack()
+
+func on_active_started() -> void:
+	if is_ranged_attack():
+		level.spawn_projectile(self, attack)
+		shots_fired += 1
 
 ## Anulowanie odnowienia ataku w kolejny element combo / unik / mocny atak.
 func try_cancel() -> void:
@@ -189,12 +215,12 @@ func try_cancel() -> void:
 	if Controls.consume("heavy") and cooldown_ready("heavy"):
 		start_attack("heavy", attack_defs["heavy"])
 		return
-	if attack_name != "sweep" and attack_name != "heavy" and Controls.consume("light"):
+	if attack_name != chain_end() and attack_name != "heavy" and Controls.consume("light"):
 		start_light()
 
 func on_attack_finished() -> void:
-	combo_timer = float(cfg["combo_window"]) if attack_name != "sweep" and attack_name != "heavy" else 0.0
-	if attack_name == "sweep" or attack_name == "heavy":
+	combo_timer = float(cfg["combo_window"]) if attack_name != chain_end() and attack_name != "heavy" else 0.0
+	if attack_name == chain_end() or attack_name == "heavy":
 		combo_idx = 0
 
 func try_dodge(mv: Vector2) -> bool:

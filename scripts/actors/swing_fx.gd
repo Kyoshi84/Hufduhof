@@ -13,8 +13,8 @@ func _pt(f: int, hit_start: float, rx: float, ry: float, ang: float, cy: float) 
 
 func _draw() -> void:
 	var a = actor
-	if a == null or a.attack.is_empty():
-		return
+	if a == null or a.attack.is_empty() or a.attack.has("projectile"):
+		return                                   # atak dystansowy: zamiast smugi leci pocisk
 	var st: int = a.state
 	var atk: Dictionary = a.attack
 	var area: bool = float(atk.get("back", 0.0)) > 0.0

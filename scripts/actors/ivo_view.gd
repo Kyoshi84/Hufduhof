@@ -1,6 +1,7 @@
 class_name IvoView
 extends Node2D
-## Widok Ivo oparty na dostarczonych sprite'ach (8 kierunków, statyczne pozy). Wybór kierunku:
+## Widok bohatera (Ivo, Ursa, ...) oparty na dostarczonych sprite'ach: 8 kierunków, statyczne pozy z
+## assets/characters/<id>/poses/<id>_<kierunek>.png + manifest.json. Wybór kierunku:
 ##  - ruch (także w głąb sceny): kierunek wektora ruchu (E, SE, S, SW, W, NW, N, NE),
 ##  - atak / trafienie / unik: profil zgodny z kierunkiem ataku (E lub W) - hitbox jest zawsze poziomy,
 ##  - zwycięstwo: S (twarzą do kamery), śmierć: profil, obrócony o dokładnie 90 stopni.
@@ -8,6 +9,7 @@ extends Node2D
 
 const DIR_ORDER := ["east", "south-east", "south", "south-west", "west", "north-west", "north", "north-east"]
 const MANIFEST := "res://assets/characters/ivo/poses/manifest.json"
+const POSES := "res://assets/characters/%s/poses/"
 
 var actor
 var sprite: Sprite2D
@@ -19,23 +21,30 @@ var wpt: float = 1.3333
 var cur_dir: String = "east"
 var t: float = 0.0
 
-static func available() -> bool:
-	return ResourceLoader.exists(MANIFEST) or FileAccess.file_exists(MANIFEST)
+var hero: String = "ivo"
 
-func setup(a) -> void:
+static func manifest_path(hero_id: String) -> String:
+	return (POSES % hero_id) + "manifest.json"
+
+static func available(hero_id: String = "ivo") -> bool:
+	var p := manifest_path(hero_id)
+	return ResourceLoader.exists(p) or FileAccess.file_exists(p)
+
+func setup(a, hero_id: String = "ivo") -> void:
 	actor = a
-	var f := FileAccess.open(MANIFEST, FileAccess.READ)
+	hero = hero_id
+	var f := FileAccess.open(manifest_path(hero_id), FileAccess.READ)
 	var m: Dictionary = JSON.parse_string(f.get_as_text())
 	wpt = float(m["world_per_texel"])
 	for d in m["dirs"]:
-		tex[d] = load("res://assets/characters/ivo/poses/ivo_%s.png" % d)
+		tex[d] = load((POSES % hero) + "%s_%s.png" % [hero, d])
 	sprite = Sprite2D.new()
 	sprite.centered = false
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.offset = -Vector2(floorf(float(m["pivot"][0])), floorf(float(m["pivot"][1])))
 	sprite.scale = Vector2(wpt, wpt)
 	add_child(sprite)
-	sheet = CharacterSheet.get_sheet("ivo")
+	sheet = CharacterSheet.get_sheet(hero)
 	sheet_sprite = Sprite2D.new()
 	sheet_sprite.centered = false
 	sheet_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

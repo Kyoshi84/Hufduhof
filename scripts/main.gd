@@ -7,6 +7,7 @@ const AUTHORS := "Janek M. i Franek W."   # autorzy gry (menu główne i "Inform
 
 func _ready() -> void:
 	add_child(PaletteFilter.new())
+	GameState.hero_id = Heroes.preferred(SaveData.last_hero)
 	var errs := Balance.validate()
 	if not errs.is_empty():
 		push_error("Błędy balansu: %s" % str(errs))
@@ -57,7 +58,7 @@ func show_menu() -> void:
 	var gap := Control.new()
 	gap.custom_minimum_size = Vector2(0, 16)
 	vb.add_child(gap)
-	vb.add_child(UI.make_button("Nowa gra", func(): start_game(false)))
+	vb.add_child(UI.make_button("Nowa gra", show_hero_select))
 	var cont := UI.make_button("Kontynuuj", func(): start_game(true))
 	cont.disabled = not SaveData.has_checkpoint()
 	vb.add_child(cont)
@@ -81,6 +82,99 @@ func _credits_label() -> Label:
 	l.add_theme_constant_override("outline_size", 4)
 	return l
 
+## Ekran wyboru bohatera (po "Nowa gra"): karty z data/heroes.json; zablokowane karty mają "Wkrótce".
+func show_hero_select() -> void:
+	Controls.reset()
+	var root := Control.new()
+	root.name = "HeroSelect"
+	root.theme = UI.theme()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var bgc := ColorRect.new()
+	bgc.color = Color(0.07, 0.04, 0.04)
+	bgc.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.add_child(bgc)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.add_child(center)
+	var vb := VBoxContainer.new()
+	vb.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.add_theme_constant_override("separation", 14)
+	center.add_child(vb)
+	vb.add_child(UI.make_label("WYBIERZ BOHATERA", 48, Color(0.85, 0.18, 0.14)))
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 22)
+	vb.add_child(row)
+	var focus_btn: Button = null
+	var want: String = Heroes.preferred(SaveData.last_hero)
+	for h in Heroes.all():
+		var card := _hero_card(h)
+		row.add_child(card)
+		var btn: Button = card.get_meta("button")
+		if str(h.get("id", "")) == want:
+			focus_btn = btn
+	var back := UI.make_button("Wróć", show_menu, 260.0)
+	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	vb.add_child(back)
+	_swap(root)
+	if focus_btn != null:
+		focus_btn.grab_focus()
+
+func _hero_card(h: Dictionary) -> Control:
+	var hid: String = str(h.get("id", ""))
+	var open: bool = bool(h.get("selectable", false))
+	var panel := PanelContainer.new()
+	panel.name = "Hero_" + hid
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.13, 0.08, 0.07, 0.95) if open else Color(0.08, 0.06, 0.06, 0.95)
+	sb.border_color = Color(0.72, 0.58, 0.28) if open else Color(0.32, 0.27, 0.22)
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(6)
+	sb.set_content_margin_all(14)
+	panel.add_theme_stylebox_override("panel", sb)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 6)
+	panel.add_child(col)
+	var pic_size := Vector2(290, 290)
+	var path: String = str(h.get("portrait", ""))
+	if open and path != "" and ResourceLoader.exists(path):
+		var tr := TextureRect.new()
+		tr.texture = load(path)
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		tr.custom_minimum_size = pic_size
+		col.add_child(tr)
+	else:
+		var box := ColorRect.new()
+		box.color = Color(0.04, 0.03, 0.03)
+		box.custom_minimum_size = pic_size
+		var q := UI.make_label("?", 140, Color(0.30, 0.26, 0.22))
+		q.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		q.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		box.add_child(q)
+		col.add_child(box)
+	col.add_child(UI.make_label(str(h.get("name", hid)), 34, Color(0.9, 0.78, 0.45) if open else Color(0.5, 0.45, 0.4)))
+	col.add_child(UI.make_label(str(h.get("title", "")), 20, Color(0.8, 0.72, 0.6)))
+	var desc := UI.make_label(str(h.get("description", "")), 17, Color(0.78, 0.74, 0.66))
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc.custom_minimum_size = Vector2(pic_size.x, 48)
+	col.add_child(desc)
+	var btn := UI.make_button("Wybierz" if open else "Wkrótce", func(): choose_hero(hid), pic_size.x)
+	btn.disabled = not open
+	col.add_child(btn)
+	panel.set_meta("button", btn)
+	return panel
+
+## Wybór bohatera: zapamiętany (SaveData.last_hero) i od razu nowa gra.
+func choose_hero(hero_id: String) -> void:
+	if not Heroes.is_selectable(hero_id):
+		return
+	GameState.hero_id = hero_id
+	SaveData.last_hero = hero_id
+	SaveData.save_all()
+	start_game(false)
+
 ## Nowa gra zaczyna się prologiem (opis -> karczma z kuflami -> szczury -> opis); Kontynuuj i ponowna próba po porażce go pomijają.
 func start_game(continue_save: bool, skip_prologue: bool = false) -> void:
 	get_tree().paused = false
@@ -89,6 +183,9 @@ func start_game(continue_save: bool, skip_prologue: bool = false) -> void:
 	var from_wave := 0
 	var resumed: bool = continue_save and SaveData.has_checkpoint()
 	if resumed:
+		var cp_hero: String = str(SaveData.checkpoint.get("hero", GameState.hero_id))
+		if Heroes.is_selectable(cp_hero):
+			GameState.hero_id = cp_hero
 		from_wave = int(SaveData.checkpoint["wave"])
 		GameState.score = int(SaveData.checkpoint.get("score", 0))
 		GameState.kills = int(SaveData.checkpoint.get("kills", 0))

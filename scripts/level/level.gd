@@ -12,6 +12,7 @@ var player: Player
 var enemies: Array = []
 var barrels: Array = []
 var pickups: Array = []
+var projectiles: Array = []         # Projectile: pociski bohatera (ognisty pocisk, kula ognia)
 var obstacles: Array = []           # Obstacle: kałuże, ogień, powalone drzewa, rzeki, przepaście (trzeba skoczyć)
 var obstacle_layer: Node2D
 var ambient: Ambient                # uciekający wieśniacy i zwierzęta (tylko dekoracja)
@@ -132,7 +133,7 @@ func build() -> void:
 	player = Player.new()
 	player.setup(self)
 	player.position = Vector2(float(data["player_start"]), (lane_min() + lane_max()) * 0.5)
-	attach_visual(player, "ivo")
+	attach_visual(player, player.hero_id)
 	entities.add_child(player)
 	camera = Camera2D.new()
 	camera.position = Vector2(view_w * 0.5, VIEW_H * 0.5)
@@ -209,6 +210,14 @@ func attach_visual(a: Actor, kind: String) -> void:
 
 # ------------------------------------------------------------------ granice sceny
 
+## Pocisk bohatera (atak z polem "projectile"), wystrzeliwany na początku fazy ACTIVE.
+func spawn_projectile(shooter: Actor, defn: Dictionary) -> Projectile:
+	var pr := Projectile.new()
+	pr.setup(self, shooter, defn)
+	world.add_child(pr)
+	projectiles.append(pr)
+	return pr
+
 func lane_min() -> float:
 	return float(Balance.world("lane_min"))
 
@@ -267,6 +276,11 @@ func tick(delta: float) -> void:
 	player.speed_mult = 1.0
 	for o in obstacles:
 		o.resolve(player, prev_x, delta)
+	for pr in projectiles.duplicate():
+		pr.tick(delta)
+		if pr.done:
+			projectiles.erase(pr)
+			pr.queue_free()
 	update_jump_hint()
 	for e in enemies.duplicate():
 		e.tick(delta)

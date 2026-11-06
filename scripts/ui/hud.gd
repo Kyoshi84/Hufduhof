@@ -1,6 +1,6 @@
 class_name Hud
 extends CanvasLayer
-## HUD: zdrowie Ivo, wynik, licznik pokonanych, pasek bossa, przycisk pauzy, banery, sterowanie dotykowe.
+## HUD: zdrowie bohatera, wynik, licznik pokonanych, pasek bossa, przycisk pauzy, banery, sterowanie dotykowe.
 
 var level
 var canvas: Control
@@ -85,14 +85,14 @@ func _draw_hud() -> void:
 	if p == null:
 		return
 	var size_v: Vector2 = canvas.get_viewport_rect().size
-	# pasek zdrowia Ivo
+	# pasek zdrowia bohatera
 	var bx := 24.0
 	var by := 22.0
 	var bw := 250.0
 	canvas.draw_rect(Rect2(bx - 3, by - 3, bw + 6, 34), Color(0.05, 0.03, 0.03, 0.85))
 	canvas.draw_rect(Rect2(bx, by, bw * clampf(p.hp / p.max_hp, 0.0, 1.0), 28), Color(0.72, 0.1, 0.1))
 	canvas.draw_rect(Rect2(bx - 3, by - 3, bw + 6, 34), Color(0.72, 0.58, 0.28), false, 2.0)
-	canvas.draw_string(ThemeDB.fallback_font, Vector2(bx + 6, by + 22), "IVO", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(1, 1, 1, 0.9))
+	canvas.draw_string(ThemeDB.fallback_font, Vector2(bx + 6, by + 22), Heroes.hud_name(p.hero_id), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(1, 1, 1, 0.9))
 	# postęp limitu punktów etapu (cienki pasek pod zdrowiem)
 	var si: int = level.stage_idx
 	if si >= 0 and si < level.stage_points.size() and level.stage_quota() > 0:

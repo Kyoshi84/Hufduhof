@@ -45,6 +45,29 @@ od razu do etapu 1; „Kontynuuj” i ponowna próba po porażce w ogóle pomija
   `assets/ui/story/portraits/borubar.png` (skrypt wypisuje geometrię sprite'a: otwór beczki = `CATCH_Y`, stopy = `BODY_DX`).
 - Zrzuty: `tests/shots_tavern.tscn` (wymaga xvfb), testy: `t_tavern` w `tests/test_runner.gd`.
 
+## Bohaterowie
+„Nowa gra” otwiera **ekran wyboru bohatera** (karty: portret, imię, tytuł, opis). Wybór jest zapamiętywany (`SaveData.last_hero`)
+i zapisywany w checkpoincie, więc „Kontynuuj” gra tym samym bohaterem.
+
+| bohater | stan | walka |
+|---|---|---|
+| **Ivo Eggert** | do wyboru | dwuręczny miecz: cięcie → cięcie → szeroki zamach, mocny atak znad głowy (bez zmian) |
+| **Modraszka** | puste miejsce, zablokowana („Wkrótce”) | - |
+| **Ursa** (czarodziejka ognia) | do wyboru | `J`: ognisty pocisk - leci przed siebie i rani **wszystkich wrogów na linii**; `K`: kula ognia - wybucha na pierwszym wrogu (albo na końcu zasięgu) i rani wszystkich w promieniu; 110 zdrowia (Ivo 160) |
+
+- Lista i opisy: `data/heroes.json` (`selectable: false` = zablokowana karta). Statystyki i ataki: `data/balance.json` →
+  `player` (Ivo) i `heroes.<id>` (pola nadpisują `player`; `chain` = kolejność lekkich ataków, `projectile` = atak dystansowy).
+- Kod: `scripts/actors/heroes.gd` (lista), `scripts/actors/player.gd` (bohater wg `GameState.hero_id`), `scripts/combat/projectile.gd`
+  (pociski: `bolt` przebija, `fireball` wybucha), ekran wyboru w `scripts/main.gd` (`show_hero_select`, `choose_hero`).
+- Grafika w grze: `assets/characters/<id>/poses/<id>_<kierunek>.png` + `manifest.json` (8 kierunków, płótno 96x128, pivot 48,126.5;
+  ten sam widok co u Ivo). Portret na karcie: pole `portrait`.
+- Ursa powstaje z obrazu autora `assets/characters/ursa/source/ursa_source.webp`: `python3 tools/build_ursa.py` (pozy + portret
+  `assets/ui/heroes/ursa.png`). Jest jeden rysunek (3/4 przodem, w lewo), więc kierunki w prawo to odbicie lustrzane, a N/S to ta sama
+  poza - osobne rysunki (np. plecy) wystarczy wrzucić pod tymi samymi nazwami. Pocisk i wybuch są na razie rysowane w kodzie z palety.
+- Fabuła: wpis w `data/story.json` może mieć `pages_<id>` (np. `pages_ursa`) - wtedy ten bohater widzi własne strony;
+  bez tego wszyscy widzą wspólne `pages` (historia Ivo). W karczmie wśród gości siedzi wybrany bohater.
+- Testy: `t_heroes`, `t_hero_select`, `t_projectiles`, `t_ursa_art`, `t_full_run_bot_ursa` (bot przechodzi poziom Ursą).
+
 ## Muzyka
 Trzy zapętlone motywy w stylu automatów z lat 90. (FM jak w YM2151, kwadraty, szum, uderzenia orkiestry), zbudowane na **melodii
 piosenki „Oath of the Carroburg Guard” (Przysięga Szkarłatnej Gwardii)**. Z piosenki wzięte są tylko: tonacja c-moll, tempo 136 BPM,

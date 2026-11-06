@@ -6,6 +6,7 @@ extends Node2D
 ## Brakująca animacja = zapas, więc podmieniasz grafikę po jednej animacji.
 
 const STYLES := {
+	"ursa":           { "scale": 1.15, "cloth": Color(0.78, 0.12, 0.08), "cloth2": Color(0.16, 0.12, 0.12), "skin": Color(0.84, 0.64, 0.52), "blade": Color(0.72, 0.74, 0.78), "wlen": 70.0 },
 	"ivo":            { "scale": 1.2,  "cloth": Color(0.74, 0.08, 0.10), "cloth2": Color(0.09, 0.08, 0.08), "skin": Color(0.80, 0.60, 0.46), "blade": Color(0.72, 0.74, 0.78), "wlen": 118.0 },
 	"skaven":         { "scale": 1.0, "cloth": Color(0.36, 0.30, 0.24), "cloth2": Color(0.22, 0.18, 0.14), "skin": Color(0.45, 0.38, 0.32), "blade": Color(0.50, 0.42, 0.30), "wlen": 40.0 },
 	"chaos_hound":    { "scale": 1.1, "cloth": Color(0.20, 0.16, 0.18), "cloth2": Color(0.42, 0.10, 0.16), "skin": Color(0.26, 0.20, 0.20), "blade": Color(0.8, 0.8, 0.8),   "wlen": 0.0 },
@@ -22,9 +23,9 @@ var t_anim: float = 0.0
 func setup(a, k: String) -> void:
 	actor = a
 	kind = k
-	if k == "ivo" and IvoView.available():
+	if (k == "ivo" or a.team == 0) and IvoView.available(k):
 		ivo_view = IvoView.new()
-		ivo_view.setup(a)
+		ivo_view.setup(a, k)
 		add_child(ivo_view)
 		return
 	var sh := CharacterSheet.get_sheet(k)

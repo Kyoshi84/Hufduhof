@@ -17,11 +17,12 @@ func _ready() -> void:
 	var tests := [
 		"t_balance", "t_hit_geometry", "t_single_hit_per_attack", "t_invulnerability", "t_light_timing",
 		"t_skaven_ai", "t_hound_charge", "t_beastman_poise", "t_boss_phases", "t_wave_flow", "t_pause_state",
-		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_story", "t_tavern", "t_jump_obstacles", "t_road_decals", "t_stage_quota", "t_music", "t_full_run_bot",
+		"t_restart_cleanup", "t_save_data", "t_touch_controls", "t_hit_shape", "t_sword_scenarios", "t_sword_assist", "t_art_assets", "t_ivo_direction", "t_asset_folders", "t_sheet_loading", "t_sheet_integration", "t_stage_art", "t_story", "t_tavern", "t_jump_obstacles", "t_road_decals", "t_stage_quota", "t_music", "t_heroes", "t_hero_select", "t_projectiles", "t_ursa_art", "t_full_run_bot", "t_full_run_bot_ursa",
 	]
 	for t in tests:
 		var t0 := Time.get_ticks_msec()
 		GameState.reset()
+		GameState.hero_id = "ivo"          # main.tscn ustawia ostatnio wybranego bohatera z zapisu gracza
 		Controls.reset()
 		call(t)
 		print("[test] %s (%d ms)" % [t, Time.get_ticks_msec() - t0])
@@ -1323,8 +1324,14 @@ func t_jump_obstacles() -> void:
 	ok(float(d["length"]) >= 15000.0, "poziom jest długi (%d)" % int(d["length"]))
 	ok(d["obstacles"].size() >= 10 and d["potions"].size() >= 10 and d["slimes"].size() >= 5, "poziom ma przeszkody, mikstury i spaczenie")
 
+func t_full_run_bot_ursa() -> void:
+	GameState.hero_id = "ursa"
+	t_full_run_bot()
+	GameState.hero_id = "ivo"
+
 func t_full_run_bot() -> void:
 	var lvl := make_level()
+	ok(lvl.player.hero_id == GameState.hero_id, "bot gra wybranym bohaterem (%s)" % GameState.hero_id)
 	GameState.god_mode = true
 	var bot := TestBot.new()
 	bot.level = lvl
@@ -1350,3 +1357,188 @@ func t_full_run_bot() -> void:
 	print("  info: czas ~%.0f s, kills %d, wynik %d, szczyt wrogów %d" % [ticks / 60.0, GameState.kills, GameState.score, peak_enemies])
 	SaveData.clear_checkpoint()
 	free_level(lvl)
+
+# ------------------------------------------------------------------ bohaterowie
+
+func t_heroes() -> void:
+	ok(Balance.validate().is_empty(), "balans z bohaterami przechodzi walidację")
+	var ids := []
+	for h in Heroes.all():
+		ids.append(str(h["id"]))
+	ok(ids == ["ivo", "modraszka", "ursa"], "kolejność bohaterów: Ivo, Modraszka, Ursa (%s)" % str(ids))
+	ok(Heroes.is_selectable("ivo") and Heroes.is_selectable("ursa"), "Ivo i Ursa do wyboru")
+	ok(not Heroes.is_selectable("modraszka"), "Modraszka zablokowana (puste miejsce)")
+	ok(Heroes.preferred("modraszka") == "ivo" and Heroes.preferred("ursa") == "ursa", "zablokowany/nieznany bohater -> Ivo")
+	ok(Heroes.hud_name("ivo") == "IVO" and Heroes.hud_name("ursa") == "URSA", "imię na pasku zdrowia")
+	# Ivo bez zmian: te same wartości co sekcja player
+	ok(Balance.hero("ivo") == Balance.player(), "Ivo = sekcja player z balance.json")
+	var lvl := make_level()
+	ok(lvl.player.hero_id == "ivo" and lvl.player.chain == Player.CHAIN, "domyślnie gra Ivo z combo light1-light2-sweep")
+	ok(is_equal_approx(lvl.player.max_hp, float(Balance.player()["max_hp"])), "Ivo: zdrowie z sekcji player")
+	free_level(lvl)
+	GameState.hero_id = "ursa"
+	var lvl2 := make_level()
+	var u: Player = lvl2.player
+	var cfg: Dictionary = Balance.hero("ursa")
+	ok(u.hero_id == "ursa" and u.id == "ursa", "Ursa w poziomie")
+	ok(u.max_hp < float(Balance.player()["max_hp"]), "Ursa ma mniej zdrowia niż Ivo (%.0f)" % u.max_hp)
+	ok(u.chain == ["firebolt"], "lekki atak Ursy: ognisty pocisk")
+	ok(u.attack_defs["heavy"].has("projectile") and float(u.attack_defs["heavy"]["projectile"]["explode_radius"]) > 0.0, "mocny atak Ursy: kula ognia z wybuchem")
+	ok(is_equal_approx(float(cfg["dodge"]["cooldown"]), float(Balance.player()["dodge"]["cooldown"])), "brakujące pola Ursy dziedziczone z sekcji player")
+	ok(u.visual != null and u.visual.ivo_view != null and u.visual.ivo_view.hero == "ursa", "Ursa używa własnych póz 8-kierunkowych")
+	free_level(lvl2)
+	GameState.hero_id = "ivo"
+	# zapis: ostatni bohater i bohater w checkpoincie
+	var old_path: String = SaveData.path
+	SaveData.path = "user://test_save_hero.cfg"
+	GameState.hero_id = "ursa"
+	SaveData.last_hero = "ursa"
+	SaveData.set_checkpoint(2, 300, 4)
+	SaveData.last_hero = "ivo"
+	SaveData.checkpoint = {}
+	SaveData.load_all()
+	ok(SaveData.last_hero == "ursa", "ostatnio wybrany bohater zapisany")
+	ok(str(SaveData.checkpoint.get("hero", "")) == "ursa", "checkpoint pamięta bohatera")
+	SaveData.clear_checkpoint()
+	SaveData.last_hero = "ivo"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://test_save_hero.cfg"))
+	SaveData.path = old_path
+	GameState.hero_id = "ivo"
+	# fabuła: strony Ursy, gdy gra Ursa; inaczej wspólne
+	var las := StoryScreen.entry_after_stage(1)
+	ok(StoryScreen.pages_for(las, "ivo") == las["pages"], "Ivo: wspólne strony fabuły")
+	ok(StoryScreen.pages_for(las, "ursa") == las["pages_ursa"], "Ursa: własne strony fabuły")
+	for e in StoryScreen.load_entries():
+		for pg in StoryScreen.pages_for(e, "ursa"):
+			for para in pg:
+				ok(str(para).find("Ivo") < 0, "%s: w wersji Ursy nie ma Ivo" % str(e["id"]))
+
+func t_hero_select() -> void:
+	var old_path: String = SaveData.path
+	SaveData.path = "user://test_save_sel.cfg"
+	GameState.story_enabled = false
+	var main = load("res://main.tscn").instantiate()
+	add_child(main)
+	main.show_hero_select()
+	var root: Control = main.current
+	ok(root.name == "HeroSelect", "\"Nowa gra\" prowadzi do wyboru bohatera")
+	var cards := root.find_children("Hero_*", "PanelContainer", true, false)
+	ok(cards.size() == 3, "3 karty bohaterów (%d)" % cards.size())
+	var locked: Button = root.find_child("Hero_modraszka", true, false).get_meta("button")
+	ok(locked.disabled, "karta Modraszki nieaktywna")
+	var pick: Button = root.find_child("Hero_ursa", true, false).get_meta("button")
+	ok(not pick.disabled, "kartę Ursy można wybrać")
+	main.choose_hero("modraszka")
+	ok(main.current == root, "zablokowanego bohatera nie da się wybrać")
+	pick.emit_signal("pressed")
+	ok(GameState.hero_id == "ursa" and SaveData.last_hero == "ursa", "wybór Ursy zapisany")
+	ok(main.current is Level and (main.current as Level).player.hero_id == "ursa", "gra startuje z Ursą")
+	main.show_menu()
+	ok(main.current.find_child("Credits", true, false) != null, "menu główne ma napis z autorami")
+	Sfx.stop_music()
+	main.queue_free()
+	get_tree().paused = false
+	GameState.hero_id = "ivo"
+	SaveData.last_hero = "ivo"
+	SaveData.clear_checkpoint()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://test_save_sel.cfg"))
+	SaveData.path = old_path
+	GameState.story_enabled = true
+
+func no_barrels(lvl: Level) -> void:
+	for b in lvl.barrels:
+		b.alive = false
+
+func t_projectiles() -> void:
+	GameState.hero_id = "ursa"
+	var lvl := make_level()
+	no_barrels(lvl)
+	var p: Player = lvl.player
+	p.position = Vector2(1000, 480)
+	p.facing = 1
+	var a := spawn(lvl, "beastman", Vector2(1200, 480))
+	var b := spawn(lvl, "beastman", Vector2(1450, 486))
+	var off := spawn(lvl, "beastman", Vector2(1300, 480 + 90))
+	var behind := spawn(lvl, "beastman", Vector2(800, 480))
+	var far := spawn(lvl, "beastman", Vector2(1000 + 900, 480))
+	for e in [a, b, off, behind, far]:
+		e.ai_cd = 99.0
+	p.start_attack("firebolt", p.attack_defs["firebolt"])
+	step(lvl, 1.2)
+	ok(p.shots_fired == 1, "ognisty pocisk wystrzelony raz")
+	ok(a.hp < a.max_hp and b.hp < b.max_hp, "pocisk rani wszystkich wrogów w linii")
+	ok(off.hp == off.max_hp, "wróg na innej głębi nietknięty")
+	ok(behind.hp == behind.max_hp, "wróg za plecami nietknięty")
+	ok(far.hp == far.max_hp, "wróg poza zasięgiem nietknięty")
+	ok(lvl.projectiles.is_empty(), "pocisk znika po zasięgu")
+	ok(is_equal_approx(a.max_hp - a.hp, b.max_hp - b.hp), "każdy w linii trafiony raz, tymi samymi obrażeniami")
+	ok(not p.hitbox_active(), "atak dystansowy nie ma hitboxa wręcz")
+	free_level(lvl)
+	# kula ognia: wybuch na pierwszym wrogu rani też sąsiadów (także na innej głębi w promieniu), ale nie dalszych
+	var lvl2 := make_level()
+	no_barrels(lvl2)
+	var p2: Player = lvl2.player
+	p2.position = Vector2(1000, 480)
+	p2.facing = 1
+	var first := spawn(lvl2, "skaven", Vector2(1250, 480))
+	var near := spawn(lvl2, "skaven", Vector2(1330, 530))
+	var away := spawn(lvl2, "skaven", Vector2(1700, 480))
+	for e in [first, near, away]:
+		e.ai_cd = 99.0
+	p2.start_attack("heavy", p2.attack_defs["heavy"])
+	var exploded := false
+	for i in 90:
+		lvl2.tick(1.0 / 60.0)
+		for pr in lvl2.projectiles:
+			exploded = exploded or pr.is_exploding()
+	ok(exploded, "kula ognia wybucha przy pierwszym wrogu")
+	ok(first.hp < first.max_hp and near.hp < near.max_hp, "wybuch rani wszystkich w promieniu")
+	ok(away.hp == away.max_hp, "wybuch nie sięga dalekich wrogów")
+	ok(float(p2.attack_defs["heavy"]["cooldown"]) > 0.5, "kula ognia ma czas odnowienia")
+	free_level(lvl2)
+	# kula ognia bez celu wybucha na końcu zasięgu
+	var lvl3 := make_level()
+	no_barrels(lvl3)
+	lvl3.player.position = Vector2(1000, 480)
+	lvl3.player.facing = -1
+	lvl3.player.start_attack("heavy", lvl3.player.attack_defs["heavy"])
+	step(lvl3, 0.6)
+	var pr3: Projectile = lvl3.projectiles[0] if not lvl3.projectiles.is_empty() else null
+	ok(pr3 != null and pr3.dir == -1, "pocisk leci w stronę, w którą patrzy bohater")
+	step(lvl3, 1.5)
+	ok(lvl3.projectiles.is_empty(), "kula ognia bez celu wybucha i znika")
+	free_level(lvl3)
+	GameState.hero_id = "ivo"
+	# Ivo nadal tnie wręcz
+	var lvl4 := make_level()
+	lvl4.player.start_attack("light1", lvl4.player.attack_defs["light1"])
+	step(lvl4, 0.15)
+	ok(lvl4.projectiles.is_empty() and lvl4.player.shots_fired == 0, "Ivo nie strzela pociskami")
+	free_level(lvl4)
+
+func t_ursa_art() -> void:
+	var pal_img := Image.load_from_file("res://assets/palette/hufduhof_256.png")
+	var pal := {}
+	for x in 256:
+		pal[pal_img.get_pixel(x, 0).to_html(false)] = true
+	ok(IvoView.available("ursa"), "manifest póz Ursy istnieje")
+	var m: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(IvoView.manifest_path("ursa")))
+	ok(m["dirs"].size() == 8, "Ursa: 8 kierunków")
+	var foreign := 0
+	var partial := 0
+	var ok_size := true
+	for d in m["dirs"]:
+		var img := Image.load_from_file("res://assets/characters/ursa/poses/ursa_%s.png" % d)
+		ok_size = ok_size and img.get_size() == Vector2i(96, 128)
+		for y in range(0, img.get_height(), 2):
+			for x in img.get_width():
+				var c := img.get_pixel(x, y)
+				if c.a > 0.0:
+					if c.a < 0.99:
+						partial += 1
+					if not pal.has(c.to_html(false)):
+						foreign += 1
+	ok(ok_size, "pozy Ursy na płótnie 96x128 jak u Ivo")
+	ok(foreign == 0, "pozy Ursy w kolorach palety (spoza: %d)" % foreign)
+	ok(partial == 0, "pozy Ursy z alfą binarną (%d)" % partial)
+	ok(ResourceLoader.exists("res://assets/ui/heroes/ursa.png"), "portret Ursy na ekran wyboru")

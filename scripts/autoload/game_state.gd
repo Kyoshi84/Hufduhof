@@ -4,6 +4,7 @@ extends Node
 var score: int = 0
 var kills: int = 0
 var god_mode: bool = false   # tylko do testów automatycznych
+var hero_id: String = "ivo"  # wybrany bohater (ekran wyboru po "Nowa gra"); reset() go nie zmienia
 
 func reset() -> void:
 	score = 0
