@@ -6,7 +6,7 @@ extends Node
 const RATE := 22050
 const SFX := ["swing", "swing_heavy", "hit", "miss", "hurt", "skaven_die", "skaven_alert", "stone", "warp", "bolt",
 	"lightning", "fire", "pickup", "coin", "potion", "chest", "splash", "fill", "shrine", "levelup", "ui_click",
-	"door", "mug_catch", "mug_break", "death"]
+	"door", "mug_catch", "mug_break", "death", "no_mana"]
 
 var streams: Dictionary = {}
 var _pool: Array = []
@@ -129,6 +129,7 @@ func _synth(n: String) -> AudioStreamWAV:
 		"mug_catch": [0.12, "tone", 880.0, 1100.0, 0.3],
 		"mug_break": [0.25, "noise_sweep", 3000.0, 1500.0, 0.4],
 		"death": [0.9, "tone", 200.0, 60.0, 0.4],
+		"no_mana": [0.12, "tone", 180.0, 140.0, 0.25],
 	}
 	var p: Array = spec.get(n, [0.1, "tone", 440.0, 440.0, 0.2])
 	var dur: float = p[0]

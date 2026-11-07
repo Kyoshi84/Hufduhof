@@ -94,7 +94,8 @@
           "odrzut": 70,
           "wzmocnienie": 0.4,
           "czas": 6,
-          "opis": "Odrzuca wrogów wokół i na 6 s zwiększa obrażenia o 40%."
+          "opis": "Odrzuca wrogów wokół i na 6 s zwiększa obrażenia o 40%.",
+          "zasieg": 140
         }
       },
       "pasek": [
