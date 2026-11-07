@@ -157,3 +157,60 @@ func test_touch_layout_collapses_and_avoids_joystick():
 	await wait_frames(2)
 	assert_eq(bar.slot_rects.size(), 10, "na PC wszystkie 10 slotów")
 	Save.touch_mode = 0
+
+func _swap(id: String) -> void:
+	lvl.queue_free()
+	await wait_frames(2)
+	Game.new_game(id)
+	lvl = Level.new("wioska")
+	add_child(lvl)
+	await wait_frames(3)
+	for e in lvl.enemies():
+		e.queue_free()
+	await wait_frames(2)
+	lvl.map.walls.free()
+	lvl.hero.blessed = 1000.0
+	lvl.hero.use_mouse_aim = false
+
+func _dummy(off: Vector2) -> Enemy:
+	var e := lvl.spawn_enemy("skaven_spear", lvl.hero.position + off, "", "")
+	e.set_physics_process(false)
+	e.hp = 9999.0
+	return e
+
+func test_ivo_whirl_hits_all_around():
+	await _swap("ivo")
+	var es := [_dummy(Vector2(70, 0)), _dummy(Vector2(-70, 0)), _dummy(Vector2(0, 40)), _dummy(Vector2(0, -40))]
+	lvl.hero.aim = Vector2.RIGHT
+	var hits: Array = lvl.hero._melee(lvl.hero.skills["wirujacy_miecz"])
+	assert_eq(hits.size(), 4, "wirujący miecz trafia przód, tył i boki")
+	for e in es:
+		assert_true(e.hp < 9999.0)
+
+func test_ivo_war_cry_buffs_damage_and_pushes():
+	await _swap("ivo")
+	var e := _dummy(Vector2(80, 0))
+	e.set_physics_process(true)
+	var sk: Dictionary = lvl.hero.skills["potezne_ciecie"]
+	var before := Rules.skill_damage(sk, lvl.hero.stats, e.stats, lvl.hero.weapon_dmg(), lvl.hero.dmg_buff)
+	assert_eq(lvl.hero.try_skill("okrzyk_gwardii"), "ok")
+	await wait_seconds(0.5)
+	assert_almost_eq(lvl.hero.dmg_buff, 0.4, 0.001)
+	var after := Rules.skill_damage(sk, lvl.hero.stats, e.stats, lvl.hero.weapon_dmg(), lvl.hero.dmg_buff)
+	assert_true(after > before, "okrzyk zwiększa obrażenia (%d -> %d)" % [before, after])
+	assert_true(Iso.dist(lvl.hero.position, e.position) > 80.0, "okrzyk odrzuca wroga")
+
+func test_modraszka_net_slows_group():
+	await _swap("modraszka")
+	var es := [_dummy(Vector2(220, 0)), _dummy(Vector2(240, 20)), _dummy(Vector2(200, -15))]
+	assert_eq(lvl.hero.try_skill("strzala_z_siecia"), "ok")
+	await wait_seconds(1.0)
+	for e in es:
+		assert_true(e.slow_k < 1.0 and e.slow_t > 0.0, "sieć spowalnia grupę")
+
+func test_ursa_fireball_explosion_damages_group():
+	var es := [_dummy(Vector2(220, 0)), _dummy(Vector2(250, 20)), _dummy(Vector2(240, -20))]
+	assert_eq(lvl.hero.try_skill("kula_ognia"), "ok")
+	await wait_seconds(1.2)
+	for e in es:
+		assert_true(e.hp < 9999.0, "wybuch rani całą grupę")

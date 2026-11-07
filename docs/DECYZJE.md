@@ -3,23 +3,48 @@
 Ten plik zbiera rzeczy, które ustaliłem sam, bo nie było ich w opisie albo opisy się różniły.
 Wszystko, co dotyczy liczb, zmienisz w plikach `data/*.json` — bez dotykania kodu.
 
-## 1. Postacie (poprawione wg uwag autora)
+## 1. Postacie i umiejętności
 
-| Postać | Klasa | Walka |
+| Postać | Klasa |
+|---|---|
+| **Ivo Eggert** | Wojownik, Szkarłatna Gwardia z Carroburga, dwuręczny miecz |
+| **Ursa** | Czarodziejka ognia (Mag 2): pociski ognia, z bliska kostur. Dużo many, mniej zdrowia |
+| **Modraszka** | Łuczniczka o czarnych włosach: łuk, z bliska krótki nóż |
+
+**Uwaga o propozycji z zadania „trzy umiejętności”:** w propozycji Ursa miała strzały, a Modraszka była maginią — odwrotnie niż
+ustaliłeś wcześniej (Ursa = mag ognia, Modraszka = łuczniczka). Zostawiłem Twoje wcześniejsze ustalenie, zachowałem
+istniejące umiejętności (Kula ognia, Grad strzał) i dopasowałem resztę propozycji do klas:
+
+| Slot | Ivo | Ursa | Modraszka |
+|---|---|---|---|
+| 1 (szybka, tania) | **Potężne cięcie** - łuk 130° przed sobą, do 3 wrogów | **Ognisty pocisk** | **Strzała** |
+| 2 | **Wirujący miecz** - obszar dookoła, droższy | **Kula ognia** - wybuch i podpalenie (było) | **Grad strzał** - 5 strzał w wachlarzu (było) |
+| 3 | **Okrzyk Szkarłatnej Gwardii** - odrzut wrogów i +40% obrażeń na 6 s | **Przebijający płomień** - przelatuje przez kilku wrogów | **Strzała z siecią** - spowalnia grupę o połowę na 4 s (odpowiednik „spowolnienia grupy”) |
+
+Każda umiejętność ma w `data/heroes.json` (pole `umiejetnosci`): obrażenia (`obrazenia_bazowe`, `skalowanie`, `mnoznik`),
+`koszt_many`, `odnowienie`, `zamach`/`powrot`, `zasieg`, `predkosc`, `promien_trafienia` (hitbox pocisku), `ikona`.
+Ikony to placeholdery w `assets/ui/skills/<postać>/<id>.png` (48×48) — podmień pliki o tych samych nazwach.
+Kolejność na pasku: `pasek` (10 pozycji; `""` = pusty slot).
+
+**Mana dla wszystkich:** umiejętności Ivo i Modraszki też kosztują manę (jak w Diablo). Mana = Int + Mag × 10 + `mana_premia`
+(Ivo +22, Modraszka +20). Mag nadal oznacza magię: wzmacnia czary Ursy. Bez many atak główny przechodzi na zwykły atak bronią.
+
+**Grafika:** Ursa ma na Twoim obrazie miecz — na sprite'ach wciąż go widać; wersję z kosturem podmienisz w
+`assets/characters/ursa/idle/<kierunek>/0.png`. Modraszka ma grafikę tymczasową.
+
+**Prędkość:** bohaterowie Sz 5–6, skaveny Sz 4 — każdy bohater jest szybszy od każdego szczura.
+
+## 1a. Sterowanie walką
+
+| PC | Telefon | Działanie |
 |---|---|---|
-| **Ivo Eggert** | Wojownik, Szkarłatna Gwardia z Carroburga | Dwuręczny miecz, szerokie cięcia (do 3 wrogów). Bez magii. Umiejętność *Cios Gwardzisty*: zamach dookoła, bez many, odnowienie 7 s. |
-| **Ursa** | **Czarodziejka ognia** (Mag 2) | Z dystansu **ognisty pocisk** (2 many), z bliska **cios kosturem** (bez many). Czar *Kula ognia*: wybuch w promieniu, podpala (12 many). Dużo many (67), mniej zdrowia (60). |
-| **Modraszka** | **Łuczniczka**, czarne włosy (Mag 0, bez many) | Z dystansu **strzały z łuku** (rzut na US, obrażenia łuku + S − Wt), z bliska **krótki nóż**. Umiejętność *Grad strzał*: 5 strzał w wachlarzu, odnowienie 6 s. |
+| LPM / J / Spacja (przytrzymaj) | ATAK | umiejętność ze slotu 1; bez many - zwykły atak bronią |
+| PPM / K (przytrzymaj) | - | slot 2 |
+| 1-9, 0 (górny rząd i numeryczna) | dotknięcie slotu | sloty paska (przytrzymanie = ciągłe używanie) |
+| Q / R | sloty 4 / 5 | mikstura zdrowia / many |
 
-Atak „mieszany” (Ursa, Modraszka): jeśli wróg stoi tuż obok — cios wręcz, w przeciwnym razie pocisk. Gdy Ursie zabraknie many,
-z dystansu nie strzela (z bliska nadal bije kosturem).
-
-**Grafika:** Ursa ma na Twoim obrazie miecz (`source/ursa_source.webp`) — w grze używam tych póz bez zmian, więc na sprite'ach
-wciąż widać miecz. Dorysuj wersję z kosturem i podmień `assets/characters/ursa/idle/<kierunek>/0.png` (oraz `portrait.png`).
-Modraszka ma nową grafikę tymczasową: czarne włosy, skórzana kurta, zielony płaszcz, łuk, nóż u pasa.
-
-**Prędkość:** bohaterowie mają Sz 5 (Modraszka 6), skaveny Sz 4 — każdy bohater jest szybszy od każdego szczura
-(130–148 px/s wobec 112 px/s; test `test_heroes_faster_than_all_rats`).
+Celowanie: mysz (klik w korpus wroga = cel w jego stopy; klik w ziemię - z korektą wysokości lotu), joystick (kierunek ruchu
++ pomoc w celowaniu), bez ruchu - najbliższy wróg. Kierunek liczony w chwili wystrzału, nie zaokrąglany do 8 kierunków.
 
 ## 2. Profile startowe (styl Warhammera)
 
@@ -38,6 +63,9 @@ Pliki: `data/heroes.json` (bohaterowie), `data/enemies.json` (wrogowie).
 
 ## 3. Przełożenie cech na grę akcji (dokładne wzory: `scripts/core/rules.gd`)
 
+- **Trafienie bohatera:** zetknięcie hitboxu zawsze rani. Rzut na WW/US (i unik wroga ze Zr) decyduje tylko, czy to pełne
+  trafienie, czy **draśnięcie** (połowa obrażeń, szara liczba) - dzięki temu cios, który wizualnie trafił, nigdy nie daje „Pudła”.
+  Wrogowie nadal mogą chybić bohatera (pełny rzut Warhammera).
 - **WW** — szansa trafienia wręcz = **40 + WW − (WW celu / 4) − obrona pancerza celu**, w granicach 10–95%.
   Zmieniłem „WW% minus obrona” na wersję z premią bazową +40, bo przy WW 40 bohater trafiałby za rzadko
   (ok. 30%), a w grze akcji ciągłe pudła frustrują. Ivo przeciw skavenowi z dzidą: **72%**.
@@ -49,7 +77,7 @@ Pliki: `data/heroes.json` (bohaterowie), `data/enemies.json` (wrogowie).
   inna (A 6 = atak co ok. 1,5 s). Każdy atak ma **zamach (42% czasu)** → uderzenie → powrót.
 - **Żyw** — życie = Żyw × 10 (mnożnik `zycie_mnoznik`).
 - **Obrażenia** = obrażenia broni + S − Wt celu (min. 1). Czary: bazowe + siła czarów (Int/10 + Mag×3) − Wt/2.
-- **Int** — mana = Int + Mag × 10 (tylko gdy Mag > 0). **SW** — regeneracja many = SW × 0,02/s i odporność na truciznę = SW/2 % (maks. 75%).
+- **Int** — mana = Int + Mag × 10 + premia postaci (mana zasila umiejętności wszystkich postaci). **SW** — regeneracja many = SW × 0,02/s i odporność na truciznę = SW/2 % (maks. 75%).
 - **Ogd** — kupno: cena × (1,5 − Ogd × 0,01, min. 0,8); sprzedaż: cena × (0,15 + Ogd × 0,005, maks. 0,6).
 - **Sz** — prędkość = 40 + Sz × 18 px/s (odległość na podłodze; ruch w pionie ekranu jest o połowę wolniejszy — tak działa rzut izometryczny).
 - **Mag** — 0 = brak czarów i many. **PO** — tylko wyświetlane. **PP** — przy śmierci −1 PP i odrodzenie z połową życia; bez PP: ekran śmierci i wczytanie ostatniego zapisu.
