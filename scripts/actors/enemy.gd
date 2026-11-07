@@ -257,6 +257,10 @@ func receive_hit(res: Dictionary, attacker: Actor = null) -> void:
 	super(res, attacker)
 
 func on_damaged(amount: float, _kind: String) -> void:
+	# przy szybkich atakach bohatera trafienie nie przerywa rozpoczętej zapowiedzi ataku (wróg zachowuje swoje tempo);
+	# przełącznik: balance.json -> walka/zachwianie_przerywa_zamach
+	if state == St.WINDUP and not bool(Data.bal("walka/zachwianie_przerywa_zamach", false)):
+		return
 	if amount >= get_max_hp() * float(Data.bal("walka/zachwianie_prog", 0.12)) and state != St.DEAD:
 		# trafienie przerywa zamach (zachwianie)
 		_clear_marker()

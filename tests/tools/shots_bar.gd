@@ -18,6 +18,7 @@ func _shot(name: String) -> void:
 	print("zrzut: ", name)
 
 func _run() -> void:
+	await _wait(5)
 	var save = root.get_node("Save")
 	var game = root.get_node("Game")
 	save.save_path = "user://test_bar.json"

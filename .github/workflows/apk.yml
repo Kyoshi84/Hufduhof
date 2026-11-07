@@ -12,13 +12,15 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: barichello/godot-ci:4.3
+    env:
+      # obraz ma szablony eksportu, ustawienia Android SDK i klucz debug w katalogu domowym /root
+      HOME: /root
     steps:
       - uses: actions/checkout@v4
-      - name: Przygotowanie szablonów eksportu
+      - name: Sprawdzenie szablonów eksportu
         run: |
-          mkdir -v -p ~/.local/share/godot/export_templates/ ~/.config/
-          cp -r /root/.config/godot ~/.config/godot || true
-          cp -r /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/ || true
+          ls -la /root/.local/share/godot/export_templates/ || true
+          ls /root/.config/godot/ || true
       - name: Import zasobów
         run: godot --headless --path . --import || true
       - name: Testy GUT
@@ -28,6 +30,7 @@ jobs:
           mkdir -p build
           godot --headless --path . --export-debug "Android" build/hufduhof.apk
           ls -la build
+          test -s build/hufduhof.apk
       - uses: actions/upload-artifact@v4
         with:
           name: hufduhof-apk
