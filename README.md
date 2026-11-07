@@ -19,21 +19,21 @@ Szczuroludzie napadli wioskę Hufduhof — trzeba ugasić płonącą barykadę p
 | PC | Telefon | Akcja |
 |---|---|---|
 | WASD / strzałki | joystick (lewa strona) | ruch |
-| lewy przycisk myszy / J / Spacja | ATAK | atak (przytrzymaj = kolejne zamachy), mysz celuje |
-| prawy przycisk myszy / K | UMIEJ. | umiejętność / czar |
-| Q / 1 | ŻYCIE | mikstura życia (gdy brak — piwo) |
-| R / 2 | MANA | mikstura many |
+| lewy przycisk myszy / J / Spacja (przytrzymaj) | ATAK | umiejętność ze slotu 1; bez many - zwykły atak bronią |
+| prawy przycisk myszy / K (przytrzymaj) | — | umiejętność ze slotu 2 |
+| 1–9, 0 (górny rząd lub klawiatura numeryczna) | dotknięcie slotu na pasku | sloty paska: 1–3 umiejętności, 4 mikstura zdrowia, 5 many, 6 piwo |
+| Q / R | — | mikstura zdrowia / many |
 | E / F | UŻYJ | interakcja (skrzynia, studnia, kapliczka, Borubar…) |
 | M / Tab, C, I, Esc | przyciski u góry | mapa, postać, plecak, pauza |
 | kółko myszy | — | zoom kamery |
-| F3 (tylko debug) | — | diagnostyka kolizji (domyślnie wyłączona) |
+| F3 (tylko debug) | — | diagnostyka: hitboxy, zasięgi, tor pocisków (domyślnie wyłączona) |
 
 ## Testy (GUT)
 ```bash
 godot --headless --path . --import
 godot --headless --path . -s addons/gut/gut_cmdln.gd -gconfig=res://.gutconfig.json
 ```
-50 testów: formuły walki i cech, rozwój postaci (w tym „ok. 5 punktów w Poziomie 1”), łupy i ekwipunek, zadanie z wiadrami
+Ponad 80 testów: trafienia pocisków (100% w 8 kierunkach, przy 15–144 FPS), umiejętności, mana, pasek, balans, formuły walki i cech, rozwój postaci (w tym „ok. 5 punktów w Poziomie 1”), łupy i ekwipunek, zadanie z wiadrami
 (logika i pełne przejście na prawdziwej scenie), walka ze skavenem, zapowiedzi ataków, kapliczki, PP, zapis/wczytanie.
 Zrzuty ekranu (wymaga `xvfb-run`): `xvfb-run -a godot --path . -s res://tests/tools/shots.gd -- /katalog`.
 

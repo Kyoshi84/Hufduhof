@@ -49,7 +49,8 @@ assets/levels/tavern/props/              table, bench, bar_counter, fireplace, d
                                          wall_x_window, wall_y_window, innkeeper, guest_1..6, mug, splash, borubar
 assets/levels/common/tiles/              fog_full, fog_soft (mgła wojny)
 assets/levels/common/props/              chest_closed, chest_open, bucket_empty, bucket_full
-assets/levels/common/fx/                 stone, warp_orb, magic_bolt, fireball, poison_pool_0..1, fire_0..3
+assets/levels/common/fx/                 stone, warp_orb, magic_bolt, fireball, fire_lance, arrow, net_arrow,
+                                         poison_pool_0..1, fire_0..3 (pocisk: grafika skierowana w prawo)
 ```
 **Kotwica rekwizytu = środek dolnej krawędzi obrazka:**
 - małe obiekty (drzewa, płoty, beczki, skrzynie, kapliczki, studnia, barykada): dolny środek = **środek komórki**, na której stoją;
@@ -80,6 +81,10 @@ Rozmieszczenie (mapa znakowa, budynki, skrzynie, kapliczki, grupy wrogów): `dat
 assets/ui/ivo_portrait.png               portret w menu głównym i na karcie Ivo
 assets/ui/crest/                         herb Carroburga (menu)
 assets/ui/items/<ikona>.png              ikony przedmiotów 32×32 (nazwa ikony: pole "ikona" w data/items.json)
+assets/ui/skills/<postać>/<id>.png       ikony umiejętności na pasku, 48×48 (ścieżka: pole "ikona" umiejętności w data/heroes.json)
+                                         ivo: potezne_ciecie, wirujacy_miecz, okrzyk_gwardii
+                                         ursa: ognisty_pocisk, kula_ognia, przebijajacy_plomien
+                                         modraszka: strzala, grad_strzal, strzala_z_siecia
 ```
 
 ## Dźwięk
@@ -88,7 +93,7 @@ assets/audio/music/                      menu_theme.ogg, stage_theme.ogg, boss_t
 assets/audio/sfx/<nazwa>.ogg|wav|mp3     efekty; brak pliku = dźwięk tymczasowy syntezowany w kodzie
 ```
 Nazwy efektów: `swing, swing_heavy, hit, miss, hurt, skaven_die, skaven_alert, stone, warp, bolt, lightning, fire, pickup,
-coin, potion, chest, splash, fill, shrine, levelup, ui_click, door, mug_catch, mug_break, death`.
+coin, potion, chest, splash, fill, shrine, levelup, ui_click, door, mug_catch, mug_break, death, no_mana`.
 
 ## Generatory placeholderów (Python 3 + Pillow)
 ```
@@ -96,7 +101,8 @@ python3 tools/make_palette.py      # paleta 256 + LUT
 python3 tools/gen_tiles.py         # kafle i mgła
 python3 tools/gen_props.py         # budynki, rekwizyty, efekty
 python3 tools/gen_characters.py    # skaveny, Modraszka
-python3 tools/gen_items.py         # ikony przedmiotów, ściany karczmy
+python3 tools/gen_items.py         # ikony przedmiotów, ściany karczmy, strzała
+python3 tools/gen_skills.py        # ikony umiejętności, ognista włócznia, strzała z siecią
 python3 tools/build_levels.py      # data/levels/*.json (UWAGA: nadpisuje ręczne zmiany w tych plikach)
 ```
 Generatory **nadpisują** placeholdery — jeśli podmieniłeś plik na własny, nie uruchamiaj generatora tej grupy.
