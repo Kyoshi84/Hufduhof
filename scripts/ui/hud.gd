@@ -8,7 +8,7 @@ var _msgs: VBoxContainer
 var _quest_box: VBoxContainer
 var _quest_panel: PanelContainer
 var _gold: Label
-var _belt: Label
+var skill_bar: SkillBar
 var _name: Label
 var _points: Button
 var _hint: Label
@@ -28,20 +28,12 @@ func _ready() -> void:
 	add_child(tl)
 	_name = UiKit.outlined(UiKit.label("", 18, UiKit.GOLD, false))
 	tl.add_child(_name)
-	var bars := Control.new()
-	bars.custom_minimum_size = Vector2(300, 46)
-	bars.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bars.draw.connect(_draw_bars.bind(bars))
-	bars.name = "Bars"
-	tl.add_child(bars)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tl.add_child(row)
 	_gold = UiKit.outlined(UiKit.label("", 17, Color(1.0, 0.85, 0.35), false))
 	row.add_child(_gold)
-	_belt = UiKit.outlined(UiKit.label("", 17, UiKit.TEXT, false))
-	row.add_child(_belt)
 	_points = UiKit.button("", func(): level.open_character(), 230, 34)
 	_points.add_theme_font_size_override("font_size", 16)
 	_points.visible = false
@@ -82,10 +74,14 @@ func _ready() -> void:
 	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_banner)
 	_hint = UiKit.outlined(UiKit.label("", 20, Color(1.0, 0.95, 0.7)), 5)
-	_anchor(_hint, 0.5, 1.0, Vector2(-300, -64), Vector2(300, -64))
+	_anchor(_hint, 0.5, 1.0, Vector2(-300, -170), Vector2(300, -170))
 	_hint.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_hint)
+	# pasek umiejętności z kulami Życia i Many (dół ekranu)
+	skill_bar = SkillBar.new()
+	skill_bar.level = level
+	add_child(skill_bar)
 	Game.message.connect(show_message)
 	Game.hero_changed.connect(refresh)
 	if level and level.hero:
@@ -105,37 +101,9 @@ func _anchor(c: Control, ax: float, ay: float, tl: Vector2, br: Vector2) -> void
 
 func _process(delta: float) -> void:
 	_t += delta
-	var bars := find_child("Bars", true, false)
-	if bars:
-		bars.queue_redraw()
 	if _banner_t > 0.0:
 		_banner_t -= delta
 		_banner.modulate.a = clampf(_banner_t, 0.0, 1.0)
-	_refresh_belt()
-
-func _draw_bars(c: Control) -> void:
-	var h: HeroState = Game.hero
-	if h == null:
-		return
-	var w := 300.0
-	_bar(c, Rect2(0, 0, w, 18), h.hp / maxf(1.0, h.max_hp()), Color(0.62, 0.08, 0.06), "%d / %d" % [int(ceil(h.hp)), h.max_hp()])
-	if h.max_mana() > 0:
-		_bar(c, Rect2(0, 21, w, 14), h.mana / maxf(1.0, h.max_mana()), Color(0.16, 0.3, 0.7), "%d / %d" % [int(h.mana), h.max_mana()])
-	var prev := h.prev_threshold()
-	var nxt := h.next_threshold()
-	var k := 1.0 if nxt < 0 else float(h.xp - prev) / maxf(1.0, nxt - prev)
-	_bar(c, Rect2(0, 38, w, 6), k, Color(0.75, 0.6, 0.2), "")
-
-
-func _bar(c: Control, r: Rect2, k: float, col: Color, text: String) -> void:
-	c.draw_rect(r.grow(2), Color(0.03, 0.02, 0.02))
-	c.draw_rect(r, Color(0.14, 0.1, 0.09))
-	c.draw_rect(Rect2(r.position, Vector2(r.size.x * clampf(k, 0, 1), r.size.y)), col)
-	c.draw_rect(Rect2(r.position, Vector2(r.size.x * clampf(k, 0, 1), 2)), col.lightened(0.3))
-	if text != "" and r.size.y >= 12:
-		var f := get_theme_default_font()
-		c.draw_string_outline(f, r.position + Vector2(6, r.size.y - 3), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 3, Color(0, 0, 0))
-		c.draw_string(f, r.position + Vector2(6, r.size.y - 3), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(1, 1, 1))
 
 func refresh() -> void:
 	var h: HeroState = Game.hero
@@ -146,18 +114,6 @@ func refresh() -> void:
 	var pa := h.points_available()
 	_points.visible = pa > 0
 	_points.text = "+ Punkty rozwoju: %d" % pa
-	_refresh_belt()
-
-func _refresh_belt() -> void:
-	var h: HeroState = Game.hero
-	if h == null:
-		return
-	var b: Dictionary = h.inv.belt
-	var t := "Życie: %d  Piwo: %d" % [int(b.get("mikstura_zycia", 0)), int(b.get("piwo", 0))]
-	if h.max_mana() > 0:
-		t = "Życie: %d  Mana: %d  Piwo: %d" % [int(b.get("mikstura_zycia", 0)), int(b.get("mikstura_many", 0)), int(b.get("piwo", 0))]
-	if _belt.text != t:
-		_belt.text = t
 
 func refresh_quest() -> void:
 	for c in _quest_box.get_children():

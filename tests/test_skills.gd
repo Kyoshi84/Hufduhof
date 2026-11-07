@@ -89,3 +89,71 @@ func test_skill_rate_is_several_per_second():
 			used += 1
 		await wait_frames(1)
 	assert_between(used, 5, 9, "ok. 3-4 strzały na sekundę")
+
+func _key(code: int, pressed: bool, physical: bool = true) -> InputEventKey:
+	var ev := InputEventKey.new()
+	if physical:
+		ev.physical_keycode = code
+	else:
+		ev.keycode = code
+	ev.pressed = pressed
+	return ev
+
+func test_number_row_and_numpad_map_to_slots():
+	var top := [KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0]
+	var kp := [KEY_KP_1, KEY_KP_2, KEY_KP_3, KEY_KP_4, KEY_KP_5, KEY_KP_6, KEY_KP_7, KEY_KP_8, KEY_KP_9, KEY_KP_0]
+	for i in 10:
+		var act := "slot_%d" % (i + 1)
+		assert_true(_key(top[i], true).is_action(act), "klawisz %d -> %s" % [i, act])
+		assert_true(_key(kp[i], true).is_action(act), "numeryczna %d -> %s" % [i, act])
+		assert_true(_key(kp[i], true, false).is_action(act), "numeryczna (keycode) %d -> %s" % [i, act])
+
+func test_slot_keys_use_potions_and_skills():
+	Game.hero.hp = 10.0
+	lvl.hero.hp = 10.0
+	Input.action_press("slot_4")
+	await wait_frames(3)
+	Input.action_release("slot_4")
+	assert_true(lvl.hero.hp > 10.0, "slot 4 = mikstura zdrowia")
+	await wait_seconds(1.1)
+	Game.hero.mana = 5.0
+	var mana0 := Game.hero.mana
+	Input.action_press("slot_6")
+	await wait_frames(3)
+	Input.action_release("slot_6")
+	assert_true(Game.hero.mana > mana0, "slot 6 = piwo (mana też)")
+	Game.hero.mana = 50.0
+	lvl.spawn_enemy("skaven_spear", lvl.hero.position + Vector2(250, 0), "", "")
+	Input.action_press("slot_3")
+	await wait_frames(4)
+	Input.action_release("slot_3")
+	assert_eq(lvl.hero.cur_id, "przebijajacy_plomien", "slot 3 = trzecia umiejętność")
+
+func test_clicking_bar_slot_activates_it():
+	var bar: SkillBar = lvl.hud.skill_bar
+	await wait_frames(2)
+	var r: Rect2 = bar.slot_rects[0][1]
+	Game.hero.mana = 50.0
+	bar._press(bar.slot_at(r.get_center()))
+	assert_true(Input.is_action_pressed("slot_1"))
+	await wait_frames(3)
+	bar._release(0)
+	assert_eq(lvl.hero.cur_id, "ognisty_pocisk")
+
+func test_touch_layout_collapses_and_avoids_joystick():
+	Save.touch_mode = 1
+	var bar: SkillBar = lvl.hud.skill_bar
+	bar.layout()
+	await wait_frames(2)
+	var rect := bar.get_global_rect()
+	var vw := bar.get_viewport_rect().size.x
+	gut.p("pasek dotykowy: %s (ekran %d)" % [rect, vw])
+	assert_true(rect.position.x > 230.0, "pasek nie nachodzi na joystick")
+	assert_true(rect.end.x < vw - 190.0, "pasek nie nachodzi na przycisk ATAK")
+	assert_eq(bar.collapsed, true, "na telefonie puste sloty pod '...'")
+	assert_eq(bar.slot_rects.size(), 6)
+	Save.touch_mode = 2
+	bar.layout()
+	await wait_frames(2)
+	assert_eq(bar.slot_rects.size(), 10, "na PC wszystkie 10 slotów")
+	Save.touch_mode = 0

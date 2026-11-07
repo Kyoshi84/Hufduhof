@@ -1,7 +1,8 @@
 class_name TouchControls
 extends Control
-## Sterowanie dotykowe (Android): wirtualny joystick po lewej, po prawej przyciski Atak, Umiejętność/Czar,
-## Mikstura życia, Mikstura many i Interakcja. Obsługa wielu palców naraz (ruch + atak).
+## Sterowanie dotykowe (Android): wirtualny joystick po lewej, po prawej ATAK (atak główny = slot 1, bez many - broń)
+## i UŻYJ (interakcja). Umiejętności i mikstury są na pasku umiejętności na dole (SkillBar).
+## Obsługa wielu palców naraz (ruch + atak + slot paska).
 ## Przyciski wywołują te same akcje wejścia co klawiatura (Input.action_press), więc bohater nie odróżnia źródła.
 
 var level: Node
@@ -24,10 +25,7 @@ func _layout() -> void:
 	var br := Vector2(s.x - 120, s.y - 120)
 	buttons = [
 		{"action": "atak", "pos": br, "r": 66.0, "label": "ATAK", "touch": -1},
-		{"action": "umiejetnosc", "pos": br + Vector2(-150, 18), "r": 48.0, "label": "UMIEJ.", "touch": -1},
-		{"action": "interakcja", "pos": br + Vector2(-20, -150), "r": 46.0, "label": "UŻYJ", "touch": -1},
-		{"action": "mikstura_zycia", "pos": br + Vector2(-140, -110), "r": 36.0, "label": "ŻYCIE", "touch": -1},
-		{"action": "mikstura_many", "pos": br + Vector2(-250, -40), "r": 36.0, "label": "MANA", "touch": -1},
+		{"action": "interakcja", "pos": br + Vector2(-30, -150), "r": 46.0, "label": "UŻYJ", "touch": -1},
 	]
 	queue_redraw()
 
@@ -50,7 +48,8 @@ func _input(event: InputEvent) -> void:
 					get_viewport().set_input_as_handled()
 					queue_redraw()
 					return
-			if joy_touch == -1 and e.position.x < get_viewport_rect().size.x * 0.45 and e.position.y > 140:
+			var on_bar: bool = level != null and level.hud != null and level.hud.skill_bar != null and level.hud.skill_bar.covers(e.position)
+			if joy_touch == -1 and not on_bar and e.position.x < get_viewport_rect().size.x * 0.45 and e.position.y > 140:
 				joy_touch = e.index
 				joy_center = e.position
 				joy_knob = Vector2.ZERO
@@ -93,17 +92,13 @@ func _draw() -> void:
 		draw_arc(b["pos"], b["r"], 0, TAU, 36, Color(0.9, 0.78, 0.45, 0.35 if dim else 0.85), 2.5)
 		var txt: String = b["label"]
 		var fs := 16 if b["r"] > 40 else 13
-		if b["action"] == "mikstura_zycia" or b["action"] == "mikstura_many":
-			var h: HeroState = Game.hero
-			if h:
-				txt += "\n%d" % int(h.inv.belt.get(b["action"], 0))
 		var lines := txt.split("\n")
 		for i in lines.size():
 			var w := f.get_string_size(lines[i], HORIZONTAL_ALIGNMENT_CENTER, -1, fs).x
 			draw_string_outline(f, b["pos"] + Vector2(-w / 2.0, 6 + (i - (lines.size() - 1) / 2.0) * 18), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 3, Color(0, 0, 0))
 			draw_string(f, b["pos"] + Vector2(-w / 2.0, 6 + (i - (lines.size() - 1) / 2.0) * 18), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1, 0.95, 0.85, 0.4 if dim else 1.0))
 	if interact_label != "":
-		var ib: Dictionary = buttons[2]
+		var ib: Dictionary = buttons[1]
 		var iw := f.get_string_size(interact_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
 		draw_string_outline(f, ib["pos"] + Vector2(-iw / 2.0, -ib["r"] - 10), interact_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, 3, Color(0, 0, 0))
 		draw_string(f, ib["pos"] + Vector2(-iw / 2.0, -ib["r"] - 10), interact_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(1, 0.95, 0.7))
