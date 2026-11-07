@@ -61,7 +61,7 @@ func test_melee_kills_skaven_and_gives_xp():
 	assert_eq(Game.hero.xp, xp0 + int(Data.enemy("skaven_spear")["xp"]))
 	assert_true(Game.has_flag("zabici", "test_1"))
 	gut.p("czas walki: %.1f s" % t)
-	assert_true(t > 2.0, "walka nie jest natychmiastowa (wolniejsze tempo)")
+	assert_true(t <= 3.0, "zwykły skaven pada szybko (kilka ciosów)")
 
 func test_enemy_telegraphs_before_hitting():
 	await _clear_enemies()
@@ -178,34 +178,25 @@ func _swap_hero(id: String) -> void:
 	await _clear_enemies()
 	lvl.hero.blessed = 100.0
 
-func test_modraszka_shoots_arrows_and_stabs_close():
+func test_modraszka_primary_shoots_and_knife_without_mana():
 	await _swap_hero("modraszka")
-	assert_eq(Game.hero.max_mana(), 0)
 	var e := lvl.spawn_enemy("skaven_spear", lvl.hero.position + Vector2(220, 0), "", "")
-	e.stats.set_base("Zr", 0)
 	lvl.hero.use_mouse_aim = false
-	lvl.hero.start_attack()
-	assert_eq(lvl.hero.atk_mode, "pocisk", "z dystansu strzela z łuku")
-	var t := 0.0
-	lvl.hero.mouse_atk = true
-	while e.hp >= e.get_max_hp() and t < 8.0:
-		await wait_frames(6)
-		t += 0.1
-	lvl.hero.mouse_atk = false
+	lvl.hero.primary()
+	assert_eq(lvl.hero.cur_id, "strzala", "atak główny = strzała ze slotu 1")
+	await wait_seconds(0.8)
 	assert_true(e.hp < e.get_max_hp(), "strzała trafia")
-	await wait_seconds(1.5)
-	var e2 := lvl.spawn_enemy("skaven_spear", lvl.hero.position + Vector2(40, 0), "", "")
-	await wait_frames(2)
-	lvl.hero.start_attack()
-	assert_eq(lvl.hero.atk_mode, "wrecz", "z bliska dźga nożem")
-	assert_not_null(e2)
+	await wait_seconds(0.4)
+	Game.hero.mana = 0.0
+	lvl.hero.primary()
+	assert_eq(lvl.hero.cur_id, "bron", "bez many - zwykły atak nożem")
 
 func test_modraszka_volley_fires_five_arrows():
 	await _swap_hero("modraszka")
 	var e := lvl.spawn_enemy("skaven_spear", lvl.hero.position + Vector2(200, 0), "", "")
 	lvl.hero.use_mouse_aim = false
-	lvl.hero.start_skill()
-	await wait_seconds(0.7)
+	assert_eq(lvl.hero.try_skill("grad_strzal"), "ok")
+	await wait_seconds(0.3)
 	var arrows := lvl.map.world.get_children().filter(func(n): return n is Projectile and n.kind == "arrow")
 	assert_eq(arrows.size(), 5)
 	assert_not_null(e)
@@ -216,25 +207,20 @@ func test_ursa_fire_bolt_uses_mana_and_fireball_explodes():
 	var e2 := lvl.spawn_enemy("skaven_spear", lvl.hero.position + Vector2(215, 12), "", "")
 	var mana0 := Game.hero.mana
 	lvl.hero.use_mouse_aim = false
-	lvl.hero.start_attack()
-	assert_eq(lvl.hero.atk_mode, "pocisk", "ognisty pocisk z dystansu")
-	assert_almost_eq(Game.hero.mana, mana0 - 2.0, 0.5)
-	await wait_seconds(2.0)
+	assert_eq(lvl.hero.try_skill("ognisty_pocisk"), "ok")
+	assert_almost_eq(Game.hero.mana, mana0 - 2.1, 0.05)
+	await wait_seconds(0.6)
 	mana0 = Game.hero.mana
-	lvl.hero.start_skill()
-	assert_almost_eq(Game.hero.mana, mana0 - 12.0, 0.5, "kula ognia: 12 many")
-	await wait_seconds(1.6)
+	assert_eq(lvl.hero.try_skill("kula_ognia"), "ok")
+	assert_almost_eq(Game.hero.mana, mana0 - 12.0, 0.1, "kula ognia: 12 many")
+	await wait_seconds(1.2)
 	assert_true(e1.hp < e1.get_max_hp() and e2.hp < e2.get_max_hp(), "wybuch rani obu skavenów")
 
-func test_ursa_hits_with_staff_up_close():
-	await _swap_hero("ursa")
-	lvl.spawn_enemy("skaven_spear", lvl.hero.position + Vector2(45, 0), "", "")
-	await wait_frames(2)
-	var mana0 := Game.hero.mana
-	lvl.hero.use_mouse_aim = false
-	lvl.hero.start_attack()
-	assert_eq(lvl.hero.atk_mode, "wrecz", "kostur z bliska")
-	assert_eq(Game.hero.mana, mana0, "cios kosturem nie zużywa many")
+func test_mana_potion_works_for_everyone():
+	Game.hero.mana = 0.0
+	Game.hero.inv.belt["mikstura_many"] = 1
+	assert_true(lvl.hero.use_belt("mikstura_many"))
+	assert_true(Game.hero.mana > 0.0, "Ivo też ma manę (zasila jego umiejętności)")
 
 func test_dialog_advances_and_closes_with_e_key():
 	await _clear_enemies()
@@ -277,11 +263,6 @@ func test_dialog_closes_with_escape():
 func test_borubar_waits_in_front_of_tavern():
 	var npc = get_tree().get_nodes_in_group("interactable").filter(func(n): return n is Obj.Npc)[0]
 	assert_true(Iso.dist(npc.position, lvl.start_cell()) < 260.0, "Borubar stoi przed karczmą, blisko startu")
-
-func test_ivo_cannot_drink_mana_potion():
-	Game.hero.inv.belt["mikstura_many"] = 1
-	Game.hero.inv.belt["piwo"] = 0
-	assert_false(lvl.hero.use_belt("mikstura_many"))
 
 func test_tavern_play_borubar_then_hero():
 	lvl.queue_free()

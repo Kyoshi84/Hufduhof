@@ -39,7 +39,7 @@ func max_hp() -> int:
 	return stats.max_hp()
 
 func max_mana() -> int:
-	return stats.max_mana()
+	return Rules.max_mana(stats.val("Int"), stats.val("Mag"), int(Data.hero(id).get("mana_premia", 0)))
 
 func display_name() -> String:
 	return str(Data.hero(id).get("imie", id))

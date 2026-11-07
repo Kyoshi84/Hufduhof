@@ -25,6 +25,8 @@ var marker: Fx = null
 var knock := Vector2.ZERO
 var corpse_t: float = 0.0
 var stagger_t: float = 0.0
+var slow_k: float = 1.0           # spowolnienie (Strzała z siecią): mnożnik prędkości
+var slow_t: float = 0.0
 
 func setup(enemy_id: String, unique_id: String, group_id: String) -> void:
 	eid = enemy_id
@@ -63,6 +65,9 @@ func _physics_process(delta: float) -> void:
 		_dead_tick(delta)
 		return
 	atk_cd = maxf(0.0, atk_cd - delta)
+	slow_t = maxf(0.0, slow_t - delta)
+	if slow_t <= 0.0:
+		slow_k = 1.0
 	if target == null or not is_instance_valid(target):
 		target = level.hero if level else null
 	match state:
@@ -169,7 +174,7 @@ func _nav_to(p: Vector2, speed_k: float) -> void:
 		state = St.IDLE
 		return
 	var g := Iso.ground(dvec).normalized()
-	velocity = Iso.screen(g) * stats.move_speed() * speed_k
+	velocity = Iso.screen(g) * stats.move_speed() * speed_k * slow_k
 	facing = velocity.normalized()
 	state = St.MOVE
 
@@ -260,6 +265,18 @@ func on_damaged(amount: float, _kind: String) -> void:
 
 func knockback(g: Vector2) -> void:
 	knock = g
+
+func apply_slow(k: float, t: float) -> void:
+	slow_k = minf(slow_k, k)
+	slow_t = maxf(slow_t, t)
+
+## Krótkie zachwianie (przerywa zamach).
+func stagger(t: float) -> void:
+	if is_dead():
+		return
+	_clear_marker()
+	stagger_t = t
+	set_state(St.HURT)
 
 func die() -> void:
 	_clear_marker()

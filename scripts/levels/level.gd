@@ -206,13 +206,15 @@ func _physics_process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if overlay != null:
 		return
+	if event is InputEventMouseMotion and not Save.touch_enabled() and hero:
+		hero.use_mouse_aim = true
 	if event is InputEventMouseButton and not Save.touch_enabled():
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT:
 			hero.mouse_atk = mb.pressed
 			hero.use_mouse_aim = true
-		elif mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
-			hero.mouse_skill = true
+		elif mb.button_index == MOUSE_BUTTON_RIGHT:
+			hero.mouse_skill = mb.pressed
 			hero.use_mouse_aim = true
 		elif mb.button_index == MOUSE_BUTTON_WHEEL_UP and mb.pressed:
 			set_zoom(_zoom + 0.08)

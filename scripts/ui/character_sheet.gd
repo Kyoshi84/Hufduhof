@@ -58,8 +58,13 @@ static func _fill(holder: VBoxContainer, h: HeroState, on_raise: Callable) -> vo
 			Rules.melee_hit_chance(s.val("WW"), foe.val("WW"), int(hint.get("obrona", 0))), Rules.damage(h.inv.weapon_damage(), s.val("S"), foe.val("Wt"))],
 		"Odporność na truciznę: %d%%      Siła czarów: %d      Ceny u kupca: x%.2f" % [int(round((1.0 - Rules.poison_factor(s.val("SW"))) * 100)), Rules.spell_power(s.val("Int"), s.val("Mag")), Rules.buy_price(100, s.val("Ogd")) / 100.0],
 	]
-	var sk: Dictionary = def.get("umiejetnosc", {})
-	lines.append("Umiejętność: %s - %s" % [sk.get("nazwa", ""), sk.get("opis", "")])
+	var skills: Dictionary = def.get("umiejetnosci", {})
+	var n := 1
+	for id in def.get("pasek", []):
+		if skills.has(id):
+			var sk: Dictionary = skills[id]
+			lines.append("[%d] %s (%.1f many): %s" % [n, sk.get("nazwa", id), float(sk.get("koszt_many", 0)), sk.get("opis", "")])
+		n += 1
 	for l in lines:
 		var lb := UiKit.label(l, 16, UiKit.TEXT, false)
 		holder.add_child(lb)

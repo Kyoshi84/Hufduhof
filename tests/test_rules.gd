@@ -53,8 +53,9 @@ func test_hp_is_zyw_times_multiplier():
 	assert_eq(Rules.max_hp(9), 90)
 	assert_eq(_stats({"Zyw": 6}).max_hp(), 60)
 
-func test_mana_only_with_magic():
-	assert_eq(Rules.max_mana(46, 0), 0)
+func test_mana_formula():
+	assert_eq(Rules.max_mana(46, 0), 46)
+	assert_eq(Rules.max_mana(30, 0, 20), 50, "premia postaci")
 	assert_eq(Rules.max_mana(46, 2), 66, "Int + Mag x 10")
 
 func test_sw_regen_and_poison_resistance():

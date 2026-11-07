@@ -1,5 +1,5 @@
 {
-  "_opis": "Bohaterowie. profil = cechy startowe (główne 0-100, drugorzędne 0-10; S i Wt liczone z K i Odp). atak = atak podstawowy, umiejetnosc = przycisk Umiejętność/Czar. Czasy w sekundach, odległości w px podłoża. Założenia o postaciach: docs/DECYZJE.md.",
+  "_opis": "Bohaterowie. profil = cechy startowe (główne 0-100, drugorzędne 0-10; S i Wt liczone z K i Odp). atak_bronia = zwykły atak bronią bez many (zapas). umiejetnosci = 3 umiejętności (mana, odnowienie, zasięg, pocisk, hitbox, ikona). pasek = 10 slotów paska (klawisze 1-9, 0): id umiejętności, mikstura_zycia / mikstura_many / piwo albo \"\" (pusty). mana_premia = dodatek do many (mana = Int + Mag x 10 + premia). Czasy w sekundach, odległości w px podłoża.",
   "kolejnosc": [
     "ivo",
     "ursa",
@@ -28,26 +28,6 @@
         "PO": 0,
         "PP": 2
       },
-      "atak": {
-        "typ": "wrecz",
-        "zasieg": 82,
-        "luk_stopni": 120,
-        "max_celow": 3,
-        "dzwiek": "swing_heavy"
-      },
-      "umiejetnosc": {
-        "nazwa": "Cios Gwardzisty",
-        "typ": "zamach",
-        "koszt_many": 0,
-        "odnowienie": 7.0,
-        "zamach": 0.65,
-        "zasieg": 95,
-        "luk_stopni": 220,
-        "max_celow": 6,
-        "mnoznik_obrazen": 1.8,
-        "odrzut": 40,
-        "opis": "Szeroki zamach dookoła. Brak kosztu many, odnowienie 7 s."
-      },
       "ekwipunek": {
         "bron": "miecz_dwureczny",
         "zbroja": "kaftan_gwardii",
@@ -58,7 +38,77 @@
         "mikstura_many": 0,
         "piwo": 1
       },
-      "korony": 10
+      "korony": 10,
+      "mana_premia": 22,
+      "atak_bronia": {
+        "nazwa": "Cios mieczem",
+        "zasieg": 100,
+        "luk_stopni": 120,
+        "max_celow": 3,
+        "dzwiek": "swing_heavy"
+      },
+      "umiejetnosci": {
+        "potezne_ciecie": {
+          "nazwa": "Potężne cięcie",
+          "typ": "ciecie",
+          "ikona": "res://assets/ui/skills/ivo/potezne_ciecie.png",
+          "koszt_many": 1.7,
+          "odnowienie": 0.2,
+          "zamach": 0.14,
+          "powrot": 0.16,
+          "zasieg": 100,
+          "luk_stopni": 130,
+          "max_celow": 3,
+          "skalowanie": "bron",
+          "obrazenia_bazowe": 0,
+          "mnoznik": 1.0,
+          "odrzut": 14,
+          "opis": "Szybkie cięcie w łuku przed sobą (do 3 wrogów)."
+        },
+        "wirujacy_miecz": {
+          "nazwa": "Wirujący miecz",
+          "typ": "ciecie",
+          "ikona": "res://assets/ui/skills/ivo/wirujacy_miecz.png",
+          "koszt_many": 9,
+          "odnowienie": 0.9,
+          "zamach": 0.22,
+          "powrot": 0.25,
+          "zasieg": 112,
+          "luk_stopni": 360,
+          "max_celow": 8,
+          "skalowanie": "bron",
+          "obrazenia_bazowe": 0,
+          "mnoznik": 1.3,
+          "odrzut": 30,
+          "opis": "Obrót z mieczem - rani wszystkich wokół."
+        },
+        "okrzyk_gwardii": {
+          "nazwa": "Okrzyk Szkarłatnej Gwardii",
+          "typ": "okrzyk",
+          "ikona": "res://assets/ui/skills/ivo/okrzyk_gwardii.png",
+          "koszt_many": 14,
+          "odnowienie": 10,
+          "zamach": 0.3,
+          "powrot": 0.2,
+          "promien": 140,
+          "odrzut": 70,
+          "wzmocnienie": 0.4,
+          "czas": 6,
+          "opis": "Odrzuca wrogów wokół i na 6 s zwiększa obrażenia o 40%."
+        }
+      },
+      "pasek": [
+        "potezne_ciecie",
+        "wirujacy_miecz",
+        "okrzyk_gwardii",
+        "mikstura_zycia",
+        "mikstura_many",
+        "piwo",
+        "",
+        "",
+        "",
+        ""
+      ]
     },
     "ursa": {
       "imie": "Ursa",
@@ -82,40 +132,6 @@
         "PO": 0,
         "PP": 2
       },
-      "atak": {
-        "typ": "mieszany",
-        "wrecz": {
-          "nazwa": "Kostur",
-          "zasieg": 70,
-          "luk_stopni": 90,
-          "max_celow": 1,
-          "dzwiek": "swing"
-        },
-        "pocisk": {
-          "nazwa": "Ognisty pocisk",
-          "rodzaj": "fireball",
-          "zasieg": 360,
-          "predkosc": 320,
-          "obrazenia_bazowe": 3,
-          "koszt_many": 2,
-          "rzut": false,
-          "dzwiek": "fire"
-        }
-      },
-      "umiejetnosc": {
-        "nazwa": "Kula ognia",
-        "typ": "kula_ognia",
-        "koszt_many": 12,
-        "odnowienie": 2.5,
-        "zamach": 0.6,
-        "zasieg": 380,
-        "predkosc": 300,
-        "promien": 72,
-        "obrazenia_bazowe": 10,
-        "podpalenie_na_sekunde": 3,
-        "podpalenie_czas": 3.0,
-        "opis": "Kula ognia wybucha na pierwszym wrogu i rani wszystkich w promieniu, podpalając ich. 12 many."
-      },
       "ekwipunek": {
         "bron": "kostur_ognia",
         "zbroja": "szata_ognia"
@@ -125,7 +141,88 @@
         "mikstura_many": 3,
         "piwo": 1
       },
-      "korony": 10
+      "korony": 10,
+      "mana_premia": 0,
+      "atak_bronia": {
+        "nazwa": "Cios kosturem",
+        "zasieg": 85,
+        "luk_stopni": 100,
+        "max_celow": 1,
+        "dzwiek": "swing"
+      },
+      "umiejetnosci": {
+        "ognisty_pocisk": {
+          "nazwa": "Ognisty pocisk",
+          "typ": "pocisk",
+          "rodzaj": "fireball",
+          "ikona": "res://assets/ui/skills/ursa/ognisty_pocisk.png",
+          "koszt_many": 2.1,
+          "odnowienie": 0.2,
+          "zamach": 0.12,
+          "powrot": 0.16,
+          "zasieg": 460,
+          "predkosc": 480,
+          "promien_trafienia": 16,
+          "skalowanie": "czar",
+          "obrazenia_bazowe": 0,
+          "mnoznik": 1.0,
+          "dzwiek": "fire",
+          "opis": "Szybki, tani pocisk ognia."
+        },
+        "kula_ognia": {
+          "nazwa": "Kula ognia",
+          "typ": "pocisk",
+          "rodzaj": "fireball",
+          "ikona": "res://assets/ui/skills/ursa/kula_ognia.png",
+          "koszt_many": 12,
+          "odnowienie": 1.2,
+          "zamach": 0.3,
+          "powrot": 0.25,
+          "zasieg": 440,
+          "predkosc": 340,
+          "promien_trafienia": 20,
+          "skala": 1.8,
+          "wybuch": 80,
+          "podpalenie_na_sekunde": 3,
+          "podpalenie_czas": 3.0,
+          "skalowanie": "czar",
+          "obrazenia_bazowe": 4,
+          "mnoznik": 1.0,
+          "dzwiek": "fire",
+          "opis": "Wybucha na pierwszym wrogu, rani i podpala wszystkich w promieniu."
+        },
+        "przebijajacy_plomien": {
+          "nazwa": "Przebijający płomień",
+          "typ": "pocisk",
+          "rodzaj": "fire_lance",
+          "ikona": "res://assets/ui/skills/ursa/przebijajacy_plomien.png",
+          "koszt_many": 7,
+          "odnowienie": 0.7,
+          "zamach": 0.2,
+          "powrot": 0.2,
+          "zasieg": 540,
+          "predkosc": 640,
+          "promien_trafienia": 18,
+          "przebicie": 6,
+          "skalowanie": "czar",
+          "obrazenia_bazowe": 3,
+          "mnoznik": 1.0,
+          "dzwiek": "fire",
+          "opis": "Włócznia ognia przelatuje przez kilku wrogów w linii."
+        }
+      },
+      "pasek": [
+        "ognisty_pocisk",
+        "kula_ognia",
+        "przebijajacy_plomien",
+        "mikstura_zycia",
+        "mikstura_many",
+        "piwo",
+        "",
+        "",
+        "",
+        ""
+      ]
     },
     "modraszka": {
       "imie": "Modraszka",
@@ -149,38 +246,6 @@
         "PO": 0,
         "PP": 3
       },
-      "atak": {
-        "typ": "mieszany",
-        "wrecz": {
-          "nazwa": "Krótki nóż",
-          "zasieg": 60,
-          "luk_stopni": 80,
-          "max_celow": 1,
-          "obrazenia": 4,
-          "dzwiek": "swing"
-        },
-        "pocisk": {
-          "nazwa": "Strzała",
-          "rodzaj": "arrow",
-          "zasieg": 420,
-          "predkosc": 430,
-          "koszt_many": 0,
-          "rzut": true,
-          "dzwiek": "bolt"
-        }
-      },
-      "umiejetnosc": {
-        "nazwa": "Grad strzał",
-        "typ": "salwa",
-        "koszt_many": 0,
-        "odnowienie": 6.0,
-        "zamach": 0.55,
-        "strzaly": 5,
-        "rozrzut_stopni": 44,
-        "zasieg": 420,
-        "predkosc": 430,
-        "opis": "Pięć strzał naraz w szerokim wachlarzu. Bez many, odnowienie 6 s."
-      },
       "ekwipunek": {
         "bron": "luk_mysliwski",
         "zbroja": "kurta_skorzana",
@@ -191,7 +256,89 @@
         "mikstura_many": 0,
         "piwo": 1
       },
-      "korony": 15
+      "korony": 15,
+      "mana_premia": 20,
+      "atak_bronia": {
+        "nazwa": "Krótki nóż",
+        "zasieg": 75,
+        "luk_stopni": 90,
+        "max_celow": 1,
+        "obrazenia": 4,
+        "dzwiek": "swing"
+      },
+      "umiejetnosci": {
+        "strzala": {
+          "nazwa": "Strzała",
+          "typ": "pocisk",
+          "rodzaj": "arrow",
+          "ikona": "res://assets/ui/skills/modraszka/strzala.png",
+          "koszt_many": 1.6,
+          "odnowienie": 0.2,
+          "zamach": 0.12,
+          "powrot": 0.16,
+          "zasieg": 480,
+          "predkosc": 560,
+          "promien_trafienia": 14,
+          "skalowanie": "bron",
+          "obrazenia_bazowe": 3,
+          "mnoznik": 1.0,
+          "dzwiek": "bolt",
+          "opis": "Szybki, tani strzał z łuku."
+        },
+        "grad_strzal": {
+          "nazwa": "Grad strzał",
+          "typ": "salwa",
+          "rodzaj": "arrow",
+          "ikona": "res://assets/ui/skills/modraszka/grad_strzal.png",
+          "koszt_many": 9,
+          "odnowienie": 1.4,
+          "zamach": 0.22,
+          "powrot": 0.25,
+          "zasieg": 460,
+          "predkosc": 540,
+          "promien_trafienia": 14,
+          "strzaly": 5,
+          "rozrzut_stopni": 40,
+          "skalowanie": "bron",
+          "obrazenia_bazowe": 2,
+          "mnoznik": 1.0,
+          "dzwiek": "bolt",
+          "opis": "Pięć strzał naraz w wachlarzu."
+        },
+        "strzala_z_siecia": {
+          "nazwa": "Strzała z siecią",
+          "typ": "pocisk",
+          "rodzaj": "net_arrow",
+          "ikona": "res://assets/ui/skills/modraszka/strzala_z_siecia.png",
+          "koszt_many": 10,
+          "odnowienie": 5,
+          "zamach": 0.25,
+          "powrot": 0.25,
+          "zasieg": 460,
+          "predkosc": 480,
+          "promien_trafienia": 16,
+          "wybuch": 90,
+          "spowolnienie": 0.5,
+          "spowolnienie_czas": 4.0,
+          "skalowanie": "bron",
+          "obrazenia_bazowe": 0,
+          "mnoznik": 0.5,
+          "dzwiek": "bolt",
+          "opis": "Sieć spada na grupę wrogów i spowalnia ich o połowę na 4 s."
+        }
+      },
+      "pasek": [
+        "strzala",
+        "grad_strzal",
+        "strzala_z_siecia",
+        "mikstura_zycia",
+        "mikstura_many",
+        "piwo",
+        "",
+        "",
+        "",
+        ""
+      ]
     }
   }
 }

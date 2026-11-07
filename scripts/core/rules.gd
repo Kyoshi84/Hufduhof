@@ -8,7 +8,7 @@ extends RefCounted
 ##  K   - S  = K / 10   (dziesiątki, w dół)
 ##  Odp - Wt = Odp / 10
 ##  Zr  - szansa uniku = Zr / dzielnik (max %), przyspieszenie ataku = Zr * zr_przyspieszenie (max)
-##  Int - maks. mana = Int * mnożnik + Mag * na_poziom_mag (tylko gdy Mag > 0), siła czarów = Int / dzielnik + Mag * mnożnik
+##  Int - maks. mana = Int * mnożnik + Mag * na_poziom_mag + premia postaci, siła czarów = Int / dzielnik + Mag * mnożnik
 ##  SW  - regeneracja many = SW * mnożnik / s,  odporność na truciznę/spaczenie = SW / dzielnik % (max)
 ##  Ogd - cena kupna  = cena * (bazowe - Ogd * na_ogd), min;  cena sprzedaży = cena * (bazowe + Ogd * na_ogd), max
 ##  A   - ataki na 10 sekund: odstęp między atakami = 10 / A (skrócony przez Zr)
@@ -63,10 +63,10 @@ static func attack_phases(a: int, zr: int) -> Array:
 static func max_hp(zyw: int) -> int:
 	return maxi(1, zyw * int(_b("zycie_mnoznik", 10)))
 
-static func max_mana(intel: int, mag: int) -> int:
-	if mag <= 0:
-		return 0
-	return int(round(intel * float(_b("mana/int_mnoznik", 1.0)))) + mag * int(_b("mana/na_poziom_mag", 10))
+## Mana = Int * mnożnik + Mag * na_poziom_mag + premia postaci (heroes.json -> mana_premia).
+## Mana zasila wszystkie umiejętności (także Ivo i Modraszki); Mag wzmacnia czary.
+static func max_mana(intel: int, mag: int, premia: int = 0) -> int:
+	return maxi(0, int(round(intel * float(_b("mana/int_mnoznik", 1.0)))) + mag * int(_b("mana/na_poziom_mag", 10)) + premia)
 
 static func mana_regen(sw: int) -> float:
 	return sw * float(_b("mana/regen_sw_mnoznik", 0.02))
@@ -115,3 +115,39 @@ static func projectile_damage(att: Stats, weapon_dmg: int, def: Stats) -> int:
 ## Obrażenia czaru: bazowe + siła czarów (Int, Mag); Wt celu odejmuje się o połowę.
 static func spell_damage(base: int, att: Stats, def: Stats) -> int:
 	return maxi(1, base + spell_power(att.val("Int"), att.val("Mag")) - int(floor(def.val("Wt") / 2.0)))
+
+## --- umiejętności bohatera ---
+## Obrażenia umiejętności (przed rzutem na trafienie):
+##   skalowanie "bron": (obrażenia broni + obrazenia_bazowe) + S - Wt celu
+##   skalowanie "czar": obrazenia_bazowe + siła czarów (Int/10 + Mag*3) - Wt/2
+## potem x mnoznik umiejętności x hero_damage_multiplier (balance.json) x (1 + wzmocnienie, np. Okrzyk).
+static func skill_damage(skill: Dictionary, att: Stats, def: Stats, weapon_dmg: int, buff: float = 0.0) -> int:
+	var base := 0
+	if str(skill.get("skalowanie", "bron")) == "czar":
+		base = spell_damage(int(skill.get("obrazenia_bazowe", 0)), att, def)
+	else:
+		base = damage(weapon_dmg + int(skill.get("obrazenia_bazowe", 0)), att.val("S"), def.val("Wt"))
+	var dmg := base * float(skill.get("mnoznik", 1.0)) * float(_b("hero_damage_multiplier", 1.0)) * (1.0 + buff)
+	return maxi(1, int(round(dmg)))
+
+## Rzut bohatera po kontakcie hitboxu: trafienie pełne albo draśnięcie (nieudany rzut na WW/US lub unik wroga).
+## Kontakt zawsze rani - dzięki temu cios/pocisk, który wizualnie trafił, nigdy nie daje "Pudła".
+static func hero_hit(att: Stats, def: Stats, def_armor: int, ranged: bool, base_dmg: int, rng: RandomNumberGenerator) -> Dictionary:
+	var chance := ranged_hit_chance(att.val("US"), def.val("Zr")) if ranged else melee_hit_chance(att.val("WW"), def.val("WW"), def_armor)
+	var full := rng.randi_range(1, 100) <= chance
+	if full and not ranged and rng.randi_range(1, 100) <= dodge_chance(def.val("Zr")):
+		full = false
+	var dmg := base_dmg
+	if not full:
+		dmg = maxi(1, int(round(base_dmg * float(_b("walka_bohatera/drasniecie_mnoznik", 0.5)))))
+	return {"hit": true, "glancing": not full, "damage": dmg, "chance": chance}
+
+## Ile razy na sekundę można użyć umiejętności przy przytrzymaniu przycisku.
+static func skill_rate(skill: Dictionary) -> float:
+	var cycle := maxf(float(skill.get("zamach", 0.2)) + float(skill.get("powrot", 0.2)), float(skill.get("odnowienie", 0.2)))
+	return 1.0 / maxf(0.05, cycle)
+
+## Po ilu sekundach ciągłego używania umiejętności skończy się mana (z regeneracją z SW).
+static func seconds_to_empty(skill: Dictionary, max_mana_v: float, sw: int) -> float:
+	var drain := float(skill.get("koszt_many", 0)) * skill_rate(skill) - mana_regen(sw)
+	return INF if drain <= 0.0 else max_mana_v / drain

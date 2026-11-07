@@ -66,8 +66,7 @@ func test_starting_profiles_valid():
 		for k in Stats.SECONDARY:
 			assert_between(h.stats.base_val(k), 0, 10, id + " " + k)
 		assert_true(h.max_hp() > 0)
-	assert_eq(HeroState.create("ivo").max_mana(), 0, "Ivo bez magii")
-	assert_eq(HeroState.create("modraszka").max_mana(), 0, "łuczniczka bez magii")
+	assert_true(HeroState.create("ivo").max_mana() > 0, "mana zasila umiejętności wszystkich postaci")
 	var ursa := HeroState.create("ursa")
 	assert_true(ursa.max_mana() >= 60, "Ursa: dużo many")
 	assert_true(ursa.max_hp() < HeroState.create("ivo").max_hp(), "Ursa: mniej zdrowia niż Ivo")

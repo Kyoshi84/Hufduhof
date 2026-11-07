@@ -125,11 +125,7 @@ func _draw_bars(c: Control) -> void:
 	var nxt := h.next_threshold()
 	var k := 1.0 if nxt < 0 else float(h.xp - prev) / maxf(1.0, nxt - prev)
 	_bar(c, Rect2(0, 38, w, 6), k, Color(0.75, 0.6, 0.2), "")
-	if level and level.hero and level.hero.skill_cd > 0.0:
-		var sk: Dictionary = level.hero.skill
-		var kk: float = level.hero.skill_cd / maxf(0.1, float(sk.get("odnowienie", 1.0)))
-		c.draw_rect(Rect2(w + 8, 0, 6, 35), Color(0.1, 0.08, 0.07))
-		c.draw_rect(Rect2(w + 8, 35 * kk, 6, 35 * (1.0 - kk)), Color(0.8, 0.7, 0.4))
+
 
 func _bar(c: Control, r: Rect2, k: float, col: Color, text: String) -> void:
 	c.draw_rect(r.grow(2), Color(0.03, 0.02, 0.02))

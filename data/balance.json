@@ -29,7 +29,8 @@
   "mana": {
     "int_mnoznik": 1.0,
     "regen_sw_mnoznik": 0.02,
-    "na_poziom_mag": 10
+    "na_poziom_mag": 10,
+    "brak_many_sygnal_co": 0.4
   },
   "trucizna": {
     "odpornosc_sw_dzielnik": 2,
@@ -133,5 +134,19 @@
   "plecak": {
     "szerokosc": 8,
     "wysokosc": 4
+  },
+  "hero_damage_multiplier": 1.0,
+  "walka_bohatera": {
+    "_opis": "Trafienia bohatera: kontakt hitboxu zawsze rani; nieudany rzut na WW/US (albo unik wroga) = draśnięcie (mniejsze obrażenia).",
+    "drasniecie_mnoznik": 0.5,
+    "odrzut_trafienia": 10,
+    "tempo_ataku_bronia": 1.0
+  },
+  "celowanie": {
+    "_opis": "Pomoc w celowaniu: wróg w stożku przed postacią -> strzał koryguje się w jego stronę. wysokosc_pocisku = korekta Y przy celowaniu myszą.",
+    "stozek_stopni": 30,
+    "skret_stopni_na_sekunde": 220,
+    "wysokosc_pocisku": 48,
+    "kursor_na_wrogu_px": 30
   }
 }

@@ -4,21 +4,23 @@ extends Actor
 ## z wyraźnym zamachem (fazy z Rules.attack_phases), umiejętność/czar, mikstury, interakcja.
 
 signal action_hint_changed
+signal mana_denied          # próba użycia umiejętności bez many (pasek miga)
 
 var hs: HeroState
 var hdef: Dictionary
-var atk: Dictionary
-var skill: Dictionary
-var action: String = ""            # "atak" / "umiejetnosc"
-var atk_mode: String = "wrecz"     # atak mieszany: "wrecz" (z bliska) albo "pocisk" (z dystansu)
-var phases: Array = [0.5, 0.1, 0.6]
-var hit_done: bool = false
-var skill_cd: float = 0.0
-var potion_cd: float = 0.0
+var weapon_atk: Dictionary         # zwykły atak bronią (bez many) - zapas
+var skills: Dictionary = {}        # id -> definicja umiejętności (heroes.json)
+var bar: Array = []                # 10 slotów paska (id umiejętności / mikstura / "")
+var cooldowns: Dictionary = {}     # id -> pozostały czas odnowienia
+var cur: Dictionary = {}           # umiejętność (albo atak bronią) w trakcie użycia
+var cur_id: String = ""
+var phases: Array = [0.2, 0.05, 0.2]
 var aim := Vector2.ZERO
-var skill_target := Vector2.ZERO
-var mouse_atk: bool = false
-var mouse_skill: bool = false
+var potion_cd: float = 0.0
+var dmg_buff: float = 0.0          # wzmocnienie obrażeń (Okrzyk), np. 0.4 = +40%
+var dmg_buff_t: float = 0.0
+var mouse_atk: bool = false        # LPM przytrzymany: atak główny
+var mouse_skill: bool = false      # PPM przytrzymany: slot 2
 var mouse_world := Vector2.ZERO
 var use_mouse_aim: bool = false
 var near_interactable: Node = null
@@ -26,16 +28,17 @@ var walk_t: float = 0.0
 var input_locked: bool = false     # dialogi, przerywniki
 var ui_cooldown: float = 0.0       # chwila po zamknięciu okna: ten sam klawisz nie otwiera go ponownie
 var can_fight: bool = true         # w karczmie gramy Borubarem, który nie walczy
-var mana_acc: float = 0.0
-var _marker: Fx = null
+var _deny_t: float = 0.0
 var _reveal_t: float = 0.0
+var last_shot_dir := Vector2.ZERO  # do testów i diagnostyki
 
 func setup(hero_state: HeroState) -> void:
 	hs = hero_state
 	stats = hs.stats
 	hdef = Data.hero(hs.id)
-	atk = hdef.get("atak", {})
-	skill = hdef.get("umiejetnosc", {})
+	weapon_atk = hdef.get("atak_bronia", {})
+	skills = hdef.get("umiejetnosci", {})
+	bar = hdef.get("pasek", [])
 	faction = 0
 	setup_body(13.0, 2, 1 | 4)
 	gfx = DirSprite.new()
@@ -70,11 +73,15 @@ func _physics_process(delta: float) -> void:
 	if is_dead():
 		gfx.play("death", Iso.dir_name(facing))
 		return
-	skill_cd = maxf(0.0, skill_cd - delta)
+	for k in cooldowns.keys():
+		cooldowns[k] = maxf(0.0, cooldowns[k] - delta)
 	potion_cd = maxf(0.0, potion_cd - delta)
 	ui_cooldown = maxf(0.0, ui_cooldown - delta)
-	if hs.max_mana() > 0:
-		hs.mana = minf(hs.max_mana(), hs.mana + Rules.mana_regen(stats.val("SW")) * delta)
+	_deny_t = maxf(0.0, _deny_t - delta)
+	dmg_buff_t = maxf(0.0, dmg_buff_t - delta)
+	if dmg_buff_t <= 0.0:
+		dmg_buff = 0.0
+	hs.mana = minf(hs.max_mana(), hs.mana + Rules.mana_regen(stats.val("SW")) * delta)
 	if state in [St.WINDUP, St.STRIKE, St.RECOVER]:
 		_process_action(delta)
 	elif state == St.HURT:
@@ -107,29 +114,169 @@ func _process_free(_delta: float) -> void:
 		interact()
 	if not can_fight:
 		return
+	# przytrzymanie = ciągłe używanie (ogranicza je tylko odnowienie i mana)
 	if Input.is_action_pressed("atak") or mouse_atk:
-		start_attack()
-	elif Input.is_action_just_pressed("umiejetnosc") or mouse_skill:
-		mouse_skill = false
-		start_skill()
+		primary()
+	elif Input.is_action_pressed("umiejetnosc") or mouse_skill:
+		use_slot(1)
+	else:
+		for i in bar.size():
+			var act := "slot_%d" % (i + 1)
+			var entry := str(bar[i])
+			if skills.has(entry) and Input.is_action_pressed(act):
+				use_slot(i)
+				break
+	for i in bar.size():
+		var entry := str(bar[i])
+		if entry in Inventory.BELT and Input.is_action_just_pressed("slot_%d" % (i + 1)):
+			use_belt(entry)
 	if Input.is_action_just_pressed("mikstura_zycia"):
 		use_belt("mikstura_zycia")
 	if Input.is_action_just_pressed("mikstura_many"):
 		use_belt("mikstura_many")
 
-# ---------------------------------------------------------------- atak podstawowy
-func _aim_dir(reach: float) -> Vector2:
+# ---------------------------------------------------------------- pasek i umiejętności
+func slot_entry(i: int) -> String:
+	return str(bar[i]) if i >= 0 and i < bar.size() else ""
+
+func skill_ready(id: String) -> bool:
+	return float(cooldowns.get(id, 0.0)) <= 0.0
+
+func can_afford(id: String) -> bool:
+	return hs.mana >= float(skills.get(id, {}).get("koszt_many", 0))
+
+func busy() -> bool:
+	return state in [St.WINDUP, St.STRIKE, St.RECOVER, St.DEAD]
+
+## Użycie slotu paska (klawisz 1-0, kliknięcie, dotyk).
+func use_slot(i: int) -> String:
+	var e := slot_entry(i)
+	if e == "":
+		return "pusty"
+	if e in Inventory.BELT:
+		return "ok" if use_belt(e) else "brak"
+	return try_skill(e)
+
+## Atak główny (LPM / J / przycisk ATAK): umiejętność ze slotu 1, a bez many - zwykły atak bronią.
+func primary() -> void:
+	if busy():
+		return
+	if try_skill(slot_entry(0)) == "mana":
+		weapon_attack()
+
+## Zwraca: "ok", "zajety", "odnowienie", "mana", "brak".
+func try_skill(id: String) -> String:
+	if not skills.has(id):
+		return "brak"
+	if busy():
+		return "zajety"
+	if not skill_ready(id):
+		return "odnowienie"
+	var sk: Dictionary = skills[id]
+	var cost := float(sk.get("koszt_many", 0))
+	if hs.mana < cost:
+		_deny()
+		return "mana"
+	hs.mana -= cost
+	cooldowns[id] = float(sk.get("odnowienie", 0.2))
+	_begin(sk, id, [float(sk.get("zamach", 0.15)), 0.05, float(sk.get("powrot", 0.15))])
+	return "ok"
+
+func _deny() -> void:
+	if _deny_t > 0.0:
+		return
+	_deny_t = float(Data.bal("mana/brak_many_sygnal_co", 0.4))
+	Audio.play("no_mana")
+	mana_denied.emit()
+
+## Zwykły atak bronią (bez many): tempo z cechy A (i Zr), mnożone przez walka_bohatera/tempo_ataku_bronia.
+func weapon_attack() -> void:
+	if busy() or weapon_atk.is_empty():
+		return
+	var ph := Rules.attack_phases(stats.val("A"), stats.val("Zr"))
+	var k := float(Data.bal("walka_bohatera/tempo_ataku_bronia", 1.0))
+	var sk := weapon_atk.duplicate()
+	sk["typ"] = "ciecie"
+	sk["skalowanie"] = "bron"
+	_begin(sk, "bron", [ph[0] * k, ph[1] * k, ph[2] * k])
+
+func _begin(sk: Dictionary, id: String, ph: Array) -> void:
+	cur = sk
+	cur_id = id
+	phases = ph
+	aim = _aim_dir(float(sk.get("zasieg", 90)), _is_projectile(sk))
+	facing = aim
+	velocity = Vector2.ZERO
+	set_state(St.WINDUP)
+
+static func _is_projectile(sk: Dictionary) -> bool:
+	return str(sk.get("typ", "")) in ["pocisk", "salwa"]
+
+# ---------------------------------------------------------------- celowanie
+## Kierunek ataku liczony w chwili WYPUSZCZENIA (nie na początku zamachu), dokładnie w cel - nie zaokrąglany
+## do 8 kierunków animacji. Mysz: wróg pod kursorem albo punkt na ziemi (korekta wysokości lotu pocisku).
+## Joystick / klawiatura: kierunek ruchu z pomocą w celowaniu, bez ruchu - najbliższy wróg w zasięgu.
+func _aim_dir(reach: float, projectile: bool) -> Vector2:
+	var cone := float(Data.bal("celowanie/stozek_stopni", 30))
 	if use_mouse_aim:
-		var d := mouse_world - position
+		var hovered := enemy_under_cursor()
+		if hovered:
+			return (hovered.position - position).normalized()
+		var ground_pt := mouse_world
+		if projectile:
+			ground_pt += Vector2(0, float(Data.bal("celowanie/wysokosc_pocisku", 48)))
+		var d := ground_pt - position
 		if d.length() > 4.0:
-			return d.normalized()
+			var soft := soft_target(d, reach, cone)
+			return (soft.position - position).normalized() if soft else d.normalized()
 	var mv := Controls.move_vector()
-	var target := nearest_enemy(reach + float(Data.bal("walka/auto_cel_zasieg", 60)))
-	if target and (mv.length() < 0.1 or Iso.in_arc(position, Iso.screen(mv), target.position, reach + 80.0, 100.0)):
-		return (target.position - position).normalized()
 	if mv.length() > 0.1:
-		return Iso.screen(mv).normalized()
-	return facing
+		var dir := Iso.screen(mv).normalized()
+		var soft := soft_target(dir, reach + 40.0, cone * 1.5)
+		return (soft.position - position).normalized() if soft else dir
+	var target := nearest_enemy(reach + float(Data.bal("walka/auto_cel_zasieg", 60)))
+	if target:
+		return (target.position - position).normalized()
+	var soft := soft_target(facing, reach + 60.0, cone * 2.0)
+	return (soft.position - position).normalized() if soft else facing
+
+## Wróg, którego sprite jest pod kursorem myszy (klik w korpus = cel w stopy tego wroga).
+func enemy_under_cursor() -> Actor:
+	if level == null:
+		return null
+	var px := float(Data.bal("celowanie/kursor_na_wrogu_px", 30))
+	var best: Actor = null
+	var bd := INF
+	for e in level.enemies():
+		if e.is_dead():
+			continue
+		var dx := absf(mouse_world.x - e.position.x)
+		var top: float = e.position.y - e.gfx_height()
+		if dx <= px and mouse_world.y >= top and mouse_world.y <= e.position.y + 12.0:
+			var d := mouse_world.distance_to(e.position + Vector2(0, -e.gfx_height() * 0.5))
+			if d < bd:
+				bd = d
+				best = e
+	return best
+
+## Pomoc w celowaniu: najbliższy kątowo wróg w stożku (stopnie, całość) przed kierunkiem, w zasięgu.
+func soft_target(dir: Vector2, reach: float, cone_deg: float) -> Actor:
+	if level == null or dir.length() < 0.01:
+		return null
+	var gd := Iso.ground(dir).normalized()
+	var best: Actor = null
+	var best_a := deg_to_rad(cone_deg) * 0.5
+	for e in level.enemies():
+		if e.is_dead():
+			continue
+		var g := Iso.ground(e.position - position)
+		if g.length() > reach + e.body_radius or g.length() < 1.0:
+			continue
+		var a := absf(gd.angle_to(g))
+		if a <= best_a:
+			best_a = a
+			best = e
+	return best
 
 func nearest_enemy(max_d: float) -> Actor:
 	var best: Actor = null
@@ -145,199 +292,102 @@ func nearest_enemy(max_d: float) -> Actor:
 			best = e
 	return best
 
-func start_attack() -> void:
-	if state in [St.WINDUP, St.STRIKE, St.RECOVER, St.DEAD]:
-		return
-	action = "atak"
-	atk_mode = str(atk.get("typ", "wrecz"))
-	var reach := float(atk.get("zasieg", 80))
-	if atk_mode == "mieszany":
-		# z bliska broń wręcz (kostur / nóż), dalej pocisk (ognisty pocisk / strzała)
-		var close: Dictionary = atk.get("wrecz", {})
-		var near := nearest_enemy(float(close.get("zasieg", 60)) + 12.0)
-		var shot: Dictionary = atk.get("pocisk", {})
-		var cost := float(shot.get("koszt_many", 0))
-		if near:
-			atk_mode = "wrecz"
-			reach = float(close.get("zasieg", 60))
-		elif cost > 0.0 and hs.mana < cost:
-			if Input.is_action_just_pressed("atak") or mouse_atk:
-				Game.notify("Brak many na %s!" % str(shot.get("nazwa", "pocisk")).to_lower(), Color(0.5, 0.7, 1.0))
-			mouse_atk = false
-			return
-		else:
-			atk_mode = "pocisk"
-			reach = float(shot.get("zasieg", 360))
-			hs.mana -= cost
-	phases = Rules.attack_phases(stats.val("A"), stats.val("Zr"))
-	aim = _aim_dir(reach)
-	facing = aim
-	hit_done = false
-	velocity = Vector2.ZERO
-	set_state(St.WINDUP)
-
-func start_skill() -> void:
-	if state in [St.WINDUP, St.STRIKE, St.RECOVER, St.DEAD] or skill.is_empty():
-		return
-	if skill_cd > 0.0:
-		Game.notify("%s: odnowienie %.0f s" % [skill.get("nazwa", ""), ceil(skill_cd)], Color(0.8, 0.8, 0.8))
-		return
-	var cost := float(skill.get("koszt_many", 0))
-	if cost > 0.0 and hs.mana < cost:
-		Game.notify("Brak many!", Color(0.5, 0.7, 1.0))
-		return
-	var typ := str(skill.get("typ", ""))
-	if typ == "piorun":
-		var t := nearest_enemy(float(skill.get("zasieg", 300)))
-		if use_mouse_aim and (mouse_world - position).length() > 10.0:
-			skill_target = mouse_world
-		elif t:
-			skill_target = t.position
-		else:
-			Game.notify("Brak celu w zasięgu", Color(0.8, 0.8, 0.8))
-			return
-		aim = (skill_target - position).normalized()
-		if level:
-			_marker = Fx.marker(level.decal_parent(), skill_target, "circle", Vector2.RIGHT, float(skill.get("promien", 70)), 0.0, Color(0.5, 0.75, 1.0))
-	else:
-		aim = _aim_dir(float(skill.get("zasieg", 90)))
-	hs.mana -= cost
-	action = "umiejetnosc"
-	var wind := float(skill.get("zamach", 0.6))
-	phases = [wind, 0.1, wind * 0.8]
-	facing = aim
-	hit_done = false
-	velocity = Vector2.ZERO
-	set_state(St.WINDUP)
-
+# ---------------------------------------------------------------- wykonanie
 func _process_action(_delta: float) -> void:
 	velocity = Vector2.ZERO
 	match state:
 		St.WINDUP:
-			if _marker:
-				_marker.fill_progress = state_t / phases[0]
 			if state_t >= phases[0]:
 				set_state(St.STRIKE)
-				_do_strike()
+				_release()
 		St.STRIKE:
 			if state_t >= phases[1]:
 				set_state(St.RECOVER)
 		St.RECOVER:
-			# ruch może przerwać końcówkę powrotu (po połowie), atak przytrzymany = kolejny zamach
 			var mv := Controls.move_vector()
 			if state_t >= phases[2] or (state_t >= phases[2] * 0.5 and mv.length() > 0.3 and not input_locked):
 				set_state(St.IDLE)
-				action = ""
+				cur = {}
+				cur_id = ""
 
-func _do_strike() -> void:
-	if action == "umiejetnosc":
-		skill_cd = float(skill.get("odnowienie", 3.0))
-		_do_skill()
-		return
-	if str(atk.get("typ", "")) == "mieszany":
-		if atk_mode == "wrecz":
-			var close: Dictionary = atk.get("wrecz", {})
-			Audio.play(str(close.get("dzwiek", "swing")))
+func _release() -> void:
+	var sk := cur
+	aim = _aim_dir(float(sk.get("zasieg", 90)), _is_projectile(sk))
+	facing = aim
+	match str(sk.get("typ", "")):
+		"ciecie":
+			var reach := float(sk.get("zasieg", 90))
+			var arc := float(sk.get("luk_stopni", 120))
+			Audio.play(str(sk.get("dzwiek", "swing")))
 			if level:
-				Fx.slash(level.fx_parent(), position + Vector2(0, -34), aim, float(close.get("zasieg", 60)), float(close.get("luk_stopni", 90)), Color(0.85, 0.85, 0.9))
-			var dmg_override := int(close.get("obrazenia", -1))
-			_melee_hits(float(close.get("zasieg", 60)), float(close.get("luk_stopni", 90)), int(close.get("max_celow", 1)), 1.0, 0, "fiz", dmg_override)
-		else:
-			_shoot(atk.get("pocisk", {}), aim)
-		return
-	match str(atk.get("typ", "wrecz")):
-		"wrecz":
-			var reach := float(atk.get("zasieg", 80))
-			var arc := float(atk.get("luk_stopni", 110))
-			Audio.play(str(atk.get("dzwiek", "swing")))
-			if level:
-				Fx.slash(level.fx_parent(), position + Vector2(0, -34), aim, reach, arc, Color(0.85, 0.85, 0.9))
-			_melee_hits(reach, arc, int(atk.get("max_celow", 1)), 1.0, 0, "fiz")
+				Fx.slash(level.fx_parent(), position + Vector2(0, -34), aim, reach, minf(arc, 359.0), Color(1.0, 0.85, 0.6) if arc >= 300.0 else Color(0.85, 0.85, 0.9), 0.14)
+			_melee(sk)
 		"pocisk":
-			Audio.play(str(atk.get("dzwiek", "bolt")))
-			if level:
-				var dmg := weapon_dmg() + int(atk.get("obrazenia_bazowe", 0)) + int(floor(Rules.spell_power(stats.val("Int"), stats.val("Mag")) / 2.0))
-				level.spawn_projectile(str(atk.get("pocisk", "magic_bolt")), self, position, aim, float(atk.get("predkosc", 340)), float(atk.get("zasieg", 360)), dmg)
-
-## Pocisk bohatera: strzała (rzut na US przy trafieniu, obrażenia łuku + S - Wt) albo ognisty pocisk (czar, zawsze trafia).
-func _shoot(shot: Dictionary, dir: Vector2, extra: Dictionary = {}) -> void:
-	if level == null:
-		return
-	Audio.play(str(shot.get("dzwiek", "bolt")))
-	var kind := str(shot.get("rodzaj", "arrow"))
-	var opts := {"rzut": bool(shot.get("rzut", kind == "arrow"))}
-	var dmg := weapon_dmg()
-	if not opts["rzut"]:
-		dmg = int(shot.get("obrazenia_bazowe", 0)) + int(floor(Rules.spell_power(stats.val("Int"), stats.val("Mag")) / 2.0)) + int(floor(weapon_dmg() / 2.0))
-	opts.merge(extra, true)
-	level.spawn_projectile(kind, self, position, dir, float(shot.get("predkosc", 340)), float(shot.get("zasieg", 360)), dmg, opts)
-
-func _melee_hits(reach: float, arc: float, max_targets: int, mult: float, bonus: int, kind: String, dmg_override: int = -1) -> Array:
-	var hits: Array = []
-	if level == null:
-		return hits
-	var cands: Array = []
-	for e in level.enemies():
-		if not e.is_dead() and Iso.in_arc(position, aim, e.position, reach, arc, e.body_radius):
-			cands.append(e)
-	cands.sort_custom(func(a, b): return Iso.dist(position, a.position) < Iso.dist(position, b.position))
-	for e in cands.slice(0, max_targets):
-		var res := Rules.resolve_melee(stats, weapon_dmg() if dmg_override < 0 else dmg_override, e.stats, e.armor(), rng, mult, bonus)
-		res["kind"] = kind
-		e.receive_hit(res, self)
-		if res["hit"]:
-			hits.append(e)
-	if not hits.is_empty() and level:
-		level.hitstop(float(Data.bal("walka/zatrzymanie_trafienia", 0.05)))
-		level.shake(2.5)
-	return hits
-
-func _do_skill() -> void:
-	var typ := str(skill.get("typ", ""))
-	match typ:
-		"kula_ognia":
-			_shoot({"rodzaj": "fireball", "predkosc": skill.get("predkosc", 300), "zasieg": skill.get("zasieg", 380), "rzut": false,
-				"dzwiek": "fire", "obrazenia_bazowe": 0}, aim,
-				{"czar_bazowe": int(skill.get("obrazenia_bazowe", 10)), "wybuch": float(skill.get("promien", 72)),
-				 "podpalenie": [float(skill.get("podpalenie_na_sekunde", 3)), float(skill.get("podpalenie_czas", 3.0))], "skala": 1.8})
+			_shoot(sk, aim)
 		"salwa":
-			var n := int(skill.get("strzaly", 5))
-			var spread := deg_to_rad(float(skill.get("rozrzut_stopni", 44)))
+			var n := int(sk.get("strzaly", 5))
+			var spread := deg_to_rad(float(sk.get("rozrzut_stopni", 40)))
 			var g := Iso.ground(aim).normalized()
 			for i in n:
 				var a := -spread / 2.0 + spread * i / maxf(1.0, n - 1)
-				_shoot({"rodzaj": "arrow", "predkosc": skill.get("predkosc", 430), "zasieg": skill.get("zasieg", 420), "rzut": true, "dzwiek": "bolt"},
-					Iso.screen(g.rotated(a)).normalized())
-		"zamach":
-			Audio.play("swing_heavy", 0.8)
+				_shoot(sk, Iso.screen(g.rotated(a)).normalized(), i > 0)
+		"okrzyk":
+			Audio.play("shrine", 0.7)
+			dmg_buff = float(sk.get("wzmocnienie", 0.4))
+			dmg_buff_t = float(sk.get("czas", 6.0))
 			if level:
-				Fx.slash(level.fx_parent(), position + Vector2(0, -30), aim, float(skill.get("zasieg", 95)), float(skill.get("luk_stopni", 220)), Color(1.0, 0.8, 0.5), 0.24)
-			var hits := _melee_hits(float(skill.get("zasieg", 95)), float(skill.get("luk_stopni", 220)), int(skill.get("max_celow", 6)), float(skill.get("mnoznik_obrazen", 1.8)), 0, "fiz")
-			for e in hits:
-				e.knockback(Iso.ground(e.position - position).normalized() * float(skill.get("odrzut", 40)))
-			if level:
+				Fx.ring(level.decal_parent(), position, float(sk.get("promien", 140)), Color(1.0, 0.3, 0.2), 0.5)
+				Fx.float_text(level.fx_parent(), position + Vector2(0, -130), "Za Carroburg!", Color(1.0, 0.4, 0.3), true)
 				level.shake(5.0)
-		"ogien":
-			Audio.play("fire")
-			if level:
-				Fx.slash(level.fx_parent(), position + Vector2(0, -34), aim, float(skill.get("zasieg", 90)), float(skill.get("luk_stopni", 150)), Color(1.0, 0.5, 0.15), 0.22)
-			var bonus := int(skill.get("obrazenia_bazowe", 6)) + Rules.spell_power(stats.val("Int"), stats.val("Mag"))
-			var hits := _melee_hits(float(skill.get("zasieg", 90)), float(skill.get("luk_stopni", 150)), int(skill.get("max_celow", 4)), 1.0, bonus, "ogien")
-			for e in hits:
-				e.add_dot(float(skill.get("podpalenie_na_sekunde", 3)), float(skill.get("podpalenie_czas", 3.0)), "ogien")
-		"piorun":
-			Audio.play("lightning")
-			if _marker:
-				_marker.queue_free()
-				_marker = null
-			if level:
-				Fx.bolt(level.fx_parent(), skill_target, Color(0.55, 0.75, 1.0))
-				Fx.ring(level.decal_parent(), skill_target, float(skill.get("promien", 70)), Color(0.6, 0.8, 1.0))
-				level.shake(4.0)
 				for e in level.enemies():
-					if not e.is_dead() and Iso.dist(e.position, skill_target) <= float(skill.get("promien", 70)) + e.body_radius:
-						var dmg := Rules.spell_damage(int(skill.get("obrazenia_bazowe", 10)), stats, e.stats)
-						e.receive_hit({"hit": true, "damage": dmg, "kind": "magia"}, self)
+					if not e.is_dead() and Iso.dist(position, e.position) <= float(sk.get("promien", 140)) + e.body_radius:
+						e.knockback(Iso.ground(e.position - position).normalized() * float(sk.get("odrzut", 60)))
+						e.stagger(0.4)
+
+func _weapon_for(sk: Dictionary) -> int:
+	return int(sk.get("obrazenia", weapon_dmg()))
+
+## Wynik trafienia umiejętnością w wroga (wywołuje też Projectile).
+func skill_hit(sk: Dictionary, e: Actor, ranged: bool) -> Dictionary:
+	var dmg := Rules.skill_damage(sk, stats, e.stats, _weapon_for(sk), dmg_buff)
+	var res := Rules.hero_hit(stats, e.stats, e.armor(), ranged, dmg, rng)
+	var kind := "fiz"
+	if str(sk.get("rodzaj", "")) in ["fireball", "fire_lance"]:
+		kind = "ogien"
+	res["kind"] = kind
+	return res
+
+func _melee(sk: Dictionary) -> Array:
+	var hits: Array = []
+	if level == null:
+		return hits
+	var reach := float(sk.get("zasieg", 90))
+	var arc := float(sk.get("luk_stopni", 120))
+	var cands: Array = []
+	for e in level.enemies():
+		if not e.is_dead() and (arc >= 359.0 and Iso.dist(position, e.position) <= reach + e.body_radius or Iso.in_arc(position, aim, e.position, reach, arc, e.body_radius)):
+			cands.append(e)
+	cands.sort_custom(func(a, b): return Iso.dist(position, a.position) < Iso.dist(position, b.position))
+	for e in cands.slice(0, int(sk.get("max_celow", 1))):
+		e.receive_hit(skill_hit(sk, e, false), self)
+		var push := float(Data.bal("walka_bohatera/odrzut_trafienia", 10)) + float(sk.get("odrzut", 0))
+		e.knockback(Iso.ground(e.position - position).normalized() * push)
+		hits.append(e)
+	if not hits.is_empty():
+		level.hitstop(float(Data.bal("walka/zatrzymanie_trafienia", 0.05)))
+		level.shake(2.5 if arc < 300.0 else 4.0)
+	return hits
+
+## Pocisk umiejętności: obrażenia liczone przy trafieniu (skill_hit), hitbox = promien_trafienia + promień ciała wroga.
+func _shoot(sk: Dictionary, dir: Vector2, silent: bool = false) -> void:
+	if level == null:
+		return
+	if not silent:
+		Audio.play(str(sk.get("dzwiek", "bolt")))
+	last_shot_dir = dir
+	var opts := {"skill": sk, "soft_aim": true, "promien_trafienia": float(sk.get("promien_trafienia", 14)),
+		"przebicie": int(sk.get("przebicie", 1)), "wybuch": float(sk.get("wybuch", 0.0)), "skala": float(sk.get("skala", 1.0))}
+	level.spawn_projectile(str(sk.get("rodzaj", "arrow")), self, position, dir, float(sk.get("predkosc", 400)), float(sk.get("zasieg", 400)), 0, opts)
 
 # ---------------------------------------------------------------- obrażenia i śmierć
 func receive_hit(res: Dictionary, attacker: Actor = null) -> void:
@@ -357,9 +407,6 @@ func on_damaged(amount: float, kind: String) -> void:
 func die() -> void:
 	super()
 	Audio.play("death")
-	if _marker:
-		_marker.queue_free()
-		_marker = null
 	if level:
 		level.on_hero_died()
 
@@ -402,9 +449,6 @@ func use_belt(id: String) -> bool:
 		else:
 			Game.notify("Brak: " + str(Data.belt_item(id).get("nazwa", id)), Color(0.8, 0.7, 0.6))
 			return false
-	if pick == "mikstura_many" and hs.max_mana() <= 0:
-		Game.notify("Ta postać nie używa many", Color(0.8, 0.7, 0.6))
-		return false
 	inv.belt_use(pick)
 	var eff: Dictionary = Data.bal("mikstury/" + pick, {})
 	heal(float(eff.get("zycie", 0)))
@@ -481,13 +525,20 @@ func _animate(delta: float) -> void:
 
 func draw_debug() -> void:
 	super()
-	if state == St.WINDUP or state == St.STRIKE:
-		var reach := float(atk.get("zasieg", 80)) if action == "atak" else float(skill.get("zasieg", 90))
-		var arc := float(atk.get("luk_stopni", 110)) if action == "atak" else float(skill.get("luk_stopni", 180))
-		var g := Iso.ground(aim).normalized()
-		var pts := PackedVector2Array([Vector2.ZERO])
-		for i in 13:
-			var a := g.angle() - deg_to_rad(arc) / 2.0 + deg_to_rad(arc) * i / 12.0
-			pts.append(Iso.screen(Vector2.RIGHT.rotated(a) * reach))
-		pts.append(Vector2.ZERO)
-		draw_polyline(pts, Color(1, 0.2, 0.2) if state == St.STRIKE else Color(1, 0.9, 0.2), 1.5)
+	# zasięg umiejętności ze slotu 1 (elipsa na ziemi) i łuk zwykłego ataku bronią
+	var sk: Dictionary = skills.get(slot_entry(0), {})
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.5))
+	draw_arc(Vector2.ZERO, float(sk.get("zasieg", 0)), 0, TAU, 64, Color(0.4, 0.8, 1.0, 0.5), 1.5)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var shown: Dictionary = cur if not cur.is_empty() else weapon_atk
+	var reach := float(shown.get("zasieg", 80))
+	var arc := minf(float(shown.get("luk_stopni", 110)), 360.0)
+	var g := Iso.ground(aim if aim.length() > 0.1 else facing).normalized()
+	var pts := PackedVector2Array([Vector2.ZERO])
+	for i in 25:
+		var a := g.angle() - deg_to_rad(arc) / 2.0 + deg_to_rad(arc) * i / 24.0
+		pts.append(Iso.screen(Vector2.RIGHT.rotated(a) * reach))
+	pts.append(Vector2.ZERO)
+	draw_polyline(pts, Color(1, 0.2, 0.2) if state == St.STRIKE else Color(1, 0.9, 0.2, 0.8), 1.5)
+	if state in [St.WINDUP, St.STRIKE]:
+		draw_line(Vector2.ZERO, Iso.screen(g * 500.0), Color(1, 1, 1, 0.4), 1.0)

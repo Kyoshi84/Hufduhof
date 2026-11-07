@@ -23,6 +23,7 @@ var flash: float = 0.0
 var glow := Color(0, 0, 0, 0)        # poświata (np. niezniszczalność Ulryka)
 var blessed: float = 0.0             # niezniszczalność (kapliczka Ulryka) - sekundy
 var rng := RandomNumberGenerator.new()
+var _glancing: bool = false         # bieżące trafienie to draśnięcie (mniejsza, szara liczba)
 
 func _init() -> void:
 	rng.randomize()
@@ -72,7 +73,9 @@ func apply_damage(amount: float, kind: String = "fiz", _source: Node = null) -> 
 		c = Color(0.55, 1.0, 0.35)
 	elif kind == "ogien":
 		c = Color(1.0, 0.6, 0.2)
-	_float(str(int(round(amount))), c, amount >= 10.0)
+	if _glancing:
+		c = Color(0.75, 0.72, 0.66)
+	_float(str(int(round(amount))), c, amount >= 10.0 and not _glancing)
 	on_damaged(amount, kind)
 	if hp <= 0.0:
 		hp = 0.0
@@ -105,8 +108,10 @@ func receive_hit(res: Dictionary, attacker: Actor = null) -> void:
 	if is_dead():
 		return
 	if res.get("hit", false):
+		_glancing = bool(res.get("glancing", false))
 		apply_damage(float(res["damage"]), str(res.get("kind", "fiz")), attacker)
-		Audio.play("hit")
+		_glancing = false
+		Audio.play("hit", 0.8 if res.get("glancing", false) else 1.0)
 	elif res.get("dodged", false):
 		_float("Unik", Color(0.8, 0.9, 1.0))
 		Audio.play("miss")
@@ -142,6 +147,8 @@ func tick_common(delta: float) -> void:
 		var m := Color(1, 1, 1)
 		if flash > 0.0:
 			m = Color(2.2, 2.0, 1.9)
+		elif get("slow_t") != null and float(get("slow_t")) > 0.0:
+			m = Color(0.75, 0.85, 1.25)
 		elif not dots.is_empty():
 			m = Color(0.75, 1.15, 0.7) if dots[0]["kind"] == "trucizna" else Color(1.3, 0.9, 0.7)
 		if glow.a > 0.0:
