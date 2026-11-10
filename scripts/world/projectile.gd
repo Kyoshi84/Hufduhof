@@ -54,6 +54,8 @@ func setup(lvl: Node, k: String, from: Actor, pos: Vector2, d: Vector2, spd: flo
 	spr.position = Vector2(0, -height)
 	spr.scale = Vector2.ONE * float(opts.get("skala", 1.0))
 	add_child(spr)
+	if kind in ["fireball", "fire_lance"]:
+		LightFx.make("pocisk_ognia", self, Vector2.ZERO)
 	_orient()
 
 func _orient() -> void:

@@ -180,3 +180,32 @@ func test_single_attack_never_damages_twice():
 			counts[0] += 1
 	assert_eq(counts[0], 1, "jedna strzała = jedno trafienie")
 	assert_true(e.hp < orig_hp)
+
+func test_lights_and_shadows_exist():
+	var lights := lvl.find_children("*", "PointLight2D", true, false)
+	gut.p("świateł w wiosce: %d" % lights.size())
+	assert_true(lights.size() >= 20, "latarnie, ogień barykady, palenisko, okna, kapliczki, poświata bohatera")
+	for part in lvl.barricade_parts:
+		assert_not_null(part.light, "płonąca barykada świeci")
+	var shadows := lvl.map.decals.get_children().filter(func(n): return n is Polygon2D)
+	assert_true(shadows.size() > 100, "cienie na ziemi pod budynkami, drzewami i rekwizytami")
+
+func test_extinguished_barricade_stops_glowing():
+	for id in ["a", "b", "c"]:
+		Game.quest.pick_bucket(id)
+	Game.quest.fill_at_well()
+	lvl.barricade_parts[0].interact(lvl.hero)
+	await wait_frames(2)
+	assert_null(lvl.barricade_parts[0].light, "ugaszona część nie świeci")
+	assert_not_null(lvl.barricade_parts[1].light)
+
+func test_attack_frames_last_is_hit():
+	var g: DirSprite = lvl.hero.gfx
+	var n := g.frame_count("attack", "east")
+	assert_eq(n, 3)
+	g.set_windup("attack", 0.0, "east")
+	assert_eq(int(g.progress * n), 0)
+	g.set_windup("attack", 0.99, "east")
+	assert_eq(int(g.progress * n), n - 2, "koniec zamachu = przedostatnia klatka")
+	g.set_last("attack", "east")
+	assert_eq(mini(int(g.progress * n), n - 1), n - 1, "trafienie = ostatnia klatka")

@@ -5,6 +5,11 @@
  "rekwizyty": "res://assets/levels/level1/props/",
  "muzyka": "wioska",
  "odcien": [
+  0.5,
+  0.5,
+  0.62
+ ],
+ "odcien_bez_swiatel": [
   0.86,
   0.84,
   0.88
@@ -1402,6 +1407,181 @@
    ],
    "blokuje": false,
    "plaska": true
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    29,
+    28
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    39,
+    28
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    29,
+    37
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    39,
+    37
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    32,
+    33
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    8,
+    52
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    46,
+    8
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    50,
+    8
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    29,
+    13
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    46,
+    43
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    53,
+    57
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    20,
+    29
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    15,
+    19
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    26,
+    45
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    46,
+    24
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    17,
+    51
+   ]
+  },
+  {
+   "typ": "latarnia",
+   "komorka": [
+    42,
+    44
+   ]
+  },
+  {
+   "typ": "swiatlo",
+   "rodzaj": "palenisko",
+   "komorka": [
+    17,
+    34
+   ]
+  },
+  {
+   "typ": "swiatlo",
+   "rodzaj": "okno",
+   "komorka": [
+    23,
+    43
+   ]
+  },
+  {
+   "typ": "swiatlo",
+   "rodzaj": "okno",
+   "komorka": [
+    27,
+    24
+   ]
+  },
+  {
+   "typ": "swiatlo",
+   "rodzaj": "okno",
+   "komorka": [
+    5,
+    55
+   ]
+  },
+  {
+   "typ": "swiatlo",
+   "rodzaj": "okno",
+   "komorka": [
+    25,
+    57
+   ]
+  },
+  {
+   "typ": "swiatlo",
+   "rodzaj": "swieca",
+   "komorka": [
+    34,
+    14
+   ]
+  },
+  {
+   "typ": "swiatlo",
+   "rodzaj": "swieca",
+   "komorka": [
+    31,
+    8
+   ]
   }
  ],
  "grupy": [

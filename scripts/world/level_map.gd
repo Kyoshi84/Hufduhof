@@ -124,7 +124,7 @@ func _hash(x: int, y: int) -> int:
 
 # ---------------------------------------------------------------- rekwizyty
 ## Dodaje sprite rekwizytu. footprint = rozmiar podstawy w komórkach; anchor "south" (budynki) albo "center".
-func add_prop(texture: Texture2D, cell: Vector2i, footprint: Vector2i = Vector2i.ONE, anchor: String = "center", parent: Node = null) -> Sprite2D:
+func add_prop(texture: Texture2D, cell: Vector2i, footprint: Vector2i = Vector2i.ONE, anchor: String = "center", parent: Node = null, shadow: bool = true) -> Sprite2D:
 	if texture == null:
 		return null
 	var s := Sprite2D.new()
@@ -137,7 +137,35 @@ func add_prop(texture: Texture2D, cell: Vector2i, footprint: Vector2i = Vector2i
 	s.position = center
 	s.offset = a - Vector2(texture.get_width() / 2.0, texture.get_height())
 	(parent if parent else world).add_child(s)
+	if parent == null and shadow:
+		_add_shadow(center, footprint, texture, anchor == "south")
 	return s
+
+## Cień na ziemi: światło pada z lewej-góry, więc cień leży po prawej-dolnej stronie obiektu.
+## Budynek: romb podstawy przesunięty wzdłuż osi x siatki; mały obiekt: spłaszczona elipsa pod spodem.
+func _add_shadow(center: Vector2, footprint: Vector2i, texture: Texture2D, is_building: bool) -> void:
+	var dark := float(Data.bal("swiatlo/cien", 0.34))
+	if dark <= 0.0 or not Save.lights:
+		return
+	var poly := Polygon2D.new()
+	poly.color = Color(0.02, 0.02, 0.05, dark)
+	var pts := PackedVector2Array()
+	if is_building:
+		var w := float(footprint.x)
+		var h := float(footprint.y)
+		var shift := 0.55 + 0.12 * maxf(w, h)
+		for c in [Vector2(-w / 2.0, -h / 2.0), Vector2(w / 2.0 + shift, -h / 2.0), Vector2(w / 2.0 + shift, h / 2.0), Vector2(-w / 2.0, h / 2.0)]:
+			pts.append(Vector2((c.x - c.y) * Iso.TW / 2.0, (c.x + c.y) * Iso.TH / 2.0))
+	else:
+		var r := clampf(texture.get_width() * 0.42, 12.0, 60.0)
+		var tall := clampf(texture.get_height() / 90.0, 0.4, 1.6)
+		for i in 14:
+			var ang := TAU * i / 14.0
+			pts.append(Vector2(cos(ang) * r * (0.9 + 0.35 * tall) + r * 0.45 * tall, sin(ang) * r * 0.42 + r * 0.16 * tall))
+	poly.polygon = pts
+	poly.position = center
+	poly.z_index = -6
+	decals.add_child(poly)
 
 func prop_tex(prop_name: String, set_dir: String = "") -> Texture2D:
 	var dirs := [set_dir] if set_dir != "" else []
@@ -203,7 +231,8 @@ func _spawn_static_object(o: Dictionary) -> void:
 			var set_dir := ""
 			if o.has("zestaw"):
 				set_dir = "res://assets/levels/%s/props/" % str(o["zestaw"])
-			var sp := add_prop(prop_tex(str(o.get("grafika", "")), set_dir), cell)
+			var flat: bool = str(o.get("grafika", "")) == "rat_hole" or bool(o.get("plaska", false))
+			var sp := add_prop(prop_tex(str(o.get("grafika", "")), set_dir), cell, Vector2i.ONE, "center", null, not flat)
 			if sp and bool(o.get("odbicie", false)):
 				sp.flip_h = true
 			if (str(o.get("grafika", "")) == "rat_hole" or bool(o.get("plaska", false))) and sp:

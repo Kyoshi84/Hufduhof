@@ -25,6 +25,7 @@ func setup(lvl: Node, c: Actor, a: Vector2, b: Vector2, enemy_def: Dictionary) -
 	if ResourceLoader.exists(p):
 		spr.texture = load(p)
 	add_child(spr)
+	LightFx.make("spaczenie", spr, Vector2(0, 20))
 
 func _physics_process(delta: float) -> void:
 	t += delta

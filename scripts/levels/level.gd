@@ -47,9 +47,10 @@ func _ready() -> void:
 	_setup_camera()
 	_setup_ui()
 	map.reveal(hero.position, float(Data.bal("mgla/promien_komorek", 6.5)))
-	if data.has("odcien"):
-		# przygaszone, zimne światło (grimdark): mnożnik koloru całego świata gry, bez interfejsu
-		var tint: Array = data["odcien"]
+	var tint_key := "odcien" if LightFx.enabled() else "odcien_bez_swiatel"
+	if data.has(tint_key):
+		# zmierzch (grimdark): mnożnik koloru całego świata gry, bez interfejsu; źródła światła rozjaśniają go lokalnie
+		var tint: Array = data[tint_key]
 		var cm := CanvasModulate.new()
 		cm.color = Color(float(tint[0]), float(tint[1]), float(tint[2]))
 		add_child(cm)
@@ -96,6 +97,12 @@ func _spawn_objects() -> void:
 				exit_zone.setup(self, float(o.get("promien", 2)))
 			"tunel":
 				tunnel_defs.append(o)
+			"latarnia":
+				map.add_prop(map.prop_tex("lantern_post"), Iso.to_cell(p))
+				map.blocked[Iso.to_cell(p)] = true
+				LightFx.make("latarnia", map.world, p)
+			"swiatlo":
+				LightFx.make(str(o.get("rodzaj", "latarnia")), map.world, p)
 			"npc":
 				_add_obj(Obj.Npc.new(), p).setup(self, str(o.get("id", "borubar")))
 				map.blocked[Iso.to_cell(p)] = true
@@ -157,6 +164,9 @@ func _spawn_hero() -> void:
 	Game.spawn_pos = null
 	map.world.add_child(hero)
 	hero.setup(Game.hero)
+	var hl := LightFx.make("bohater", hero, Vector2.ZERO)   # słaba poświata, żeby postać była czytelna w mroku
+	if hl:
+		hl.name = "HeroLight"
 
 func spawn_enemy(eid: String, pos: Vector2, group: String, uid: String) -> Enemy:
 	var e := Enemy.new()

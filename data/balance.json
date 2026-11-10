@@ -161,5 +161,112 @@
     "odstep_sekund": 0.8,
     "wynurzanie_sekund": 0.9,
     "min_odleglosc_od_bohatera": 70
+  },
+  "swiatlo": {
+    "_opis": "Oświetlenie. Poziom jest przyciemniony kolorem 'odcien' z pliku poziomu; rodzaje świateł: promien (px), kolor [r,g,b], energia (jasność), migotanie (0-1), wysokosc (px nad ziemią). cien = ciemność cieni rzucanych na ziemię (0 = brak).",
+    "wlaczone": true,
+    "splaszczenie": 0.72,
+    "cien": 0.34,
+    "rodzaje": {
+      "latarnia": {
+        "promien": 230,
+        "kolor": [
+          1.0,
+          0.72,
+          0.38
+        ],
+        "energia": 0.85,
+        "migotanie": 0.12,
+        "wysokosc": 60
+      },
+      "ogien": {
+        "promien": 300,
+        "kolor": [
+          1.0,
+          0.55,
+          0.22
+        ],
+        "energia": 1.0,
+        "migotanie": 0.35,
+        "wysokosc": 30
+      },
+      "palenisko": {
+        "promien": 280,
+        "kolor": [
+          1.0,
+          0.6,
+          0.28
+        ],
+        "energia": 0.95,
+        "migotanie": 0.25,
+        "wysokosc": 20
+      },
+      "swieca": {
+        "promien": 120,
+        "kolor": [
+          1.0,
+          0.8,
+          0.5
+        ],
+        "energia": 0.6,
+        "migotanie": 0.2,
+        "wysokosc": 36
+      },
+      "okno": {
+        "promien": 130,
+        "kolor": [
+          1.0,
+          0.62,
+          0.3
+        ],
+        "energia": 0.5,
+        "migotanie": 0.06,
+        "wysokosc": 30
+      },
+      "kapliczka": {
+        "promien": 150,
+        "kolor": [
+          1.0,
+          0.9,
+          0.6
+        ],
+        "energia": 0.5,
+        "migotanie": 0.1,
+        "wysokosc": 50
+      },
+      "spaczenie": {
+        "promien": 120,
+        "kolor": [
+          0.4,
+          1.0,
+          0.3
+        ],
+        "energia": 0.7,
+        "migotanie": 0.3,
+        "wysokosc": 20
+      },
+      "pocisk_ognia": {
+        "promien": 110,
+        "kolor": [
+          1.0,
+          0.6,
+          0.25
+        ],
+        "energia": 0.8,
+        "migotanie": 0.2,
+        "wysokosc": 40
+      },
+      "bohater": {
+        "promien": 240,
+        "kolor": [
+          0.8,
+          0.82,
+          0.95
+        ],
+        "energia": 0.34,
+        "migotanie": 0.0,
+        "wysokosc": 40
+      }
+    }
   }
 }

@@ -4,6 +4,11 @@
  "kafle": "res://assets/levels/tavern/tiles/",
  "rekwizyty": "res://assets/levels/tavern/props/",
  "muzyka": "karczma",
+ "odcien": [
+  0.6,
+  0.52,
+  0.48
+ ],
  "legenda": {
   ".": "trawa",
   ",": "trawa z kwiatami",
@@ -204,6 +209,70 @@
    "komorka": [
     9,
     7
+   ]
+  },
+  {
+   "typ": "swiatlo",
+   "rodzaj": "palenisko",
+   "komorka": [
+    2,
+    5
+   ]
+  },
+  {
+   "typ": "swiatlo",
+   "rodzaj": "swieca",
+   "komorka": [
+    4,
+    8
+   ]
+  },
+  {
+   "typ": "swiatlo",
+   "rodzaj": "swieca",
+   "komorka": [
+    10,
+    4
+   ]
+  },
+  {
+   "typ": "swiatlo",
+   "rodzaj": "swieca",
+   "komorka": [
+    10,
+    8
+   ]
+  },
+  {
+   "typ": "swiatlo",
+   "rodzaj": "latarnia",
+   "komorka": [
+    6,
+    1
+   ]
+  },
+  {
+   "typ": "swiatlo",
+   "rodzaj": "latarnia",
+   "komorka": [
+    11,
+    2
+   ]
+  },
+  {
+   "typ": "swiatlo",
+   "rodzaj": "latarnia",
+   "komorka": [
+    1,
+    9
+   ]
+  },
+  {
+   "typ": "swiatlo",
+   "rodzaj": "latarnia",
+   "komorka": [
+    7,
+    10
    ]
   }
  ],

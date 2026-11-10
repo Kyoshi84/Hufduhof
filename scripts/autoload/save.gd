@@ -8,6 +8,7 @@ var music_volume: float = 0.8
 var sfx_volume: float = 0.9
 var touch_mode: int = 0          # 0 = auto, 1 = zawsze, 2 = nigdy
 var palette_filter: bool = true
+var lights: bool = true            # oświetlenie (zmierzch + źródła światła); wyłącz na słabym telefonie
 var last_hero: String = "ivo"
 var save_path: String = SAVE_PATH   # testy podmieniają ścieżkę
 
@@ -50,6 +51,7 @@ func load_settings() -> void:
 	sfx_volume = float(d.get("sfx", sfx_volume))
 	touch_mode = int(d.get("touch", touch_mode))
 	palette_filter = bool(d.get("palette", palette_filter))
+	lights = bool(d.get("lights", lights))
 	last_hero = str(d.get("last_hero", last_hero))
 
 func save_settings() -> void:
@@ -57,7 +59,7 @@ func save_settings() -> void:
 	if f == null:
 		return
 	f.store_string(JSON.stringify({"music": music_volume, "sfx": sfx_volume, "touch": touch_mode,
-		"palette": palette_filter, "last_hero": last_hero}))
+		"palette": palette_filter, "lights": lights, "last_hero": last_hero}))
 	f.close()
 
 func touch_enabled() -> bool:

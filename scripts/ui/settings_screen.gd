@@ -29,6 +29,12 @@ static func build(on_back: Callable) -> Control:
 		Save.palette_filter = not Save.palette_filter
 		pb.text = "Filtr palety 256 kolorów: " + ("WŁ" if Save.palette_filter else "wył") + " (od nowego poziomu)")
 	vb.add_child(pb)
+	var lb := UiKit.button("", func(): pass, 460)
+	lb.text = "Oświetlenie i cienie: " + ("WŁ" if Save.lights else "wył")
+	lb.pressed.connect(func():
+		Save.lights = not Save.lights
+		lb.text = "Oświetlenie i cienie: " + ("WŁ" if Save.lights else "wył") + " (od nowego poziomu)")
+	vb.add_child(lb)
 	if OS.is_debug_build():
 		var db := UiKit.button("", func(): pass, 460)
 		db.text = "Diagnostyka kolizji (F3): " + ("WŁ" if Game.debug_collision else "wył")

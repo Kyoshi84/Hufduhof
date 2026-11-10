@@ -143,3 +143,17 @@ Pliki: `data/heroes.json` (bohaterowie), `data/enemies.json` (wrogowie).
 - **Kolory:** trawa i drzewa w matowej zieleni, ciemna strzecha, brudny tynk, plus `"odcien"` poziomu (zimne, przygaszone światło).
 - **Ruch:** rozpęd i hamowanie (`ruch/rozped_sekund`, `ruch/hamowanie_sekund`, `ruch/wrog_rozped_sekund`); skos znormalizowany.
 - **Trafienia:** większe hitboxy strzał i pocisków ognia (`promien_trafienia` 17-22), jedno trafienie na cel na pocisk.
+
+## 9. Oświetlenie i cieniowanie
+
+- **Zmierzch:** poziom jest przyciemniony kolorem `odcien` (plik poziomu), a źródła światła rozjaśniają go lokalnie ciepłymi plamami.
+  Bez oświetlenia (Ustawienia → „Oświetlenie i cienie: wył”, np. na słabym telefonie) używany jest jaśniejszy `odcien_bez_swiatel`.
+- **Źródła światła** (`data/balance.json` → `swiatlo/rodzaje`: promień, kolor, jasność, migotanie): latarnie na słupach przy drogach
+  i na placu, płonąca barykada (gaśnie razem z ogniem), palenisko kuźni i kominek karczmy, świece, kilka okien, kapliczki
+  (dopóki nieużyte), zielona poświata spaczenia, pociski ognia Ursy, słaba poświata wokół bohatera (czytelność w mroku).
+  W pliku poziomu: `"typ": "latarnia"` (słup + światło) i `"typ": "swiatlo"` z polem `rodzaj` (samo światło).
+- Plama światła ma schodkowe pierścienie zamiast gładkiego gradientu - po filtrze palety daje wygląd starych gier.
+- **Cienie na ziemi:** pod każdym budynkiem, drzewem i rekwizytem, po prawej-dolnej stronie (światło z lewej-góry);
+  ciemność: `swiatlo/cien`. Docelowe grafiki rysuj bez własnego cienia i bez poświaty.
+- **Cieniowanie placeholderów:** generatory dodają jaśniejszy rant od strony światła, ciemniejszy od strony cienia i ziarno na
+  płaskich powierzchniach (`tools/pixlib.py` → `bevel`). Twoich oryginałów (Ivo, Ursa, Modraszka, Borubar) nie ruszałem.

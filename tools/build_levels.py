@@ -287,6 +287,24 @@ def village():
                     ("rubble_1", 10, 25), ("bones_0", 9, 26), ("puddle", 22, 30), ("puddle", 47, 22), ("puddle", 26, 49)]:
         deco(g, x, y, block=False, flat=True)
 
+    # ---- światło: latarnie przy drogach i na placu, palenisko kuźni, kilka okien, w których jeszcze się świeci
+    def lantern(x, y, plac=False):
+        if (x, y) in taken or m.get(x, y) in "#P" or (not plac and m.get(x, y) in ":="):
+            warnings.append("latarnia koliduje w (%d,%d): %s" % (x, y, m.get(x, y)))
+            return
+        if m.get(x, y) in "TbDtR":
+            m.set(x, y, ".")
+        taken.add((x, y))
+        objs.append({"typ": "latarnia", "komorka": [x, y]})
+
+    for (x, y) in [(29, 28), (39, 28), (29, 37), (39, 37), (32, 33)]:
+        lantern(x, y, plac=True)
+    for (x, y) in [(8, 52), (46, 8), (50, 8), (29, 13), (46, 43), (53, 57), (20, 29), (15, 19), (26, 45), (46, 24), (17, 51), (42, 44)]:
+        lantern(x, y)
+    for kind, x, y in [("palenisko", 17, 34), ("okno", 23, 43), ("okno", 27, 24), ("okno", 5, 55), ("okno", 25, 57),
+                       ("swieca", 34, 14), ("swieca", 31, 8)]:
+        objs.append({"typ": "swiatlo", "rodzaj": kind, "komorka": [x, y]})
+
     # ---- roślinność: martwe drzewa i ciernie gęstnieją ku skrajowi lasu; głazy
     def near(x, y, chars, r=1):
         return any(m.get(x + dx, y + dy) in chars for dx in range(-r, r + 1) for dy in range(-r, r + 1))
@@ -324,7 +342,8 @@ def village():
         "kafle": "res://assets/levels/level1/tiles/",
         "rekwizyty": "res://assets/levels/level1/props/",
         "muzyka": "wioska",
-        "odcien": [0.86, 0.84, 0.88],
+        "odcien": [0.5, 0.5, 0.62],
+        "odcien_bez_swiatel": [0.86, 0.84, 0.88],
         "legenda": LEGEND,
         "mapa": m.rows(),
         "obiekty": objs,
@@ -360,6 +379,14 @@ def tavern():
         {"typ": "goscie", "komorki": [[3, 9], [5, 9], [11, 6], [11, 9], [9, 4], [3, 7]]},
         {"typ": "karczmarz", "komorka": [3, 2]},
         {"typ": "bohater_gosc", "komorka": [9, 7]},
+        {"typ": "swiatlo", "rodzaj": "palenisko", "komorka": [2, 5]},
+        {"typ": "swiatlo", "rodzaj": "swieca", "komorka": [4, 8]},
+        {"typ": "swiatlo", "rodzaj": "swieca", "komorka": [10, 4]},
+        {"typ": "swiatlo", "rodzaj": "swieca", "komorka": [10, 8]},
+        {"typ": "swiatlo", "rodzaj": "latarnia", "komorka": [6, 1]},
+        {"typ": "swiatlo", "rodzaj": "latarnia", "komorka": [11, 2]},
+        {"typ": "swiatlo", "rodzaj": "latarnia", "komorka": [1, 9]},
+        {"typ": "swiatlo", "rodzaj": "latarnia", "komorka": [7, 10]},
     ]
     return {
         "_opis": "Minigra: impreza w karczmie. Faza 1: łapanie kufli (stań w cieniu, zanim kufel spadnie). Faza 2: skaveny "
@@ -368,6 +395,7 @@ def tavern():
         "kafle": "res://assets/levels/tavern/tiles/",
         "rekwizyty": "res://assets/levels/tavern/props/",
         "muzyka": "karczma",
+        "odcien": [0.6, 0.52, 0.48],
         "legenda": LEGEND,
         "mapa": m.rows(),
         "obiekty": objs,

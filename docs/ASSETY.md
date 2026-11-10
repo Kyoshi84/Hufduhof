@@ -1,5 +1,7 @@
 # Zasoby graficzne i dźwiękowe — jak podmieniać
 
+> Co dokładnie narysować: **`docs/SPECYFIKACJA_GRAFIK.md`** (rekwizyty, kafle, efekty, interfejs) i **`docs/SPECYFIKACJA_ANIMACJI.md`** (klatki postaci).
+
 Gra ładuje pliki z poniższych ścieżek. **Placeholdery leżą dokładnie tam, gdzie mają trafić Twoje grafiki** —
 podmieniasz plik o tej samej nazwie i od razu widzisz efekt (kod się nie zmienia).
 Po podmianie otwórz projekt w Godocie (sam zaimportuje plik) albo uruchom `godot --headless --import`.

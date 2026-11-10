@@ -329,13 +329,13 @@ func _animate() -> void:
 			gfx.play("walk", d)
 		St.WINDUP:
 			var wind := float(edef.get("zamach", 0.8))
-			gfx.set_progress("attack", clampf(state_t / wind, 0.0, 1.0) * 0.66, d)
+			gfx.set_windup("attack", state_t / wind, d)
 			gfx.lunge = -Iso.screen(Iso.ground(strike_dir).normalized()) * 3.0 * clampf(state_t / wind, 0, 1)
 		St.STRIKE:
-			gfx.set_progress("attack", 1.0, d)
+			gfx.set_last("attack", d)
 			gfx.lunge = Iso.screen(Iso.ground(strike_dir).normalized()) * 6.0
 		St.RECOVER:
-			gfx.set_progress("attack", 1.0, d)
+			gfx.set_last("attack", d)
 		St.HURT:
 			gfx.play("hurt", d)
 		_:

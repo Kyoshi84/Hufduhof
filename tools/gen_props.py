@@ -10,7 +10,18 @@ import math
 import random
 
 from PIL import Image, ImageDraw
-from pixlib import R, Canvas, outline, save, HW, HH
+from pixlib import R, Canvas, outline, bevel, HW, HH
+from pixlib import save as _save
+
+NO_SHADE = ("/fx/", "puddle", "bones_", "rubble_", "skaven_tunnel", "rat_hole", "poison")
+
+
+def save(im, rel, quantize=True):
+    """Zapis z podstawowym cieniowaniem (światło z lewej-góry); efekty i płaskie plamy na ziemi bez cieniowania."""
+    if not any(k in rel for k in NO_SHADE):
+        im = bevel(im)
+    return _save(im, rel, quantize)
+
 
 rnd = random.Random(11)
 L1 = "assets/levels/level1/props/"
@@ -358,6 +369,18 @@ def grim_props():
         cv.line(cv.P(gx, 0.18, 0), cv.P(gx, -0.2, 40), R("wood", 4), 3)
         cv.line(cv.P(gx, -0.18, 0), cv.P(gx, 0.22, 36), R("wood", 2), 3)
     save_center(cv, L1 + "spikes.png")
+    # latarnia na słupie (źródło światła - gra dokłada do niej ciepłą poświatę)
+    cv = small_canvas()
+    c = cv.P(0, 0, 0)
+    cv.d.rectangle([c[0] - 3, c[1] - 92, c[0] + 3, c[1]], fill=R("wood", 2))
+    cv.d.rectangle([c[0] - 3, c[1] - 92, c[0] + 20, c[1] - 87], fill=R("wood", 2))
+    cv.line((c[0] + 3, c[1] - 74), (c[0] + 14, c[1] - 88), R("wood", 1), 2)
+    cv.line((c[0] + 16, c[1] - 87), (c[0] + 16, c[1] - 80), R("steel", 2), 1)
+    cv.d.rectangle([c[0] + 10, c[1] - 80, c[0] + 22, c[1] - 62], fill=R("steel", 1))
+    cv.d.rectangle([c[0] + 12, c[1] - 78, c[0] + 20, c[1] - 65], fill=R("fire", 4))
+    cv.d.rectangle([c[0] + 14, c[1] - 75, c[0] + 18, c[1] - 68], fill=R("fire", 6))
+    cv.poly([(c[0] + 8, c[1] - 80), (c[0] + 24, c[1] - 80), (c[0] + 16, c[1] - 86)], R("steel", 2))
+    save_center(cv, L1 + "lantern_post.png")
     # strach na wróble
     cv = small_canvas()
     c = cv.P(0, 0, 0)

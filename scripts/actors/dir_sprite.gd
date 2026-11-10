@@ -96,6 +96,19 @@ func set_progress(a: String, p: float, d: String = "") -> void:
 	anim = a
 	progress = clampf(p, 0.0, 1.0)
 
+func frame_count(a: String, d: String) -> int:
+	var e := _entry(a, d)
+	return (e["tex"] as Array).size() if not e.is_empty() else 0
+
+## Atak: klatki 0..N-2 rozkładają się równo na czas zamachu (p = 0..1), ostatnia klatka N-1 to moment trafienia.
+func set_windup(a: String, p: float, d: String) -> void:
+	var n := frame_count(a, d)
+	set_progress(a, clampf(p, 0.0, 0.999) * maxf(0.0, n - 1.0) / maxf(1.0, n), d)
+
+## Ostatnia klatka animacji (moment trafienia; zostaje na czas powrotu).
+func set_last(a: String, d: String) -> void:
+	set_progress(a, 0.999, d)
+
 func _process(delta: float) -> void:
 	t += delta
 	_apply()

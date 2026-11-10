@@ -25,6 +25,7 @@ func setup(lvl: Node, pos: Vector2, r: float, duration: float, per_second: float
 		spr.texture = frames[0]
 		spr.scale = Vector2.ONE * (r * 2.0 / spr.texture.get_width())
 	add_child(spr)
+	LightFx.make("spaczenie", self, Vector2.ZERO)
 
 func _physics_process(delta: float) -> void:
 	age += delta

@@ -137,3 +137,35 @@ def noise_fill(im, mask_fn, cols, rnd, density=0.5):
 
 def face_shade(col, k):
     return tuple(max(0, min(255, int(c * k))) for c in col[:3]) + (255,)
+
+
+def bevel(im, grain=0.07, seed=5):
+    """Podstawowe cieniowanie sprite'a: światło pada z lewej-góry.
+    Krawędzie sylwetki od strony światła dostają jaśniejszy rant, od strony cienia - ciemniejszy (2 px, drugi
+    piksel w szachownicę), a płaskie powierzchnie lekkie ziarno. Kontur (najciemniejszy kolor) zostaje bez zmian."""
+    import numpy as np
+    a = np.array(im.convert("RGBA")).astype(np.float32)
+    ink = np.array(R("ink", 0)[:3], dtype=np.float32)
+    solid = (a[..., 3] > 127) & (np.abs(a[..., :3] - ink).sum(axis=2) > 12)
+
+    def shifted(mask, dx, dy):
+        out = np.zeros_like(mask)
+        h, w = mask.shape
+        ys, yd = (slice(0, h - dy), slice(dy, h)) if dy >= 0 else (slice(-dy, h), slice(0, h + dy))
+        xs, xd = (slice(0, w - dx), slice(dx, w)) if dx >= 0 else (slice(-dx, w), slice(0, w + dx))
+        out[yd, xd] = mask[ys, xs]
+        return out
+
+    lit = solid & (~shifted(solid, 0, 1) | ~shifted(solid, 1, 1))           # sąsiad u góry / po lewej-górze pusty
+    dark1 = solid & (~shifted(solid, 0, -1) | ~shifted(solid, -1, -1))      # sąsiad na dole / po prawej-dole pusty
+    dark2 = solid & ~dark1 & (~shifted(solid, 0, -2) | ~shifted(solid, -2, -2))
+    h, w = solid.shape
+    yy, xx = np.mgrid[0:h, 0:w]
+    k = np.ones((h, w), dtype=np.float32)
+    rng = np.random.default_rng(seed)
+    k[solid & (rng.random((h, w)) < grain)] = 0.88
+    k[dark2 & ((xx + yy) % 2 == 0)] = 0.8
+    k[dark1] = 0.66
+    k[lit & ~dark1] = 1.22
+    a[..., :3] = np.clip(a[..., :3] * k[..., None], 0, 255)
+    return Image.fromarray(a.astype(np.uint8), "RGBA")

@@ -512,7 +512,7 @@ func _animate(delta: float) -> void:
 		St.WINDUP:
 			var p: float = state_t / maxf(0.01, phases[0])
 			if gfx.has_attack:
-				gfx.set_progress("attack", p * 0.75, d)
+				gfx.set_windup("attack", p, d)
 			else:
 				gfx.play("idle", d)
 				# odchylenie do tyłu = zamach (zapowiedź ciosu)
@@ -520,7 +520,7 @@ func _animate(delta: float) -> void:
 				gfx.bob = -2.0 * p
 		St.STRIKE, St.RECOVER:
 			if gfx.has_attack:
-				gfx.set_progress("attack", 0.8 + 0.2 * clampf(state_t / maxf(0.01, phases[2]), 0, 1), d)
+				gfx.set_last("attack", d)
 			else:
 				gfx.play("idle", d)
 				var k := 1.0 - clampf(state_t / maxf(0.01, phases[2]), 0.0, 1.0)

@@ -12,7 +12,7 @@ import os
 import shutil
 
 from PIL import Image, ImageDraw
-from pixlib import R, outline, save, ROOT
+from pixlib import R, outline, save, bevel, ROOT
 
 EW, EH, EPX, EPY = 96, 112, 48, 108
 DIRS = ["south", "south-east", "east", "north-east", "north", "north-west", "west", "south-west"]
@@ -242,7 +242,7 @@ def frame(kind, view, pose):
                 for x in range(EW):
                     if px[x, y][3] and px[x, y][:3] in (R("blood", 7)[:3], R("warp", 6)[:3], R("bone", 4)[:3]):
                         px[x, y] = R(KINDS[kind]["fur"], KINDS[kind]["fur_i"])
-    return outline(im)
+    return bevel(outline(im), grain=0.04)
 
 
 def death_frames(base):

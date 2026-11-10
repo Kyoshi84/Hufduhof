@@ -26,6 +26,7 @@ class Chest extends Interactable:
 class Shrine extends Interactable:
 	var kind: String = "ulryk"
 	var used: bool = false
+	var glow: LightFx = null
 	var t: float = 0.0
 	func setup(lvl: Node, id: String, k: String) -> void:
 		level = lvl
@@ -36,6 +37,11 @@ class Shrine extends Interactable:
 		_refresh()
 	func _refresh() -> void:
 		set_sprite(level.map.prop_tex("shrine_%s%s" % [kind, "_used" if used else ""]))
+		if not used and glow == null:
+			glow = LightFx.make("kapliczka", self, Vector2.ZERO)
+		elif used and glow != null:
+			glow.queue_free()
+			glow = null
 	func can_interact(_h: Hero) -> bool:
 		return not used
 	func interact_label(_h: Hero) -> String:
@@ -125,6 +131,7 @@ class BarricadePart extends Interactable:
 	var fire_frames: Array = []
 	var t: float = 0.0
 	var burn_tick: float = 0.0
+	var light: LightFx = null
 	func setup(lvl: Node, id: String, idx: int, c: Vector2i) -> void:
 		level = lvl
 		uid = id
@@ -153,6 +160,11 @@ class BarricadePart extends Interactable:
 	func _refresh() -> void:
 		set_sprite(level.map.prop_tex("barricade" if burning else "barricade_burnt"))
 		fire.visible = burning
+		if burning and light == null:
+			light = LightFx.make("ogien", self, Vector2.ZERO)
+		elif not burning and light != null:
+			light.queue_free()
+			light = null
 		body.process_mode = Node.PROCESS_MODE_INHERIT if burning else Node.PROCESS_MODE_DISABLED
 		body.collision_layer = 1 if burning else 0
 	func can_interact(_h: Hero) -> bool:
