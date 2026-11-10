@@ -30,7 +30,8 @@ func _clear_enemies():
 func test_level_builds_with_navigation_and_fog():
 	assert_not_null(lvl.map.nav_region.navigation_polygon)
 	assert_true(lvl.map.nav_region.navigation_polygon.get_polygon_count() > 10, "wypieczona nawigacja")
-	assert_true(lvl.alive_enemies() >= 25, "dużo potworów na mapie")
+	assert_true(lvl.alive_enemies() >= 18, "grupy potworów na mapie")
+	assert_eq(get_tree().get_nodes_in_group("tunnels").size(), 5, "tunele skavenów")
 	assert_true(lvl.map.explored_ratio() > 0.0 and lvl.map.explored_ratio() < 0.2, "mgła wojny odkryta tylko przy starcie")
 
 func test_hero_moves_in_iso_ground_metric():

@@ -19,6 +19,7 @@ var minimap: Minimap
 var well: Node = null
 var barricade_parts: Array = []
 var exit_zone: Node = null
+var tunnel_defs: Array = []
 var _enemies: Array = []
 var _shake: float = 0.0
 var _zoom: float = 1.15
@@ -46,6 +47,12 @@ func _ready() -> void:
 	_setup_camera()
 	_setup_ui()
 	map.reveal(hero.position, float(Data.bal("mgla/promien_komorek", 6.5)))
+	if data.has("odcien"):
+		# przygaszone, zimne światło (grimdark): mnożnik koloru całego świata gry, bez interfejsu
+		var tint: Array = data["odcien"]
+		var cm := CanvasModulate.new()
+		cm.color = Color(float(tint[0]), float(tint[1]), float(tint[2]))
+		add_child(cm)
 	Audio.play_track(str(data.get("muzyka", "wioska")))
 	Game.quest_changed.connect(_on_quest_changed)
 	after_ready()
@@ -87,6 +94,8 @@ func _spawn_objects() -> void:
 			"wyjscie":
 				exit_zone = _add_obj(Obj.ExitZone.new(), p)
 				exit_zone.setup(self, float(o.get("promien", 2)))
+			"tunel":
+				tunnel_defs.append(o)
 			"npc":
 				_add_obj(Obj.Npc.new(), p).setup(self, str(o.get("id", "borubar")))
 				map.blocked[Iso.to_cell(p)] = true
@@ -100,6 +109,11 @@ func _spawn_objects() -> void:
 		if part.burning:
 			extra.append(part.cell)
 	map.rebake_navigation(extra)
+	for o in tunnel_defs:
+		var tn := Obj.Tunnel.new()
+		tn.position = cell_pos(o)
+		map.decals.add_child(tn)
+		tn.setup(self, str(o.get("id", "")), o.get("wrogowie", []))
 	for g in data.get("grupy", []):
 		var c: Array = g.get("komorka", [0, 0])
 		var center := Vector2i(int(c[0]), int(c[1]))

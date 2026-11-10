@@ -41,10 +41,11 @@ func _draw() -> void:
 				"=": col = Color(0.45, 0.44, 0.42)
 				"~": col = Color(0.25, 0.18, 0.1)
 				"T", "#", "b": col = Color(0.09, 0.16, 0.07)
-				"-", "|": col = Color(0.5, 0.36, 0.2)
+				"-", "|", "P": col = Color(0.5, 0.36, 0.2)
+				"D", "t", "R": col = Color(0.14, 0.15, 0.1)
 				"o", "r", "s": col = Color(0.4, 0.28, 0.16)
 				"W", "x": col = Color(0.15, 0.1, 0.08)
-			if m.blocked.has(c) and not ch in "T#b-|Wx":
+			if m.blocked.has(c) and not ch in "T#b-|WxPDtR":
 				col = Color(0.42, 0.14, 0.1)
 			var p := _to_map(Vector2(x, y), origin)
 			draw_colored_polygon(PackedVector2Array([p, p + Vector2(CELL, CELL * 0.5), p + Vector2(0, CELL), p + Vector2(-CELL, CELL * 0.5)]), col)

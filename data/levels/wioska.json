@@ -1,9 +1,14 @@
 {
- "_opis": "Poziom 1: wioska Hufduhof. 'mapa' = wiersze znaków (y), znak = komórka (x). Legenda w 'legenda'. Obiekty: komorka [x, y]; budynek zajmuje rozmiar [w, h] komórek od komórki (narożnik północny). Grafiki: assets/levels/level1/props/<grafika>.png, kafle: assets/levels/level1/tiles/.",
+ "_opis": "Poziom 1: wioska Hufduhof. 'mapa' = wiersze znaków (y), znak = komórka (x). Legenda w 'legenda'. Obiekty: komorka [x, y]; budynek zajmuje rozmiar [w, h] komórek od komórki (narożnik północny); dekoracja: blokuje = przeszkoda, plaska = leży na ziemi pod postaciami; tunel = nora skavenów z listą wrogów. odcien = mnożnik koloru świata (przygaszone światło). Grafiki: assets/levels/level1/props/<grafika>.png.",
  "nazwa": "Wioska Hufduhof",
  "kafle": "res://assets/levels/level1/tiles/",
  "rekwizyty": "res://assets/levels/level1/props/",
  "muzyka": "wioska",
+ "odcien": [
+  0.86,
+  0.84,
+  0.88
+ ],
  "legenda": {
   ".": "trawa",
   ",": "trawa z kwiatami",
@@ -19,70 +24,74 @@
   "o": "podłoga karczmy",
   "r": "dywan",
   "s": "kamienna posadzka",
-  "x": "niewidzialna ściana (blokuje)"
+  "x": "niewidzialna ściana (blokuje)",
+  "P": "palisada (blokuje)",
+  "D": "martwe drzewo (blokuje)",
+  "t": "ciernie (blokują)",
+  "R": "głaz (blokuje)"
  },
  "mapa": [
   "###############################################===##############",
   "###############################################===##############",
   "##.............................................===............##",
-  "##............,..T......T......................===............##",
-  "##....~~~~~~~.....~~~~~~~......................===..........b.##",
-  "##....~~~~~~~.....~~~~~~~..----------..........===....,.......##",
-  "##....~~~~~~~.,..,~~~~~~~..|........|..........===............##",
-  "##....~~~~~~~.....~~~~~~~..|........|.........,===............##",
-  "##....~~~~~~~....,~~~~~~~..|........|..........===............##",
-  "##....~~~~~~~..............|........|.....,....===............##",
-  "##.,...,..T................|........|......T...===............##",
-  "##......,...........T......|...::...|..........===,...T.....T.##",
-  "##.........................----::.---......,,..===..........,.##",
-  "##...........,.::......T.......::..............===........,...##",
-  "##.............::..........,...::,.........T...===............##",
-  "##.........,...::.....,........::...........,..===............##",
-  "##...T.........::,.............::....,..,......===.....,,.....##",
-  "##.......T.....::..............::..T...........===..T.........##",
-  "##............,:::...,.........::...........T..===............##",
-  "##..............::.............::.......T,.....===............##",
-  "##..............::....,........:::.....T.T.....===.........T..##",
-  "##..............::..T.bT........::.............===.b..........##",
-  "##.....,........::..............::......-----..===............##",
-  "##.............,::..............::.,....|...|..===.,..........##",
-  "##........,T....::.........,....::......|.,.|..===............##",
-  "##..............::,.............::,.........|..===............##",
-  "##..............:::.............::..........|..===............##",
-  "##...............::,............::......|...|..===....T.......##",
-  "##...............::...,......===::======-----..===............##",
-  "##...............::..........===========.....,.===........,...##",
-  "##.......T.......::::::::::::::=======::::::::::::.........,..##",
-  "##...............::::::::::::::=======::::::::::::........,...##",
-  "##...............::::::::::::::=======::::::::::::......b.....##",
-  "##...........................===========.......:::............##",
-  "##.......,................,..===========.......::::...........##",
-  "##......,..............T.....=========::.......::::...........##",
-  "##.................,....,....====:::==:::.......:::......T....##",
-  "##............,....,.........====:::===::.....,.:::...........##",
-  "##.......,..........---..--......:::...:::......:::...........##",
-  "##.........,........|..,..|......:::.T..:::.....:::.,.....T...##",
-  "##......---..--.,...|.....|.,....:::.....:::....:::..b........##",
-  "##..T...|.....|..b..|............:::......::....::::..,.......##",
-  "##......|.....|.....|........,...:::......:::.,.::::.....,....##",
-  "##......|,....|...,.|....,|.....,:::.....,.:::...:::..........##",
-  "##......|.....|.....-------......:::........:::-.::-----.,....##",
-  "##......-------..................:::.........::|.:::...|......##",
-  "##.......................:::::::::::.........::|.:::...|......##",
-  "##..............::::::::::::::::::::.....,.T..:|:......|......##",
-  "##.....:::::::::::::::::::::::::::::.,...T.....|:.....,|......##",
-  "##:::::::::::::::::::::::::..................,.|::.,..,|...,..##",
-  "##::::::::::::::::.........,...................---------......##",
-  "##:::::::......,.,.......,...,..................,:::..........##",
-  "##....,........b.........................,.T......::..........##",
-  "##.............,.........,........................:::..b......##",
-  "##.............,.................T....T.........,..::....T....##",
-  "##...............................T............................##",
-  "##.......,....T,...............,.........,....................##",
-  "##.................,...............,..........................##",
-  "##..T...............................................,...,.....##",
-  "##.....T...,..................................................##",
-  "##............T.,.T...................b.,......,..............##",
+  "##PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP===PPPPPPPPPPPP##",
+  "##.............................................===............##",
+  "##....~~~~~~~...D.~D~~~~~..----------..D....D..===............##",
+  "##..D.~~~~~~~...~.~~~~~~~D.|........|..........===...D.T......##",
+  "##....~~~~~~~..b~.RD~~~~~..|........|.Dt..D....===.....T...D..##",
+  "##...D~~~~~~D....~~~~~D~~..|........|~~........===..........t.##",
+  "##....D~~~~~~...D..........|........|~~........===.,D.....t...##",
+  "##.....D.t,...........T....|........|.......,.,===..........D.##",
+  "##.D..b..........t.........|...::...|..T..T....===~........D..##",
+  "##..D..............t.......----::.---..T....,..===.......D..,.##",
+  "##.............::....tD...~~...::......D.......===.........t..##",
+  "##.D...........::..........~~..::..............:::............##",
+  "##.............::..............::......T.......:::....D.......##",
+  "##...........,.::...........D.~::.~RD,.........:::......t.....##",
+  "##.........t...::...........~~.::~~~...........:::..D....t..D.##",
+  "##..T..D.......:::.............::..,.T......~D.:::..~~~.t.....##",
+  "##...........D..::.............::..b....,.~~~..:::.~b~~....t..##",
+  "##..T.-------...::.......T.....:::..t...,......:::..~~....R...##",
+  "##....|.....|...::...T..........::.D...,,,.....:::..........t.##",
+  "##..T.|......,..::..,...........::......-----..:::,.T.........##",
+  "##....|.....|...::....T.........::......|...|..:::........D...##",
+  "##....|.....|...::..............::......|...|..:::.------.....##",
+  "##.T.~|....,|.D.::......~~~..,..::..........|..:::.|....|.....##",
+  "##..t~---..--...:::.....~.~.D...::..........|..:::.|....|.D...##",
+  "##...~...T.......::.....~.~.....::......|...|..:::......|..D..##",
+  "##.......t.......::..........===::======-----..:::.....~|.....##",
+  "##...............::..........===========.......:::.|..~.|.....##",
+  "##...............::::::::::::::=======::::::::::::.------...t.##",
+  "##.t.....,.......::::::::::::::=======::::::::::::....,.......##",
+  "##..R...D........::::::::::::::=======::::::::::::.....t......##",
+  "##.....,.D...................===========.......:::...R...D....##",
+  "##.........D..,..............===========.......::::.T......D..##",
+  "##..T...b....T...............=========::.......::::........D..##",
+  "##.....t.....,.........~~~...====:::==:::.......:::.........b.##",
+  "##.....D................D~...====:::===::.......:::..t........##",
+  "##.....b............---~~--......:::...:::.....,:::...........##",
+  "##...R..............|..~~~|......:::....:::.....::::........D.##",
+  "##......---..--..t..|....~|......:::.....:::....::::.......t..##",
+  "##...D..|.....|.....|.....~......:::......::.....:::..........##",
+  "##..,...|.....|.....|.....D.....,:::......:::....:::..........##",
+  "##.D....|.....|.....|.....|......:::.......:::...:::..........##",
+  "##....D.|.....|.....-------..T..~:::........:::-.:::----......##",
+  "##......-------...,.............~:::.........::|.......|......##",
+  "##.............~~..,.....:::::::::::.D.......:::.......|......##",
+  "##..R.........~.::::::::::::::::::::...t......:::......|......##",
+  "##.....:::::::::::::::::::::::::::::.......,...::......|..D.t.##",
+  "##:::::::::::::::::::::::::....................:::.....|...t..##",
+  "##::::::::::::::::.............R........D......-:::-----......##",
+  "##:::::::..,........D.........,..T...............:::..........##",
+  "##.....,.........,..T....t........................::...,......##",
+  "##......t.....D,..T..D......T.............t,....D.:::.......t.##",
+  "##.........................~....D.T.R....b......t..::.........##",
+  "##...~~.................................~T~..D................##",
+  "##.................................D..t.........D..........D..##",
+  "##..b....DD.....D............tt.D............D...~............##",
+  "##...b.........R...................DD.......~~..~D~...........##",
+  "##.D....D...D..T................t...........D...~.D...........##",
+  "##..b...........,...T.R...D....D............D~..R.b.......t...##",
   "##............................................................##",
   "################################################################",
   "################################################################"
@@ -141,7 +150,7 @@
    "typ": "budynek",
    "grafika": "house_a",
    "komorka": [
-    41,
+    36,
     38
    ],
    "rozmiar": [
@@ -250,6 +259,389 @@
    "nazwa": "Chata zielarki"
   },
   {
+   "typ": "budynek",
+   "grafika": "house_ruin",
+   "komorka": [
+    29,
+    40
+   ],
+   "rozmiar": [
+    3,
+    3
+   ],
+   "nazwa": "Zawalona chata"
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_boarded",
+   "komorka": [
+    36,
+    23
+   ],
+   "rozmiar": [
+    3,
+    2
+   ],
+   "nazwa": "Dom zabity deskami"
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_c",
+   "komorka": [
+    22,
+    25
+   ],
+   "rozmiar": [
+    2,
+    3
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_ruin",
+   "komorka": [
+    43,
+    14
+   ],
+   "rozmiar": [
+    3,
+    3
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_a",
+   "komorka": [
+    52,
+    26
+   ],
+   "rozmiar": [
+    3,
+    3
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_b",
+   "komorka": [
+    40,
+    57
+   ],
+   "rozmiar": [
+    3,
+    2
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_burnt",
+   "komorka": [
+    8,
+    22
+   ],
+   "rozmiar": [
+    3,
+    3
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_boarded",
+   "komorka": [
+    25,
+    34
+   ],
+   "rozmiar": [
+    3,
+    2
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_ruin",
+   "komorka": [
+    56,
+    36
+   ],
+   "rozmiar": [
+    3,
+    3
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_c",
+   "komorka": [
+    11,
+    27
+   ],
+   "rozmiar": [
+    2,
+    3
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_b",
+   "komorka": [
+    52,
+    12
+   ],
+   "rozmiar": [
+    3,
+    2
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_boarded",
+   "komorka": [
+    12,
+    55
+   ],
+   "rozmiar": [
+    3,
+    2
+   ]
+  },
+  {
+   "typ": "budynek",
+   "grafika": "house_c",
+   "komorka": [
+    44,
+    50
+   ],
+   "rozmiar": [
+    2,
+    3
+   ]
+  },
+  {
+   "typ": "studnia",
+   "komorka": [
+    34,
+    32
+   ]
+  },
+  {
+   "typ": "barykada",
+   "id": "barykada_0",
+   "komorka": [
+    47,
+    3
+   ]
+  },
+  {
+   "typ": "barykada",
+   "id": "barykada_1",
+   "komorka": [
+    48,
+    3
+   ]
+  },
+  {
+   "typ": "barykada",
+   "id": "barykada_2",
+   "komorka": [
+    49,
+    3
+   ]
+  },
+  {
+   "typ": "wyjscie",
+   "komorka": [
+    48,
+    1
+   ],
+   "promien": 1.5
+  },
+  {
+   "typ": "wiadro",
+   "komorka": [
+    19,
+    35
+   ],
+   "id": "wiadro_kuznia"
+  },
+  {
+   "typ": "wiadro",
+   "komorka": [
+    16,
+    13
+   ],
+   "id": "wiadro_mlyn"
+  },
+  {
+   "typ": "wiadro",
+   "komorka": [
+    50,
+    51
+   ],
+   "id": "wiadro_stodola"
+  },
+  {
+   "typ": "npc",
+   "komorka": [
+    10,
+    52
+   ],
+   "id": "borubar"
+  },
+  {
+   "typ": "start",
+   "komorka": [
+    8,
+    50
+   ]
+  },
+  {
+   "typ": "skrzynia",
+   "komorka": [
+    20,
+    36
+   ],
+   "id": "skrzynia_kuznia"
+  },
+  {
+   "typ": "skrzynia",
+   "komorka": [
+    12,
+    13
+   ],
+   "id": "skrzynia_mlyn"
+  },
+  {
+   "typ": "skrzynia",
+   "komorka": [
+    54,
+    51
+   ],
+   "id": "skrzynia_stodola"
+  },
+  {
+   "typ": "skrzynia",
+   "komorka": [
+    34,
+    6
+   ],
+   "id": "skrzynia_cmentarz"
+  },
+  {
+   "typ": "skrzynia",
+   "komorka": [
+    57,
+    57
+   ],
+   "id": "skrzynia_zielarka"
+  },
+  {
+   "typ": "skrzynia",
+   "komorka": [
+    17,
+    59
+   ],
+   "id": "skrzynia_sad"
+  },
+  {
+   "typ": "kapliczka",
+   "komorka": [
+    40,
+    52
+   ],
+   "id": "ulryk_1",
+   "rodzaj": "ulryk"
+  },
+  {
+   "typ": "kapliczka",
+   "komorka": [
+    24,
+    18
+   ],
+   "id": "ulryk_2",
+   "rodzaj": "ulryk"
+  },
+  {
+   "typ": "kapliczka",
+   "komorka": [
+    30,
+    14
+   ],
+   "id": "rhya_1",
+   "rodzaj": "rhya"
+  },
+  {
+   "typ": "kapliczka",
+   "komorka": [
+    6,
+    30
+   ],
+   "id": "rhya_2",
+   "rodzaj": "rhya"
+  },
+  {
+   "typ": "tunel",
+   "id": "droga_zachod",
+   "komorka": [
+    21,
+    45
+   ],
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_spear",
+    "skaven_slinger"
+   ]
+  },
+  {
+   "typ": "tunel",
+   "id": "plac_wschod",
+   "komorka": [
+    45,
+    35
+   ],
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_spear",
+    "skaven_spear"
+   ]
+  },
+  {
+   "typ": "tunel",
+   "id": "polnoc",
+   "komorka": [
+    40,
+    18
+   ],
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_spear",
+    "skaven_slinger"
+   ]
+  },
+  {
+   "typ": "tunel",
+   "id": "sad",
+   "komorka": [
+    19,
+    56
+   ],
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_slinger"
+   ]
+  },
+  {
+   "typ": "tunel",
+   "id": "ruina",
+   "komorka": [
+    32,
+    45
+   ],
+   "wrogowie": [
+    "skaven_spear",
+    "skaven_spear"
+   ]
+  },
+  {
    "typ": "dekoracja",
    "grafika": "grave_0",
    "komorka": [
@@ -260,7 +652,7 @@
   },
   {
    "typ": "dekoracja",
-   "grafika": "grave_1",
+   "grafika": "grave_0",
    "komorka": [
     31,
     7
@@ -269,7 +661,7 @@
   },
   {
    "typ": "dekoracja",
-   "grafika": "grave_1",
+   "grafika": "grave_2",
    "komorka": [
     33,
     7
@@ -290,13 +682,13 @@
    "grafika": "grave_0",
    "komorka": [
     33,
-    9
+    10
    ],
    "blokuje": true
   },
   {
    "typ": "dekoracja",
-   "grafika": "grave_0",
+   "grafika": "grave_1",
    "komorka": [
     35,
     8
@@ -305,7 +697,7 @@
   },
   {
    "typ": "dekoracja",
-   "grafika": "grave_1",
+   "grafika": "grave_0",
    "komorka": [
     30,
     10
@@ -313,182 +705,329 @@
    "blokuje": true
   },
   {
-   "typ": "studnia",
-   "komorka": [
-    34,
-    32
-   ]
-  },
-  {
-   "typ": "barykada",
-   "id": "barykada_0",
-   "komorka": [
-    47,
-    6
-   ]
-  },
-  {
-   "typ": "barykada",
-   "id": "barykada_1",
-   "komorka": [
-    48,
-    6
-   ]
-  },
-  {
-   "typ": "barykada",
-   "id": "barykada_2",
-   "komorka": [
-    49,
-    6
-   ]
-  },
-  {
-   "typ": "wyjscie",
-   "komorka": [
-    48,
-    1
-   ],
-   "promien": 2
-  },
-  {
-   "typ": "wiadro",
-   "id": "wiadro_kuznia",
-   "komorka": [
-    19,
-    35
-   ]
-  },
-  {
-   "typ": "wiadro",
-   "id": "wiadro_mlyn",
-   "komorka": [
-    16,
-    13
-   ]
-  },
-  {
-   "typ": "wiadro",
-   "id": "wiadro_stodola",
-   "komorka": [
-    50,
-    51
-   ]
-  },
-  {
-   "typ": "npc",
-   "id": "borubar",
-   "komorka": [
-    10,
-    52
-   ]
-  },
-  {
-   "typ": "start",
-   "komorka": [
-    8,
-    50
-   ]
-  },
-  {
-   "typ": "skrzynia",
-   "id": "skrzynia_kuznia",
-   "komorka": [
-    20,
-    36
-   ]
-  },
-  {
-   "typ": "skrzynia",
-   "id": "skrzynia_mlyn",
-   "komorka": [
-    12,
-    13
-   ]
-  },
-  {
-   "typ": "skrzynia",
-   "id": "skrzynia_stodola",
-   "komorka": [
-    54,
-    51
-   ]
-  },
-  {
-   "typ": "skrzynia",
-   "id": "skrzynia_cmentarz",
-   "komorka": [
-    34,
-    6
-   ]
-  },
-  {
-   "typ": "skrzynia",
-   "id": "skrzynia_zielarka",
-   "komorka": [
-    57,
-    57
-   ]
-  },
-  {
-   "typ": "skrzynia",
-   "id": "skrzynia_sad",
-   "komorka": [
-    17,
-    57
-   ]
-  },
-  {
-   "typ": "kapliczka",
-   "id": "ulryk_1",
-   "rodzaj": "ulryk",
-   "komorka": [
-    40,
-    52
-   ]
-  },
-  {
-   "typ": "kapliczka",
-   "id": "ulryk_2",
-   "rodzaj": "ulryk",
-   "komorka": [
-    24,
-    18
-   ]
-  },
-  {
-   "typ": "kapliczka",
-   "id": "rhya_1",
-   "rodzaj": "rhya",
-   "komorka": [
-    30,
-    13
-   ]
-  },
-  {
-   "typ": "kapliczka",
-   "id": "rhya_2",
-   "rodzaj": "rhya",
-   "komorka": [
-    6,
-    30
-   ]
-  },
-  {
    "typ": "dekoracja",
-   "grafika": "barrel",
+   "grafika": "grave_2",
    "komorka": [
-    21,
-    35
+    35,
+    10
    ],
    "blokuje": true
   },
   {
    "typ": "dekoracja",
+   "grafika": "skull_pile",
+   "komorka": [
+    28,
+    6
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "bones_0",
+   "komorka": [
+    34,
+    9
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "shrine_broken",
+   "komorka": [
+    34,
+    13
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "bones_1",
+   "komorka": [
+    35,
+    14
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "rubble_0",
+   "komorka": [
+    32,
+    43
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "rubble_1",
+   "komorka": [
+    28,
+    43
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "bones_0",
+   "komorka": [
+    31,
+    44
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "bones_1",
+   "komorka": [
+    35,
+    45
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
    "grafika": "crate",
    "komorka": [
-    20,
-    34
+    28,
+    39
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "skull_pile",
+   "komorka": [
+    32,
+    39
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "cart_broken",
+   "komorka": [
+    15,
+    46
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "barrel",
+   "komorka": [
+    17,
+    46
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "puddle",
+   "komorka": [
+    14,
+    47
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "cart_broken",
+   "komorka": [
+    45,
+    10
+   ],
+   "blokuje": true,
+   "odbicie": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "crate",
+   "komorka": [
+    44,
+    11
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "bones_0",
+   "komorka": [
+    46,
+    9
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "spikes",
+   "komorka": [
+    37,
+    26
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "spikes",
+   "komorka": [
+    35,
+    26
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "firewood",
+   "komorka": [
+    39,
+    24
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "barrel",
+   "komorka": [
+    39,
+    25
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "spikes",
+   "komorka": [
+    26,
+    37
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "firewood",
+   "komorka": [
+    28,
+    36
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "spikes",
+   "komorka": [
+    13,
+    58
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "cellar",
+   "komorka": [
+    39,
+    45
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "bones_1",
+   "komorka": [
+    40,
+    46
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "bones_0",
+   "komorka": [
+    36,
+    47
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "bones_1",
+   "komorka": [
+    38,
+    47
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "skull_pile",
+   "komorka": [
+    38,
+    46
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "gibbet",
+   "komorka": [
+    45,
+    6
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "spikes",
+   "komorka": [
+    46,
+    5
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "spikes",
+   "komorka": [
+    50,
+    5
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "skull_pile",
+   "komorka": [
+    51,
+    6
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "exit_banner",
+   "komorka": [
+    46,
+    4
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "exit_banner",
+   "komorka": [
+    50,
+    4
    ],
    "blokuje": true
   },
@@ -512,19 +1051,19 @@
   },
   {
    "typ": "dekoracja",
-   "grafika": "haystack",
+   "grafika": "crate",
    "komorka": [
-    52,
-    50
+    30,
+    36
    ],
    "blokuje": true
   },
   {
    "typ": "dekoracja",
-   "grafika": "haystack",
+   "grafika": "firewood",
    "komorka": [
-    47,
-    48
+    30,
+    29
    ],
    "blokuje": true
   },
@@ -533,7 +1072,36 @@
    "grafika": "cart",
    "komorka": [
     44,
-    32
+    33
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "puddle",
+   "komorka": [
+    32,
+    35
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "puddle",
+   "komorka": [
+    36,
+    30
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "barrel",
+   "komorka": [
+    21,
+    35
    ],
    "blokuje": true
   },
@@ -541,8 +1109,152 @@
    "typ": "dekoracja",
    "grafika": "crate",
    "komorka": [
-    33,
-    37
+    20,
+    33
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "stump",
+   "komorka": [
+    15,
+    36
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "firewood",
+   "komorka": [
+    15,
+    35
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "haystack",
+   "komorka": [
+    10,
+    7
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "scarecrow",
+   "komorka": [
+    8,
+    6
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "scarecrow",
+   "komorka": [
+    21,
+    6
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "crate",
+   "komorka": [
+    15,
+    12
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "stump",
+   "komorka": [
+    12,
+    15
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "haystack",
+   "komorka": [
+    53,
+    49
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "crate",
+   "komorka": [
+    54,
+    47
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "firewood",
+   "komorka": [
+    48,
+    46
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "barrel",
+   "komorka": [
+    7,
+    55
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "crate",
+   "komorka": [
+    8,
+    55
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "firewood",
+   "komorka": [
+    9,
+    55
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "barrel",
+   "komorka": [
+    56,
+    54
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "skull_pile",
+   "komorka": [
+    53,
+    58
+   ],
+   "blokuje": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "stump",
+   "komorka": [
+    57,
+    55
    ],
    "blokuje": true
   },
@@ -559,71 +1271,17 @@
    "typ": "dekoracja",
    "grafika": "signpost",
    "komorka": [
-    47,
-    12
+    46,
+    13
    ],
    "blokuje": false
-  },
-  {
-   "typ": "dekoracja",
-   "grafika": "haystack",
-   "komorka": [
-    10,
-    8
-   ],
-   "blokuje": true
-  },
-  {
-   "typ": "dekoracja",
-   "grafika": "cart",
-   "komorka": [
-    26,
-    47
-   ],
-   "blokuje": true
-  },
-  {
-   "typ": "dekoracja",
-   "grafika": "barrel",
-   "komorka": [
-    7,
-    53
-   ],
-   "blokuje": true
-  },
-  {
-   "typ": "dekoracja",
-   "grafika": "crate",
-   "komorka": [
-    8,
-    53
-   ],
-   "blokuje": true
-  },
-  {
-   "typ": "dekoracja",
-   "grafika": "tree_dead",
-   "komorka": [
-    37,
-    45
-   ],
-   "blokuje": true
-  },
-  {
-   "typ": "dekoracja",
-   "grafika": "barrel",
-   "komorka": [
-    56,
-    54
-   ],
-   "blokuje": true
   },
   {
    "typ": "dekoracja",
    "grafika": "rat_hole",
    "komorka": [
     38,
-    44
+    48
    ],
    "blokuje": false
   },
@@ -632,27 +1290,118 @@
    "grafika": "rat_hole",
    "komorka": [
     15,
-    16
+    17
    ],
    "blokuje": false
   },
   {
    "typ": "dekoracja",
-   "grafika": "exit_banner",
+   "grafika": "rat_hole",
    "komorka": [
-    46,
-    3
+    57,
+    40
    ],
-   "blokuje": true
+   "blokuje": false
   },
   {
    "typ": "dekoracja",
-   "grafika": "exit_banner",
+   "grafika": "rubble_0",
    "komorka": [
-    50,
-    3
+    46,
+    16
    ],
-   "blokuje": true
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "rubble_1",
+   "komorka": [
+    42,
+    17
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "bones_0",
+   "komorka": [
+    44,
+    18
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "rubble_0",
+   "komorka": [
+    58,
+    39
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "bones_1",
+   "komorka": [
+    55,
+    39
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "rubble_1",
+   "komorka": [
+    10,
+    25
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "bones_0",
+   "komorka": [
+    9,
+    26
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "puddle",
+   "komorka": [
+    22,
+    30
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "puddle",
+   "komorka": [
+    47,
+    22
+   ],
+   "blokuje": false,
+   "plaska": true
+  },
+  {
+   "typ": "dekoracja",
+   "grafika": "puddle",
+   "komorka": [
+    26,
+    49
+   ],
+   "blokuje": false,
+   "plaska": true
   }
  ],
  "grupy": [
@@ -723,65 +1472,14 @@
    ]
   },
   {
-   "id": "droga_zachod",
-   "komorka": [
-    20,
-    48
-   ],
-   "promien": 2,
-   "wrogowie": [
-    "skaven_spear",
-    "skaven_spear",
-    "skaven_slinger"
-   ]
-  },
-  {
-   "id": "plac_wschod",
-   "komorka": [
-    44,
-    34
-   ],
-   "promien": 2,
-   "wrogowie": [
-    "skaven_spear",
-    "skaven_spear",
-    "skaven_spear"
-   ]
-  },
-  {
-   "id": "polnoc",
-   "komorka": [
-    40,
-    16
-   ],
-   "promien": 2,
-   "wrogowie": [
-    "skaven_spear",
-    "skaven_spear",
-    "skaven_slinger"
-   ]
-  },
-  {
    "id": "brama",
    "komorka": [
     48,
-    10
+    8
    ],
    "promien": 2,
    "wrogowie": [
     "skaven_spear",
-    "skaven_spear",
-    "skaven_slinger"
-   ]
-  },
-  {
-   "id": "sad",
-   "komorka": [
-    18,
-    56
-   ],
-   "promien": 2,
-   "wrogowie": [
     "skaven_spear",
     "skaven_slinger"
    ]

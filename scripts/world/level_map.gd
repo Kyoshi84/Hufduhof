@@ -6,12 +6,13 @@ extends Node2D
 ##  - kolizje (StaticBody2D, warstwa 1) i nawigację (NavigationRegion2D, wypiekaną w czasie wczytywania),
 ##  - mgłę wojny (osobny TileMapLayer) z odkrywaniem w promieniu wokół bohatera.
 
-const BLOCKING := "T#-|bWx"
+const BLOCKING := "T#-|bWxPDtR"
 const TILE_FOR := {
 	".": ["grass_0", "grass_1", "grass_2", "grass_3"], ",": ["grass_flowers"], ":": ["dirt_0", "dirt_1"],
 	"=": ["cobble_0", "cobble_1"], "~": ["mud_0"], "T": ["grass_0", "grass_2"], "b": ["grass_1", "grass_3"],
 	"#": ["forest_0"], "-": ["grass_0"], "|": ["grass_1"], "o": ["floor_0", "floor_1"], "r": ["rug_0"],
 	"s": ["stone_0"], "W": ["floor_0"], "x": ["floor_0"],
+	"P": ["mud_0"], "D": ["grass_1", "mud_0"], "t": ["grass_0", "grass_3"], "R": ["grass_2", "dirt_0"],
 }
 
 var data: Dictionary
@@ -157,6 +158,14 @@ func _spawn_cell_props() -> void:
 					add_prop(prop_tex("tree_%d" % (_hash(x, y) % 3)), cell)
 				"b":
 					add_prop(prop_tex("bush_%d" % (_hash(x, y) % 2)), cell)
+				"D":
+					add_prop(prop_tex("tree_dead" if _hash(x, y) % 2 == 0 else "tree_dead_1"), cell)
+				"t":
+					add_prop(prop_tex("thorns_%d" % (_hash(x, y) % 2)), cell)
+				"R":
+					add_prop(prop_tex("rock_%d" % (_hash(x, y) % 2)), cell)
+				"P":
+					add_prop(prop_tex("palisade_x"), cell)
 				"-":
 					add_prop(prop_tex("fence_x_broken" if _hash(x, y) % 7 == 0 else "fence_x"), cell)
 				"|":
@@ -195,7 +204,9 @@ func _spawn_static_object(o: Dictionary) -> void:
 			if o.has("zestaw"):
 				set_dir = "res://assets/levels/%s/props/" % str(o["zestaw"])
 			var sp := add_prop(prop_tex(str(o.get("grafika", "")), set_dir), cell)
-			if str(o.get("grafika", "")) == "rat_hole" and sp:
+			if sp and bool(o.get("odbicie", false)):
+				sp.flip_h = true
+			if (str(o.get("grafika", "")) == "rat_hole" or bool(o.get("plaska", false))) and sp:
 				sp.z_index = -4
 				sp.reparent(decals)
 			if bool(o.get("blokuje", false)):
@@ -232,6 +243,13 @@ func _build_walls() -> void:
 		var cp := CollisionPolygon2D.new()
 		cp.polygon = run_polygon(r[0], r[1], r[2], 0.08)
 		walls.add_child(cp)
+	# granica mapy: nie da się wyjść poza obszar gry (także przez bramę za barykadą)
+	var sx := size.x
+	var sy := size.y
+	for quad in [[-2, -2, sx + 2, 0], [-2, sy, sx + 2, sy + 2], [-2, 0, 0, sy], [sx, 0, sx + 2, sy]]:
+		var bp := CollisionPolygon2D.new()
+		bp.polygon = PackedVector2Array([Iso.corner(quad[0], quad[1]), Iso.corner(quad[2], quad[1]), Iso.corner(quad[2], quad[3]), Iso.corner(quad[0], quad[3])])
+		walls.add_child(bp)
 
 # ---------------------------------------------------------------- nawigacja
 func _build_navigation() -> void:

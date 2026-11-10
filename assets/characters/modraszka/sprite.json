@@ -1,1 +1,18 @@
-{ "canvas": [96, 128], "pivot": [48, 126], "_opis": "Pivot = punkt stóp na płótnie (taki sam na każdej klatce)." }
+{
+ "canvas": [
+  320,
+  128
+ ],
+ "pivot": [
+  160,
+  126
+ ],
+ "fps": {
+  "idle": 2,
+  "walk": 8,
+  "attack": 0,
+  "hurt": 1,
+  "death": 6
+ },
+ "_opis": "Pivot = punkt st\u00f3p. fps=0 dla attack: klatki rozk\u0142adane na czas zamachu (ostatnia = strza\u0142/cios)."
+}

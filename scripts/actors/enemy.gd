@@ -25,6 +25,9 @@ var marker: Fx = null
 var knock := Vector2.ZERO
 var corpse_t: float = 0.0
 var stagger_t: float = 0.0
+var emerge_t: float = 0.0         # wychodzenie z tunelu (w tym czasie nie atakuje)
+var emerge_dur: float = 1.0
+var _vel_s := Vector2.ZERO        # wygładzona prędkość (płynny start i hamowanie)
 var slow_k: float = 1.0           # spowolnienie (Strzała z siecią): mnożnik prędkości
 var slow_t: float = 0.0
 
@@ -64,6 +67,16 @@ func _physics_process(delta: float) -> void:
 	if is_dead():
 		_dead_tick(delta)
 		return
+	if emerge_t > 0.0:
+		emerge_t -= delta
+		var k := clampf(emerge_t / emerge_dur, 0.0, 1.0)
+		gfx.play("idle", Iso.dir_name(facing))
+		gfx.scale = Vector2(1.0, 1.0 - 0.8 * k)      # pivot w stopach: postać "wyrasta" z nory
+		gfx.modulate = Color(0.45 + 0.55 * (1.0 - k), 0.45 + 0.55 * (1.0 - k), 0.4 + 0.6 * (1.0 - k))
+		if emerge_t <= 0.0:
+			gfx.scale = Vector2.ONE
+			wake()
+		return
 	atk_cd = maxf(0.0, atk_cd - delta)
 	slow_t = maxf(0.0, slow_t - delta)
 	if slow_t <= 0.0:
@@ -88,6 +101,10 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector2.ZERO
 			if state_t >= stagger_t:
 				set_state(St.IDLE)
+	var acc_t := float(Data.bal("ruch/wrog_rozped_sekund", 0.18))
+	if acc_t > 0.0:
+		_vel_s = _vel_s.move_toward(velocity, stats.move_speed() / acc_t * delta)
+		velocity = _vel_s
 	if knock.length() > 1.0:
 		velocity += Iso.screen(knock) * 8.0
 		knock = knock.lerp(Vector2.ZERO, minf(1.0, delta * 10.0))
@@ -266,6 +283,12 @@ func on_damaged(amount: float, _kind: String) -> void:
 		_clear_marker()
 		stagger_t = float(Data.bal("walka/zachwianie_czas", 0.3))
 		set_state(St.HURT)
+
+## Wyjście z tunelu skavenów: przez chwilę wynurza się z ziemi, potem rusza do walki.
+func emerge(dur: float) -> void:
+	emerge_dur = maxf(0.05, dur)
+	emerge_t = emerge_dur
+	gfx.scale = Vector2(1.0, 0.2)
 
 func knockback(g: Vector2) -> void:
 	knock = g

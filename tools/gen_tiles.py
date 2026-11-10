@@ -85,16 +85,16 @@ def planks(rnd, base_ramp="wood", lo=4, hi=7):
 def main():
     rnd = random.Random(7)
     g = "assets/levels/level1/tiles/"
-    grass_base = [R("grass", 2), R("grass", 1)]
-    grass_sp = [R("grass", 3), R("grass", 0), R("moss", 2)]
+    grass_base = [R("moss", 2), R("moss", 1)]
+    grass_sp = [R("moss", 3), R("moss", 0), R("mud", 1)]
     for i in range(4):
-        save(tile(grass_base, grass_sp, rnd, 0.3, blades=(26, R("grass", 5), R("grass", 6))), g + "grass_%d.png" % i)
-    flowers = tile(grass_base, grass_sp, rnd, 0.3, blades=(18, R("grass", 5), R("grass", 6)))
+        save(tile(grass_base, grass_sp, rnd, 0.3, blades=(22, R("moss", 4), R("moss", 3))), g + "grass_%d.png" % i)
+    flowers = tile(grass_base, grass_sp, rnd, 0.3, blades=(16, R("moss", 4), R("moss", 3)))
     px = flowers.load()
     for _ in range(14):
         x, y = rnd.randint(20, 108), rnd.randint(10, 54)
         if inside(x, y, -0.2):
-            px[x, y] = rnd.choice([R("straw", 6), R("bone", 4), R("blood", 6), R("sky", 6)])
+            px[x, y] = rnd.choice([R("bone", 2), R("blood", 3), R("straw", 3)])
     save(flowers, g + "grass_flowers.png")
     dirt_base = [R("mud", 3), R("mud", 2)]
     dirt_sp = [R("mud", 4), R("mud", 1), R("wood", 6)]
@@ -103,8 +103,8 @@ def main():
     for i in range(2):
         save(cobble(rnd), g + "cobble_%d.png" % i)
     save(tile([R("mud", 1), R("mud", 0)], [R("mud", 2), R("night", 1), R("mud", 3)], rnd, 0.4), g + "mud_0.png")
-    save(tile([R("grass", 1), R("grass", 0)], [R("grass", 2), R("mud", 1), R("moss", 1)], rnd, 0.45,
-              blades=(10, R("grass", 3), R("grass", 4))), g + "forest_0.png")
+    save(tile([R("moss", 0), R("ink", 2)], [R("moss", 1), R("mud", 0), R("ink", 1)], rnd, 0.45,
+              blades=(8, R("moss", 2), R("moss", 1))), g + "forest_0.png")
 
     t = "assets/levels/tavern/tiles/"
     for i in range(2):

@@ -259,3 +259,73 @@ class TavernDoor extends Interactable:
 		return "Wyjdź do wioski"
 	func interact(_h: Hero) -> void:
 		level.leave_tavern()
+
+
+class Tunnel extends Node2D:
+	## Tunel skavenów: nora w ziemi, z której wychodzą wrogowie, gdy bohater się zbliży (punkt odradzania fali).
+	## Wrogowie wynurzają się pojedynczo, nigdy tuż przy bohaterze. Stan (uruchomiony, zabici) trafia do zapisu.
+	var level: Node
+	var uid: String = ""
+	var list: Array = []
+	var queue: Array = []          # [indeks, id wroga] czekający na wyjście
+	var triggered: bool = false
+	var timer: float = 0.0
+	var spr: Sprite2D
+	var t: float = 0.0
+	func setup(lvl: Node, id: String, enemies: Array) -> void:
+		level = lvl
+		uid = id
+		list = enemies
+		z_index = -4
+		spr = Sprite2D.new()
+		spr.texture = level.map.prop_tex("skaven_tunnel")
+		add_child(spr)
+		add_to_group("tunnels")
+		if Game.has_flag("tunele", uid):
+			# po wczytaniu zapisu: ci, którzy już wyszli i żyją, stoją przy norze
+			triggered = true
+			for i in list.size():
+				if not Game.has_flag("zabici", enemy_uid(i)):
+					var e: Enemy = level.spawn_enemy(str(list[i]), spot(i), "tunel_" + uid, enemy_uid(i))
+					e.home = position
+	func enemy_uid(i: int) -> String:
+		return "%s_tunel_%s_%d" % [level.key, uid, i]
+	func spot(i: int) -> Vector2:
+		var a := TAU * i / maxf(1.0, list.size()) + 0.6
+		var p := position + Iso.screen(Vector2.RIGHT.rotated(a) * 38.0)
+		return p if level.map.is_walkable(Iso.to_cell(p)) else position
+	func remaining() -> int:
+		return queue.size() if triggered else list.size()
+	func _physics_process(delta: float) -> void:
+		t += delta
+		spr.modulate = Color(1, 1, 1).lerp(Color(0.8, 1.15, 0.75), 0.5 + 0.5 * sin(t * 2.0)) if not triggered or not queue.is_empty() else Color(0.8, 0.8, 0.8)
+		var hero: Actor = level.hero
+		if hero == null or hero.is_dead():
+			return
+		if not triggered:
+			if Iso.dist(hero.position, position) <= float(Data.bal("tunele/wyzwalacz_px", 330)):
+				triggered = true
+				Game.add_flag("tunele", uid)
+				for i in list.size():
+					queue.append([i, str(list[i])])
+				timer = 0.2
+				Audio.play("skaven_alert", 0.8)
+			return
+		if queue.is_empty():
+			return
+		timer -= delta
+		if timer > 0.0:
+			return
+		var item: Array = queue[0]
+		var p := spot(item[0])
+		if Iso.dist(hero.position, p) < float(Data.bal("tunele/min_odleglosc_od_bohatera", 70)):
+			timer = 0.2      # bohater stoi na norze - czekamy, aż się odsunie
+			return
+		queue.pop_front()
+		timer = float(Data.bal("tunele/odstep_sekund", 0.8))
+		var e: Enemy = level.spawn_enemy(item[1], p, "tunel_" + uid, enemy_uid(item[0]))
+		e.home = position
+		e.facing = (hero.position - p).normalized()
+		e.emerge(float(Data.bal("tunele/wynurzanie_sekund", 0.9)))
+		Fx.ring(level.decal_parent(), p, 26.0, Color(0.45, 0.35, 0.22), 0.5)
+		Audio.play("chest", 1.4)

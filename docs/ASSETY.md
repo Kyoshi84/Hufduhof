@@ -28,7 +28,8 @@ assets/characters/<postać>/              ivo, ursa, modraszka, borubar
 - **Ivo**: `assets/characters/ivo/source/*.png` to Twoje 8 oryginałów (160×256, nazwy bez zmian).
   Kopie dla gry (96×128) są w `assets/characters/ivo/idle/<kierunek>/0.png`.
 - **Ursa**: kopie w `idle/<kierunek>/0.png` (zrobione z `source/ursa_source.webp`; jeden rysunek, więc kierunki są odbiciami).
-- **Modraszka**: placeholder (`tools/gen_characters.py`).
+- **Modraszka**: z obrazu autora `source/modraszka_source.webp` (`tools/build_modraszka.py`): idle 2 klatki, walk 4, attack 3, hurt 1,
+  death 4 w 8 kierunkach; płótno 320×128 (szerokie, żeby zmieściła się leżąca postać), pivot (160, 126).
 
 ## Wrogowie
 ```
@@ -73,6 +74,10 @@ assets/levels/common/fx/                 stone, warp_orb, magic_bolt, fireball, 
 | Drzewa, krzaki | `tree_0..2.png`, `tree_dead.png`, `bush_0..1.png` | 1×1 | ok. 110×124 |
 | Płoty | `fence_x.png` (wzdłuż „\”), `fence_y.png` (wzdłuż „/”), `fence_x_broken.png` | 1×1 | 76×60 |
 | Drobne | `barrel`, `crate`, `cart`, `haystack`, `grave_0..2`, `signpost`, `rat_hole`, `exit_banner` | 1×1 | — |
+| Zawalona chata, dom zabity deskami | `house_ruin.png`, `house_boarded.png` | 3×3, 3×2 | 390×260, 370×250 |
+| Palisada, tunel skavenów | `palisade_x.png`, `skaven_tunnel.png` (leży na ziemi, środek obrazka = środek komórki) | 1×1 | 80×110, 120×64 |
+| Grimdark | `tree_dead_1`, `thorns_0..1`, `rock_0..1`, `skull_pile`, `firewood`, `stump`, `cart_broken`, `cellar`, `shrine_broken`, `gibbet`, `spikes`, `scarecrow` | 1×1 | — |
+| Płaskie (pod postaciami) | `bones_0..1`, `rubble_0..1`, `puddle` | — | ok. 60×30 |
 
 Rozmieszczenie (mapa znakowa, budynki, skrzynie, kapliczki, grupy wrogów): `data/levels/wioska.json` i `data/levels/karczma.json`.
 
@@ -100,7 +105,8 @@ coin, potion, chest, splash, fill, shrine, levelup, ui_click, door, mug_catch, m
 python3 tools/make_palette.py      # paleta 256 + LUT
 python3 tools/gen_tiles.py         # kafle i mgła
 python3 tools/gen_props.py         # budynki, rekwizyty, efekty
-python3 tools/gen_characters.py    # skaveny, Modraszka
+python3 tools/gen_characters.py    # skaveny
+python3 tools/build_modraszka.py   # Modraszka z obrazu autora (klatki + portret)
 python3 tools/gen_items.py         # ikony przedmiotów, ściany karczmy, strzała
 python3 tools/gen_skills.py        # ikony umiejętności, ognista włócznia, strzała z siecią
 python3 tools/build_levels.py      # data/levels/*.json (UWAGA: nadpisuje ręczne zmiany w tych plikach)

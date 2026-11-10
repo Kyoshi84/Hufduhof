@@ -9,7 +9,7 @@ Wszystko, co dotyczy liczb, zmienisz w plikach `data/*.json` — bez dotykania k
 |---|---|
 | **Ivo Eggert** | Wojownik, Szkarłatna Gwardia z Carroburga, dwuręczny miecz |
 | **Ursa** | Czarodziejka ognia (Mag 2): pociski ognia, z bliska kostur. Dużo many, mniej zdrowia |
-| **Modraszka** | Łuczniczka o czarnych włosach: łuk, z bliska krótki nóż |
+| **Modraszka** | Łuczniczka (ruda, czerwono-czarna suknia, chusta) - grafika z obrazu autora: łuk, z bliska krótki nóż |
 
 **Uwaga o propozycji z zadania „trzy umiejętności”:** w propozycji Ursa miała strzały, a Modraszka była maginią — odwrotnie niż
 ustaliłeś wcześniej (Ursa = mag ognia, Modraszka = łuczniczka). Zostawiłem Twoje wcześniejsze ustalenie, zachowałem
@@ -30,7 +30,10 @@ Kolejność na pasku: `pasek` (10 pozycji; `""` = pusty slot).
 (Ivo +22, Modraszka +20). Mag nadal oznacza magię: wzmacnia czary Ursy. Bez many atak główny przechodzi na zwykły atak bronią.
 
 **Grafika:** Ursa ma na Twoim obrazie miecz — na sprite'ach wciąż go widać; wersję z kosturem podmienisz w
-`assets/characters/ursa/idle/<kierunek>/0.png`. Modraszka ma grafikę tymczasową.
+`assets/characters/ursa/idle/<kierunek>/0.png`.
+Modraszka powstaje z Twojego obrazu (`assets/characters/modraszka/source/modraszka_source.webp`, `tools/build_modraszka.py`):
+rysunek jest jeden, więc kierunki „w prawo” to odbicie lustrzane, a klatki chodu, ataku, trafienia i śmierci to przekształcenia
+tego rysunku (kołysanie, pochylenie, obrót) - nie osobno narysowane klatki. Własne klatki podmienisz pod tymi samymi nazwami.
 
 **Prędkość:** bohaterowie Sz 5–6, skaveny Sz 4 — każdy bohater jest szybszy od każdego szczura.
 
@@ -124,3 +127,19 @@ Pliki: `data/heroes.json` (bohaterowie), `data/enemies.json` (wrogowie).
 - Grafika wrogów, rekwizytów, kafli i Modraszki to **placeholdery** generowane skryptami `tools/gen_*.py`.
 - Łupy leżące na ziemi nie są zapisywane (po wczytaniu znikają; skrzynie i wrogowie pamiętają stan).
 - APK nie był budowany w tym środowisku (brak Android SDK) — instrukcja i automat w GitHub Actions: `docs/BUDOWANIE_APK.md`.
+
+## 8. Aktualizacja: wioska Hufduhof (grimdark), tunele, brama
+
+- **Brama:** palisada biegnie w poprzek całej północnej krawędzi wsi (od lasu do lasu), a jedyne przejście to brama zamknięta
+  płonącą barykadą. Wcześniej barykadę dało się obejść trawą obok drogi. Dodatkowo cała mapa ma niewidzialną granicę
+  (nie da się wyjść poza obszar gry), a strefa wyjścia działa dopiero po ugaszeniu trzech części barykady.
+- **Tunele skavenów:** 5 nor (`"typ": "tunel"` w `data/levels/wioska.json`). Gdy bohater podejdzie (`tunele/wyzwalacz_px`),
+  skaveny wychodzą pojedynczo, „wyrastając” z ziemi; nie pojawiają się w przeszkodach ani tuż przy bohaterze. Cztery dawne grupy
+  stojące na drogach zamieniłem na tunele, piąta nora jest pod zawaloną chatą (+2 skaveny; XP w Poziomie 1: 624, nadal 5 punktów).
+- **Otoczenie:** 13 nowych budynków (zawalone chaty, domy zabite deskami, chałupy), martwe drzewa i ciernie gęstniejące ku
+  Drakwaldowi, głazy, błoto, kałuże, kości, stosy czaszek, szubienica przy bramie, kozły i sterty drewna przy zabitych deskami
+  domach, rozbite wozy, wejście do piwnicy, zniszczona przydrożna kapliczka, strachy na wróble. Drogi i miejsca walk zostają wolne
+  (generator `tools/build_levels.py` sprawdza kolizje i dojścia).
+- **Kolory:** trawa i drzewa w matowej zieleni, ciemna strzecha, brudny tynk, plus `"odcien"` poziomu (zimne, przygaszone światło).
+- **Ruch:** rozpęd i hamowanie (`ruch/rozped_sekund`, `ruch/hamowanie_sekund`, `ruch/wrog_rozped_sekund`); skos znormalizowany.
+- **Trafienia:** większe hitboxy strzał i pocisków ognia (`promien_trafienia` 17-22), jedno trafienie na cel na pocisk.

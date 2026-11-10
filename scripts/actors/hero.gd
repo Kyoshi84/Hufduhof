@@ -99,15 +99,16 @@ func _physics_process(delta: float) -> void:
 	_check_pickups()
 	_update_interactable()
 
-func _process_free(_delta: float) -> void:
+func _process_free(delta: float) -> void:
 	var mv: Vector2 = Vector2.ZERO if input_locked else Controls.move_vector()
+	# płynny ruch: rozpęd do pełnej prędkości i wyhamowanie (czasy w balance.json -> ruch); skos znormalizowany
+	var speed := stats.move_speed()
+	var want := Vector2.ZERO
 	if mv.length() > 0.1:
 		facing = Iso.screen(mv).normalized()
-		velocity = Iso.screen(mv.limit_length(1.0)) * stats.move_speed()
-		state = St.MOVE
-	else:
-		velocity = Vector2.ZERO
-		state = St.IDLE
+		want = Iso.screen(mv.limit_length(1.0)) * speed
+	_approach(want, speed, delta)
+	state = St.MOVE if (mv.length() > 0.1 or velocity.length() > speed * 0.25) else St.IDLE
 	if input_locked or ui_cooldown > 0.0:
 		return
 	if Input.is_action_just_pressed("interakcja"):
@@ -134,6 +135,13 @@ func _process_free(_delta: float) -> void:
 		use_belt("mikstura_zycia")
 	if Input.is_action_just_pressed("mikstura_many"):
 		use_belt("mikstura_many")
+
+func _approach(want: Vector2, speed: float, delta: float) -> void:
+	var t := float(Data.bal("ruch/rozped_sekund", 0.14)) if want != Vector2.ZERO else float(Data.bal("ruch/hamowanie_sekund", 0.1))
+	if t <= 0.0:
+		velocity = want
+	else:
+		velocity = velocity.move_toward(want, speed / t * delta)
 
 # ---------------------------------------------------------------- pasek i umiejętności
 func slot_entry(i: int) -> String:
@@ -293,8 +301,8 @@ func nearest_enemy(max_d: float) -> Actor:
 	return best
 
 # ---------------------------------------------------------------- wykonanie
-func _process_action(_delta: float) -> void:
-	velocity = Vector2.ZERO
+func _process_action(delta: float) -> void:
+	_approach(Vector2.ZERO, stats.move_speed() * 2.0, delta)   # atak wyhamowuje postać szybko, ale bez szarpnięcia
 	match state:
 		St.WINDUP:
 			if state_t >= phases[0]:

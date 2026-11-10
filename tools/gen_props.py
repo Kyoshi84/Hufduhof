@@ -126,9 +126,9 @@ def chimney(cv, gx, gy, z, hgt):
 
 
 def house(name, w, h, wall=70, rh=60, thatch=True, along_x=True, burnt=False, windows_l=None, door=True,
-          chim=True, plaster=None):
+          chim=True, plaster=None, boarded=False):
     cv = Canvas()
-    plaster = plaster or R("bone", 2)
+    plaster = plaster or R("bone", 1)
     beam = R("wood", 2)
     pl_l = plaster
     pl_r = shade(plaster, 0.72)
@@ -153,15 +153,220 @@ def house(name, w, h, wall=70, rh=60, thatch=True, along_x=True, burnt=False, wi
             p = cv.P(rnd.random() * w, h, rnd.random() * wall)
             cv.d.point((round(p[0]), round(p[1])), fill=R("ink", 1))
     else:
-        cols = (R("straw", 3), R("wood", 4), R("straw", 1)) if thatch else (R("blood", 1), R("wood", 3), R("ink", 2))
+        cols = (R("mud", 4), R("wood", 3), R("mud", 2)) if thatch else (R("blood", 1), R("wood", 3), R("ink", 2))
         if not thatch:
             cols = (R("wood", 4), R("wood", 2), R("wood", 1))
         roof_gable(cv, w, h, wall, rh, cols, along_x=along_x, thatch=thatch)
         if chim:
             chimney(cv, w * 0.7, h * 0.35, wall + rh * 0.55, 34)
+    if boarded:
+        # dom zabity deskami: deski na krzyż na drzwiach i oknach ściany frontowej
+        for (u, z0, z1) in [(w * 0.5, 4, 40)] + [(x[0], 26, 50) for x in wins_l]:
+            for dz in (0, 10, 20):
+                cv.line(cv.P(u - 0.3, h, z0 + dz), cv.P(u + 0.3, h, z0 + dz + 8), R("wood", 5), 4)
+                cv.line(cv.P(u - 0.3, h, z0 + dz), cv.P(u + 0.3, h, z0 + dz + 8), R("wood", 2), 1)
     outline(cv.im)
     ax, ay = cv.P(w, h, 0)
     save(cv.crop_anchor(ax, ay + 1), L1 + name + ".png")
+
+
+def house_ruin(name, w=3, h=3):
+    """Zawalona chata: resztki ścian o nierównej wysokości, sterta gruzu i belek w środku."""
+    cv = Canvas()
+    r = random.Random(77)
+    beam = R("wood", 1)
+    # tylne ściany (widoczne od środka)
+    for i in range(6):
+        u0, u1 = w * i / 6, w * (i + 1) / 6
+        hh = r.randint(18, 70)
+        cv.gpoly([(u0, 0, 0), (u1, 0, 0), (u1, 0, hh), (u0, 0, hh - r.randint(0, 14))], R("grey", 1))
+        hh = r.randint(14, 60)
+        cv.gpoly([(0, u0 * h / w, 0), (0, u1 * h / w, 0), (0, u1 * h / w, hh), (0, u0 * h / w, hh - r.randint(0, 12))], R("grey", 2))
+    # gruz, belki, popiół
+    for _ in range(26):
+        gx, gy = 0.2 + r.random() * (w - 0.4), 0.2 + r.random() * (h - 0.4)
+        p = cv.P(gx, gy, 0)
+        rr = r.randint(5, 13)
+        cv.d.ellipse([p[0] - rr, p[1] - rr * 0.6, p[0] + rr, p[1] + rr * 0.5], fill=r.choice([R("grey", 2), R("grey", 3), R("mud", 2), R("grey", 4)]))
+    for _ in range(9):
+        a = cv.P(r.random() * w, r.random() * h, r.randint(0, 8))
+        b = cv.P(r.random() * w, r.random() * h, r.randint(6, 46))
+        cv.line(a, b, beam, 5)
+        cv.line(a, b, R("ink", 0), 1)
+    # resztki ścian frontowych
+    for i in range(6):
+        u0, u1 = w * i / 6, w * (i + 1) / 6
+        if i in (2, 3):
+            continue
+        hh = r.randint(10, 44)
+        cv.gpoly([(u0, h, 0), (u1, h, 0), (u1, h, hh), (u0, h, hh + r.randint(-8, 8))], R("bone", 0))
+        cv.gpoly([(u0, h, 0), (u1, h, 0), (u1, h, 9), (u0, h, 9)], R("grey", 3))
+        hh = r.randint(10, 50)
+        cv.gpoly([(w, h - u0 * h / w, 0), (w, h - u1 * h / w, 0), (w, h - u1 * h / w, hh), (w, h - u0 * h / w, hh + r.randint(-8, 8))], R("mud", 4))
+    outline(cv.im)
+    ax, ay = cv.P(w, h, 0)
+    save(cv.crop_anchor(ax, ay + 1), L1 + name + ".png")
+
+
+def grim_props():
+    r = random.Random(123)
+    # palisada (zaostrzone pale) wzdłuż osi x
+    cv = small_canvas()
+    for k in range(7):
+        gx = -0.5 + k / 6.0
+        hh = 74 + (k * 37) % 14
+        p0, p1 = cv.P(gx, 0, 0), cv.P(gx, 0, hh)
+        col = R("wood", 2 + k % 3)
+        cv.poly([(p0[0] - 6, p0[1]), (p0[0] + 6, p0[1]), (p1[0] + 6, p1[1]), (p1[0], p1[1] - 12), (p1[0] - 6, p1[1])], col)
+        cv.line((p0[0] + 3, p0[1]), (p1[0] + 3, p1[1]), R("wood", 0))
+    cv.gpoly([(-0.5, 0, 30), (0.5, 0, 30), (0.5, 0, 37), (-0.5, 0, 37)], R("wood", 1))
+    save_center(cv, L1 + "palisade_x.png")
+    # tunel skavenów: kopiec ziemi, czarna jama, kości, ślad spaczenia
+    im = Image.new("RGBA", (120, 64), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.ellipse([2, 14, 117, 62], fill=R("mud", 1))
+    d.ellipse([8, 10, 111, 54], fill=R("mud", 3))
+    d.ellipse([22, 16, 98, 50], fill=R("mud", 0))
+    d.ellipse([30, 20, 90, 46], fill=R("ink", 0))
+    for _ in range(40):
+        x, y = r.randint(8, 110), r.randint(12, 56)
+        if im.getpixel((x, y))[:3] == R("mud", 3)[:3]:
+            d.point((x, y), fill=r.choice([R("mud", 5), R("mud", 1), R("grey", 4)]))
+    for (x, y) in ((14, 40), (100, 30), (60, 54)):
+        d.line([(x, y), (x + 8, y - 3)], fill=R("bone", 4), width=2)
+    for (x, y) in ((34, 30), (82, 36), (56, 24)):
+        d.point((x, y), fill=R("warp", 4))
+    save(outline(im, R("ink", 0)), L1 + "skaven_tunnel.png")
+    # płaskie: kości, gruz, kałuża
+    for i in range(2):
+        im = Image.new("RGBA", (60, 30), (0, 0, 0, 0))
+        d = ImageDraw.Draw(im)
+        for _ in range(5):
+            x, y = r.randint(8, 46), r.randint(8, 22)
+            d.line([(x, y), (x + r.randint(-9, 9), y + r.randint(-4, 4))], fill=R("bone", 3), width=2)
+        d.ellipse([24, 8, 34, 17], fill=R("bone", 4))
+        d.point((27, 12), fill=R("ink", 0)); d.point((31, 12), fill=R("ink", 0))
+        save(outline(im), L1 + "bones_%d.png" % i)
+        im = Image.new("RGBA", (70, 34), (0, 0, 0, 0))
+        d = ImageDraw.Draw(im)
+        for _ in range(9):
+            x, y = r.randint(8, 60), r.randint(8, 26)
+            rr = r.randint(3, 7)
+            d.ellipse([x - rr, y - rr * 0.6, x + rr, y + rr * 0.6], fill=r.choice([R("grey", 2), R("grey", 3), R("grey", 4)]))
+        save(outline(im), L1 + "rubble_%d.png" % i)
+    im = Image.new("RGBA", (90, 44), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.ellipse([2, 4, 87, 40], fill=R("mud", 0))
+    d.ellipse([12, 10, 76, 34], fill=R("night", 2))
+    d.line([(26, 18), (44, 18)], fill=R("steel", 3))
+    save(im, L1 + "puddle.png")
+    # stos czaszek
+    cv = small_canvas()
+    c = cv.P(0, 0, 0)
+    for (dx, dy) in ((-10, -4), (4, -5), (-3, -13), (10, -11), (-14, -12)):
+        cv.d.ellipse([c[0] + dx - 6, c[1] + dy - 7, c[0] + dx + 6, c[1] + dy + 4], fill=R("bone", 3))
+        cv.d.point((c[0] + dx - 2, c[1] + dy - 2), fill=R("ink", 0)); cv.d.point((c[0] + dx + 2, c[1] + dy - 2), fill=R("ink", 0))
+    save_center(cv, L1 + "skull_pile.png")
+    # głazy
+    for i in range(2):
+        cv = small_canvas()
+        c = cv.P(0, 0, 0)
+        w2, hh = 26 + i * 10, 26 + i * 8
+        cv.poly([(c[0] - w2, c[1]), (c[0] - w2 + 6, c[1] - hh), (c[0] + 4, c[1] - hh - 6), (c[0] + w2, c[1] - hh + 8), (c[0] + w2 + 2, c[1])], R("grey", 3))
+        cv.poly([(c[0] + 4, c[1] - hh - 6), (c[0] + w2, c[1] - hh + 8), (c[0] + w2 + 2, c[1]), (c[0] + 6, c[1])], R("grey", 2))
+        cv.line((c[0] - w2 + 8, c[1] - hh + 2), (c[0] + 2, c[1] - hh - 4), R("grey", 5))
+        for _ in range(8):
+            cv.d.point((c[0] + r.randint(-w2 + 4, 0), c[1] - r.randint(2, hh - 4)), fill=R("moss", 3))
+        save_center(cv, L1 + "rock_%d.png" % i)
+    # ciernie
+    for i in range(2):
+        cv = small_canvas()
+        c = cv.P(0, 0, 0)
+        rr = random.Random(300 + i)
+        for _ in range(16):
+            a = (c[0] + rr.randint(-24, 24), c[1] - rr.randint(0, 6))
+            b = (a[0] + rr.randint(-22, 22), a[1] - rr.randint(14, 44))
+            cv.line(a, b, R("wood", rr.randint(0, 2)), 2)
+            cv.d.point((round((a[0] + b[0]) / 2) + 2, round((a[1] + b[1]) / 2)), fill=R("moss", 4))
+        for _ in range(10):
+            cv.d.point((c[0] + rr.randint(-26, 26), c[1] - rr.randint(8, 40)), fill=R("blood", 3))
+        save_center(cv, L1 + "thorns_%d.png" % i)
+    # sterta drewna opałowego
+    cv = small_canvas()
+    for row in range(4):
+        for k in range(6 - row):
+            p = cv.P(-0.3 + k * 0.11 + row * 0.055, 0.15, 5 + row * 10)
+            cv.d.ellipse([p[0] - 6, p[1] - 6, p[0] + 6, p[1] + 6], fill=R("wood", 4 + (k + row) % 3))
+            cv.d.ellipse([p[0] - 3, p[1] - 3, p[0] + 3, p[1] + 3], fill=R("wood", 2))
+    save_center(cv, L1 + "firewood.png")
+    # pniak z siekierą
+    cv = small_canvas()
+    c = cv.P(0, 0, 0)
+    cv.d.rectangle([c[0] - 14, c[1] - 18, c[0] + 14, c[1] - 4], fill=R("wood", 3))
+    cv.d.ellipse([c[0] - 14, c[1] - 10, c[0] + 14, c[1]], fill=R("wood", 3))
+    cv.d.ellipse([c[0] - 14, c[1] - 24, c[0] + 14, c[1] - 12], fill=R("wood", 6))
+    cv.line((c[0] + 2, c[1] - 18), (c[0] + 16, c[1] - 44), R("wood", 2), 3)
+    cv.poly([(c[0] - 2, c[1] - 24), (c[0] + 8, c[1] - 22), (c[0] + 4, c[1] - 14)], R("steel", 4))
+    save_center(cv, L1 + "stump.png")
+    # rozbity wóz
+    cv = small_canvas()
+    cv.gpoly([(-0.45, 0.25, 4), (0.45, 0.25, 22), (0.45, 0.25, 40), (-0.45, 0.25, 20)], R("wood", 3))
+    cv.gpoly([(-0.45, -0.25, 20), (0.45, -0.25, 40), (0.45, 0.25, 40), (-0.45, 0.25, 20)], R("wood", 4))
+    p = cv.P(0.3, 0.25, 18)
+    cv.d.ellipse([p[0] - 14, p[1] - 16, p[0] + 14, p[1] + 16], outline=R("wood", 1), width=4)
+    p = cv.P(-0.5, 0.45, 0)
+    cv.d.ellipse([p[0] - 16, p[1] - 9, p[0] + 16, p[1] + 5], outline=R("wood", 1), width=3)
+    cv.line(cv.P(-0.1, 0.3, 0), cv.P(-0.6, 0.1, 6), R("wood", 2), 3)
+    save_center(cv, L1 + "cart_broken.png")
+    # wejście do piwnicy (uchylona klapa)
+    cv = small_canvas()
+    cv.gpoly([(-0.35, -0.3, 0), (0.35, -0.3, 0), (0.35, 0.3, 0), (-0.35, 0.3, 0)], R("grey", 3))
+    cv.gpoly([(-0.25, -0.2, 0), (0.25, -0.2, 0), (0.25, 0.2, 0), (-0.25, 0.2, 0)], R("ink", 0))
+    cv.gpoly([(-0.25, -0.2, 0), (0.25, -0.2, 0), (0.25, -0.3, 34), (-0.25, -0.3, 34)], R("wood", 3))
+    for k in range(1, 4):
+        cv.line(cv.P(-0.25 + k * 0.125, -0.2, 0), cv.P(-0.25 + k * 0.125, -0.3, 34), R("wood", 1))
+    save_center(cv, L1 + "cellar.png")
+    # zniszczona przydrożna kapliczka
+    cv = small_canvas()
+    box(cv, 0, 0, 0.36, 0.36, 0, 40, R("grey", 4), R("grey", 4), R("grey", 2))
+    cv.gpoly([(-0.18, 0.18, 40), (0.18, 0.18, 40), (0.1, 0.18, 62), (-0.18, 0.18, 54)], R("grey", 3))
+    cv.gpoly([(-0.08, 0.18, 12), (0.08, 0.18, 12), (0.08, 0.18, 30), (-0.08, 0.18, 30)], R("ink", 1))
+    p = cv.P(0.4, 0.3, 0)
+    cv.d.ellipse([p[0] - 12, p[1] - 8, p[0] + 12, p[1] + 4], fill=R("grey", 3))
+    p = cv.P(0, 0.2, 8)
+    cv.d.rectangle([p[0] - 2, p[1] - 8, p[0] + 2, p[1]], fill=R("bone", 3))
+    cv.d.point((p[0], p[1] - 10), fill=R("fire", 4))
+    save_center(cv, L1 + "shrine_broken.png")
+    # szubienica z klatką
+    cv = small_canvas()
+    c = cv.P(0, 0, 0)
+    cv.d.rectangle([c[0] - 4, c[1] - 120, c[0] + 4, c[1]], fill=R("wood", 2))
+    cv.d.rectangle([c[0] - 4, c[1] - 120, c[0] + 44, c[1] - 113], fill=R("wood", 2))
+    cv.line((c[0] + 4, c[1] - 96), (c[0] + 24, c[1] - 116), R("wood", 1), 3)
+    cv.line((c[0] + 36, c[1] - 113), (c[0] + 36, c[1] - 96), R("steel", 2), 1)
+    cv.d.rectangle([c[0] + 26, c[1] - 96, c[0] + 46, c[1] - 56], outline=R("steel", 2), width=2)
+    for x in (31, 36, 41):
+        cv.line((c[0] + x, c[1] - 96), (c[0] + x, c[1] - 56), R("steel", 1))
+    cv.d.ellipse([c[0] + 32, c[1] - 88, c[0] + 40, c[1] - 79], fill=R("bone", 3))
+    cv.line((c[0] + 36, c[1] - 79), (c[0] + 36, c[1] - 62), R("bone", 2), 3)
+    save_center(cv, L1 + "gibbet.png")
+    # kozły (zaostrzone pale - obrona wieśniaków)
+    cv = small_canvas()
+    cv.line(cv.P(-0.4, 0, 14), cv.P(0.4, 0, 14), R("wood", 3), 5)
+    for k in range(5):
+        gx = -0.36 + k * 0.18
+        cv.line(cv.P(gx, 0.18, 0), cv.P(gx, -0.2, 40), R("wood", 4), 3)
+        cv.line(cv.P(gx, -0.18, 0), cv.P(gx, 0.22, 36), R("wood", 2), 3)
+    save_center(cv, L1 + "spikes.png")
+    # strach na wróble
+    cv = small_canvas()
+    c = cv.P(0, 0, 0)
+    cv.d.rectangle([c[0] - 2, c[1] - 84, c[0] + 2, c[1]], fill=R("wood", 2))
+    cv.d.rectangle([c[0] - 26, c[1] - 66, c[0] + 26, c[1] - 62], fill=R("wood", 2))
+    cv.poly([(c[0] - 22, c[1] - 68), (c[0] + 22, c[1] - 68), (c[0] + 12, c[1] - 30), (c[0] - 12, c[1] - 30)], R("mud", 3))
+    cv.d.ellipse([c[0] - 8, c[1] - 86, c[0] + 8, c[1] - 70], fill=R("straw", 2))
+    cv.poly([(c[0] - 12, c[1] - 84), (c[0] + 12, c[1] - 84), (c[0], c[1] - 98)], R("ink", 2))
+    save_center(cv, L1 + "scarecrow.png")
 
 
 def mill(name):
@@ -286,15 +491,15 @@ def tree(rel, seed, dead=False, size=1.0):
         blobs.append((base[0] + math.cos(a) * d * 1.3, base[1] - th - 10 * size + math.sin(a) * d * 0.8,
                       (22 + r.randint(0, 12)) * size))
     for (x, y, rr) in blobs:
-        cv.d.ellipse([x - rr, y - rr, x + rr, y + rr], fill=R("grass", 1))
+        cv.d.ellipse([x - rr, y - rr, x + rr, y + rr], fill=R("moss", 0))
     for (x, y, rr) in blobs:
-        cv.d.ellipse([x - rr * 0.8 - 2, y - rr * 0.8 - 3, x + rr * 0.6, y + rr * 0.5], fill=R("grass", 3))
-        cv.d.ellipse([x - rr * 0.6 - 4, y - rr * 0.7 - 5, x + rr * 0.1, y - rr * 0.1], fill=R("grass", 5))
+        cv.d.ellipse([x - rr * 0.8 - 2, y - rr * 0.8 - 3, x + rr * 0.6, y + rr * 0.5], fill=R("moss", 2))
+        cv.d.ellipse([x - rr * 0.6 - 4, y - rr * 0.7 - 5, x + rr * 0.1, y - rr * 0.1], fill=R("moss", 3))
     px = cv.im.load()
     for _ in range(int(500 * size)):
         x, y = r.randint(0, 299), r.randint(0, 399)
         if px[x, y][3] and px[x, y][:3] != R("wood", 2)[:3]:
-            px[x, y] = r.choice([R("grass", 2), R("grass", 4), R("moss", 2), R("grass", 6)])
+            px[x, y] = r.choice([R("moss", 1), R("moss", 2), R("moss", 3), R("mud", 2)])
     save_center(cv, rel)
 
 
@@ -306,8 +511,8 @@ def bush(rel, seed):
         x = b[0] + r.randint(-26, 26)
         y = b[1] - 14 - r.randint(0, 14)
         rr = 14 + r.randint(0, 8)
-        cv.d.ellipse([x - rr, y - rr, x + rr, y + rr * 0.8], fill=R("grass", 2))
-        cv.d.ellipse([x - rr * 0.7, y - rr, x + rr * 0.3, y], fill=R("grass", 4))
+        cv.d.ellipse([x - rr, y - rr, x + rr, y + rr * 0.8], fill=R("moss", 1))
+        cv.d.ellipse([x - rr * 0.7, y - rr, x + rr * 0.3, y], fill=R("moss", 3))
     save_center(cv, rel)
 
 
@@ -637,6 +842,9 @@ def main():
     house("house_b", 3, 2, thatch=False, along_x=True, wall=64, rh=52, windows_l=[(0.7, 30, 0.3, 16), (2.3, 30, 0.3, 16)])
     house("house_c", 2, 3, thatch=True, along_x=False, wall=60, rh=56, windows_l=[(1.0, 28, 0.3, 14)])
     house("house_burnt", 3, 3, burnt=True)
+    house("house_boarded", 3, 2, thatch=True, wall=62, rh=50, windows_l=[(0.7, 28, 0.3, 16), (2.3, 28, 0.3, 16)], chim=False, boarded=True)
+    house_ruin("house_ruin")
+    grim_props()
     house("herbalist_hut", 2, 2, thatch=True, wall=54, rh=50, windows_l=[(1.4, 26, 0.25, 12)],
           plaster=R("mud", 4), chim=False)
     house("tavern_outside", 4, 3, thatch=False, wall=80, rh=64,
@@ -647,6 +855,7 @@ def main():
     for i in range(3):
         tree(L1 + "tree_%d.png" % i, 40 + i, size=1.0 + 0.15 * (i % 2))
     tree(L1 + "tree_dead.png", 9, dead=True)
+    tree(L1 + "tree_dead_1.png", 19, dead=True, size=1.25)
     for i in range(2):
         bush(L1 + "bush_%d.png" % i, 60 + i)
     fence(L1 + "fence_x.png", "x")

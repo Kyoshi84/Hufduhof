@@ -48,6 +48,10 @@ func test_level1_gives_about_5_points():
 		for g in d.get("grupy", []):
 			for e in g.get("wrogowie", []):
 				total += int(Data.enemy(str(e)).get("xp", 0))
+		for o in d.get("obiekty", []):
+			if str(o.get("typ", "")) == "tunel":
+				for e in o.get("wrogowie", []):
+					total += int(Data.enemy(str(e)).get("xp", 0))
 		for w in d.get("fale", []):
 			for e in w.get("wrogowie", []):
 				total += int(Data.enemy(str(e)).get("xp", 0))

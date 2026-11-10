@@ -382,12 +382,9 @@ def write_borubar():
 
 
 def main():
-    import sys
-    if 'modraszka' not in sys.argv:
-        for kind in KINDS:
-            write_enemy(kind)
-    write_modraszka()
-    write_borubar()
+    for kind in KINDS:
+        write_enemy(kind)
+    write_borubar()   # Modraszka powstaje z obrazu autora: tools/build_modraszka.py
     print("postacie gotowe")
 
 

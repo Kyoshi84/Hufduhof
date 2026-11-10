@@ -1,5 +1,5 @@
 {
- "_opis": "Minigra: impreza w karczmie. Faza 1: gramy Borubarem - łapie kufle do beczki (stań w cieniu, zanim kufel spadnie); wybrany bohater siedzi wśród gości (bohater_gosc). Faza 2: skaveny wpadają drzwiami, Borubar ucieka, sterowanie przejmuje bohater - fale w 'fale'. Liczby w 'impreza'.",
+ "_opis": "Minigra: impreza w karczmie. Faza 1: łapanie kufli (stań w cieniu, zanim kufel spadnie). Faza 2: skaveny wpadają drzwiami - fale w 'fale'. Liczby w 'impreza'.",
  "nazwa": "Karczma 'Pod Złotym Kuflem'",
  "kafle": "res://assets/levels/tavern/tiles/",
  "rekwizyty": "res://assets/levels/tavern/props/",
@@ -19,7 +19,11 @@
   "o": "podłoga karczmy",
   "r": "dywan",
   "s": "kamienna posadzka",
-  "x": "niewidzialna ściana (blokuje)"
+  "x": "niewidzialna ściana (blokuje)",
+  "P": "palisada (blokuje)",
+  "D": "martwe drzewo (blokuje)",
+  "t": "ciernie (blokują)",
+  "R": "głaz (blokuje)"
  },
  "mapa": [
   "WWWWWWWWWWWWWx",
