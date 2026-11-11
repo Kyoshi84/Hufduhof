@@ -503,7 +503,7 @@ func _animate(delta: float) -> void:
 	match state:
 		St.MOVE:
 			walk_t += delta * stats.move_speed() / 18.0
-			if gfx.has_walk:
+			if gfx.has_anim("walk", d):
 				gfx.play("walk", d)
 			else:
 				gfx.play("idle", d)
@@ -511,16 +511,18 @@ func _animate(delta: float) -> void:
 				gfx.lunge = Vector2(0, 0)
 		St.WINDUP:
 			var p: float = state_t / maxf(0.01, phases[0])
-			if gfx.has_attack:
-				gfx.set_windup("attack", p, d)
+			var an := _attack_anim(d)
+			if an != "":
+				gfx.set_windup(an, p, d)
 			else:
 				gfx.play("idle", d)
 				# odchylenie do tyłu = zamach (zapowiedź ciosu)
 				gfx.lunge = -Iso.screen(Iso.ground(aim).normalized()) * 6.0 * p
 				gfx.bob = -2.0 * p
 		St.STRIKE, St.RECOVER:
-			if gfx.has_attack:
-				gfx.set_last("attack", d)
+			var an := _attack_anim(d)
+			if an != "":
+				gfx.set_last(an, d)
 			else:
 				gfx.play("idle", d)
 				var k := 1.0 - clampf(state_t / maxf(0.01, phases[2]), 0.0, 1.0)
@@ -530,6 +532,14 @@ func _animate(delta: float) -> void:
 			gfx.lunge = -Iso.screen(Iso.ground(facing).normalized()) * 4.0
 		_:
 			gfx.play("idle", d)
+
+## Animacja bieżącego ataku: pole "animacja" umiejętności (data/heroes.json), a gdy brak jej klatek w tym kierunku -
+## ogólna "attack". Pusty napis = brak narysowanych klatek, atak ożywiany w kodzie.
+func _attack_anim(d: String) -> String:
+	var an := str(cur.get("animacja", "attack"))
+	if gfx.has_anim(an, d):
+		return an
+	return "attack" if gfx.has_anim("attack", d) else ""
 
 func draw_debug() -> void:
 	super()

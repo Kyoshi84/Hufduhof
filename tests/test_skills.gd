@@ -214,3 +214,56 @@ func test_ursa_fireball_explosion_damages_group():
 	await wait_seconds(1.2)
 	for e in es:
 		assert_true(e.hp < 9999.0, "wybuch rani całą grupę")
+
+# ---------------------------------------------------------------- animacje Ivo z profilu (east/west)
+func test_ivo_profile_animations_exist_east_and_mirrored_west():
+	await _swap("ivo")
+	var g: DirSprite = lvl.hero.gfx
+	assert_eq(g.pivot, Vector2(160, 190), "pivot z sprite.json (płótno 320x192)")
+	var want := {"walk": 6, "attack": 4, "heavy": 4, "whirl": 4, "shout": 3, "hurt": 2, "death": 6}
+	for an in want:
+		assert_true(g.has_anim(an, "east"), an + "/east")
+		assert_eq(g.frame_count(an, "east"), want[an], an + ": liczba klatek")
+		assert_true(g.has_anim(an, "west"), an + "/west (odbicie)")
+		assert_true(g.frames[an]["west"]["flip"], an + "/west jest lustrzanym odbiciem east")
+		var tx: Texture2D = g.frames[an]["east"]["tex"][0]
+		assert_eq(Vector2(tx.get_width(), tx.get_height()), Vector2(320, 192), an + ": wspólne płótno")
+	for d in Iso.DIRS:
+		assert_true(g.has_anim("idle", d), "idle/" + d)
+
+func test_ivo_other_directions_keep_their_pose():
+	await _swap("ivo")
+	var g: DirSprite = lvl.hero.gfx
+	for d in ["south", "north", "south-east", "north-east", "south-west", "north-west"]:
+		assert_false(g.has_anim("walk", d), "brak klatek chodu w kierunku " + d)
+		g.play("walk", d)
+		g._apply()
+		assert_eq(g.current_texture(), g.frames["idle"][d]["tex"][0], "chód w kierunku %s pokazuje pozę tego kierunku" % d)
+		assert_eq(lvl.hero._attack_anim(d), "", "atak w kierunku %s ożywiany w kodzie" % d)
+	g.play("death", "south-west")
+	g._apply()
+	assert_true(g.frames["death"]["west"]["tex"].has(g.current_texture()), "śmierć zawsze ma klatki (z profilu)")
+	assert_true(g.sprite.flip_h, "upadek w stronę zachodnią jest odbity")
+
+func test_ivo_skills_pick_their_own_animation():
+	await _swap("ivo")
+	var h := lvl.hero
+	h.cur = h.skills["potezne_ciecie"]
+	assert_eq(h._attack_anim("east"), "heavy")
+	h.cur = h.skills["wirujacy_miecz"]
+	assert_eq(h._attack_anim("west"), "whirl")
+	h.cur = h.skills["okrzyk_gwardii"]
+	assert_eq(h._attack_anim("east"), "shout")
+	h.cur = h.weapon_atk
+	assert_eq(h._attack_anim("east"), "attack", "zwykły cios bronią")
+	h.cur = {}
+
+func test_ivo_attack_shows_hit_frame_on_strike():
+	await _swap("ivo")
+	var h := lvl.hero
+	var g: DirSprite = h.gfx
+	_dummy(Vector2(70, 0))
+	assert_eq(h.try_skill("potezne_ciecie"), "ok")
+	await wait_seconds(0.2)        # zamach 0,14 s minął: trafienie albo powrót
+	assert_eq(g.anim, "heavy")
+	assert_eq(g.current_texture(), g.frames["heavy"][g.dir]["tex"][3], "po zamachu widać klatkę trafienia")

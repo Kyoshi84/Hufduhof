@@ -62,9 +62,11 @@ Co pokazać w `attack`:
 - **Ursa** — uniesienie ręki / kostura, ostatnia klatka: dłoń wyrzucona w przód (stąd wylatuje pocisk ognia).
 - **Modraszka** — naciąg łuku, ostatnia klatka: cięciwa puszczona, ręka cofnięta.
 
-**Opcjonalnie (dziś gra tego nie rozróżnia — dodam obsługę, gdy klatki powstaną):** osobne animacje `cast` (czar Ursy),
-`melee` (cios nożem Modraszki i kosturem Ursy), `whirl` (wirujący miecz Ivo), `shout` (okrzyk Ivo). Bez nich wszystkie ataki
-używają `attack`.
+**Osobne animacje umiejętności:** umiejętność w `data/heroes.json` może wskazać własną animację polem `"animacja"`.
+Ivo ma już `heavy` (Potężne cięcie), `whirl` (Wirujący miecz) i `shout` (Okrzyk gwardii) — na razie tylko z profilu
+(`east`, `west` jako odbicie). Gdy animacji brakuje w danym kierunku, gra bierze `attack`, a gdy i jej nie ma — pozę `idle`
+ożywianą w kodzie. Animacja może więc istnieć tylko w części kierunków.
+**Opcjonalnie (dziś nieużywane):** `cast` (czar Ursy), `melee` (cios nożem Modraszki i kosturem Ursy).
 
 ## 5. Animacje skavenów (3 rodzaje wrogów)
 

@@ -27,8 +27,13 @@ assets/characters/<postać>/              ivo, ursa, modraszka, borubar
 - **Płótno bohatera 96×128 px**, stopy w punkcie (48, 126) na każdej klatce. Postać ok. 110–120 px wysokości.
 - Brakujący plik = zapas: najpierw lustrzane odbicie kierunku (np. `west` z `east`), potem animacja `idle`.
   Dlatego wystarczy np. dorysować `walk/east/0..3.png` — zachód gra odbije sama.
-- **Ivo**: `assets/characters/ivo/source/*.png` to Twoje 8 oryginałów (160×256, nazwy bez zmian).
-  Kopie dla gry (96×128) są w `assets/characters/ivo/idle/<kierunek>/0.png`.
+- **Ivo**: `assets/characters/ivo/source/*.png` to Twoje 8 oryginałów (160×256, nazwy bez zmian), a `source/walk_east/`
+  to 4 klatki chodu z profilu. Klatki dla gry robi `tools/build_ivo.py`: płótno 320×192, pivot (160, 190), Ivo ok. 105 px.
+  - `idle/<kierunek>/0.png` — pozy w 8 kierunkach (pomniejszone oryginały).
+  - **Tylko kierunek `east` (a `west` jako odbicie)** ma narysowane animacje: `walk` 6, `attack` 4 (zwykły cios),
+    `heavy` 4 (Potężne cięcie), `whirl` 4 (Wirujący miecz), `shout` 3 (Okrzyk gwardii), `hurt` 2, `death` 6.
+    W pozostałych 6 kierunkach Ivo pokazuje pozę i jest ożywiany w kodzie; śmierć zawsze używa klatek z profilu.
+  - Która umiejętność używa której animacji: pole `"animacja"` umiejętności w `data/heroes.json` (brak pola = `attack`).
 - **Ursa**: kopie w `idle/<kierunek>/0.png` (zrobione z `source/ursa_source.webp`; jeden rysunek, więc kierunki są odbiciami).
 - **Modraszka**: z obrazu autora `source/modraszka_source.webp` (`tools/build_modraszka.py`): idle 2 klatki, walk 4, attack 3, hurt 1,
   death 4 w 8 kierunkach; płótno 320×128 (szerokie, żeby zmieściła się leżąca postać), pivot (160, 126).
@@ -109,6 +114,7 @@ python3 tools/gen_tiles.py         # kafle i mgła
 python3 tools/gen_props.py         # budynki, rekwizyty, efekty
 python3 tools/gen_characters.py    # skaveny
 python3 tools/build_modraszka.py   # Modraszka z obrazu autora (klatki + portret)
+python3 tools/build_ivo.py         # Ivo: pozy 8 kierunków + animacje z profilu (east) z oryginałów autora
 python3 tools/gen_items.py         # ikony przedmiotów, ściany karczmy, strzała
 python3 tools/gen_skills.py        # ikony umiejętności, ognista włócznia, strzała z siecią
 python3 tools/build_levels.py      # data/levels/*.json (UWAGA: nadpisuje ręczne zmiany w tych plikach)

@@ -109,8 +109,13 @@ Pliki: `data/heroes.json` (bohaterowie), `data/enemies.json` (wrogowie).
 - **Hitboxy** to promienie na podłodze (elipsy 2:1), niezależne od rozmiaru grafiki. Diagnostyka: `F3` (tylko build debug, domyślnie wyłączona).
 - **Paleta 256 kolorów**: grafika tymczasowa jest generowana od razu w palecie, a filtr końcowy (shader + LUT) sprowadza cały obraz do palety.
   Paleta = rampy z poprzedniej wersji + niebieska (magia) + zielona (spaczenie) + 92 kolory wyłuskane z Twoich obrazów.
-- **Grafika postaci**: Ivo i Ursa mają tylko pozy w 8 kierunkach (bez klatek ruchu). Ruch i ataki są „ożywione” w kodzie
+- **Grafika postaci**: Ursa ma tylko pozy w 8 kierunkach (bez klatek ruchu). Ruch i ataki są „ożywione” w kodzie
   (kołysanie, wypad, łuk cięcia). Gdy dorysujesz klatki `walk/` i `attack/`, gra użyje ich automatycznie.
+- **Ivo — animacje tylko z profilu**: chód, ciosy, trafienie i śmierć są narysowane w kierunku wschodnim (zachód = odbicie),
+  bo oryginalne klatki chodu są z profilu. W pozostałych 6 kierunkach zostają pozy ożywiane w kodzie, więc przy skręcie
+  z boku na skos widać przejście z animacji na pozę. Chód to pół cyklu kroku powtórzone dwa razy. Ivo jest teraz
+  pomniejszony do ok. 105 px (wcześniej 124), żeby miecz w pełnym zamachu mieścił się na płótnie 320×192.
+  Do poprawienia, gdy powstaną klatki w pozostałych kierunkach: wystarczy dodać foldery `walk/<kierunek>/` itd.
 - **Zapis**: jeden slot w `user://zapis.json` (postać, cechy, ekwipunek, zadanie, otwarte skrzynie, użyte kapliczki, zabici wrogowie, odkryta mapa).
   Autozapis: wejście do wioski, rozmowa z Borubarem, wiadra, studnia, każda ugaszona część barykady, Poziom 2. W karczmie się nie zapisuje.
 - **Menu**: wygląd i klimat bez zmian (portret Ivo, herb Carroburga, czerwono-złote przyciski, autorzy). Zmieniłem tylko napis:

@@ -1,1 +1,21 @@
-{ "canvas": [96, 128], "pivot": [48, 126], "_opis": "Pivot = punkt stóp na płótnie (taki sam na każdej klatce)." }
+{
+ "canvas": [
+  320,
+  192
+ ],
+ "pivot": [
+  160,
+  190
+ ],
+ "fps": {
+  "idle": 2,
+  "walk": 10,
+  "attack": 0,
+  "heavy": 0,
+  "whirl": 0,
+  "shout": 0,
+  "hurt": 6,
+  "death": 6
+ },
+ "_opis": "Pivot = punkt stóp. fps=0: klatki rozkładane na czas zamachu (ostatnia = trafienie). Animacje z profilu są tylko w kierunku east (west = odbicie); reszta kierunków to pozy. Generator: tools/build_ivo.py"
+}
